@@ -426,6 +426,16 @@ pub struct CodeGenConfig {
     /// `#[derive(strum::EnumIter)]` when the user does not want to apply the
     /// same attribute to every message in the matched scope.
     pub enum_attributes: Vec<(String, String)>,
+    /// Custom attributes to inject on generated oneof enums only (not messages,
+    /// not regular enums).
+    ///
+    /// Same path-matching semantics as `type_attributes`, matched against the
+    /// oneof's fully-qualified path (`.pkg.Message.oneof_name`). Useful when a
+    /// oneof needs a different attribute set than the surrounding types — e.g.
+    /// keeping `#[derive(serde::Serialize)]` on messages and oneofs while a
+    /// separate `enum_attributes` entry puts a different serde derive on the
+    /// regular enums.
+    pub oneof_attributes: Vec<(String, String)>,
     /// Wrap generated `impl`s in `#[cfg(feature = "...")]` instead of
     /// emitting them unconditionally.
     ///
@@ -613,6 +623,7 @@ impl Default for CodeGenConfig {
             field_attributes: Vec::new(),
             message_attributes: Vec::new(),
             enum_attributes: Vec::new(),
+            oneof_attributes: Vec::new(),
             gate_impls_on_crate_features: false,
             generate_with_setters: true,
             generate_reflection: false,

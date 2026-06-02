@@ -306,6 +306,8 @@ pub fn generate_oneof_enum(
         crate::comments::doc_attrs_resolved(ctx.comment(&oneof_fqn), proto_fqn, &ctx.type_map);
     let custom_type_attrs =
         CodeGenContext::matching_attributes(&ctx.config.type_attributes, &oneof_fqn)?;
+    let custom_oneof_attrs =
+        CodeGenContext::matching_attributes(&ctx.config.oneof_attributes, &oneof_fqn)?;
 
     // Variants whose field is `[debug_redact = true]` print a placeholder
     // instead of their payload. The `Debug` derive is swapped for a manual
@@ -354,6 +356,7 @@ pub fn generate_oneof_enum(
         #debug_derive
         #arbitrary_derive
         #custom_type_attrs
+        #custom_oneof_attrs
         pub enum #rust_enum_ident {
             #(#variants,)*
         }

@@ -775,6 +775,39 @@ impl Config {
         self
     }
 
+    /// Add a custom attribute to generated oneof enums only (not message
+    /// structs, not regular enums) matching a proto path prefix.
+    ///
+    /// Same path-matching semantics as [`type_attribute`](Self::type_attribute),
+    /// matched against the oneof's fully-qualified path
+    /// (`.my.pkg.MyMessage.my_oneof`). Useful when a oneof needs a different
+    /// attribute set than the surrounding types — for example to keep
+    /// `#[derive(serde::Serialize)]` on messages and oneofs while
+    /// [`enum_attribute`](Self::enum_attribute) gives the regular enums a
+    /// different serde derive.
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// buffa_build::Config::new()
+    ///     .oneof_attribute(".my.pkg", "#[derive(serde::Serialize)]")
+    ///     .files(&["proto/my_service.proto"])
+    ///     .includes(&["proto/"])
+    ///     .compile()
+    ///     .unwrap();
+    /// ```
+    #[must_use]
+    pub fn oneof_attribute(
+        mut self,
+        path: impl Into<String>,
+        attribute: impl Into<String>,
+    ) -> Self {
+        self.codegen_config
+            .oneof_attributes
+            .push((normalize_attr_path(path.into()), attribute.into()));
+        self
+    }
+
     /// Use `buf build` instead of `protoc` for descriptor generation.
     ///
     /// `buf` is often easier to install and keep current than `protoc`

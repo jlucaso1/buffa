@@ -383,6 +383,33 @@ fn test_field_attribute_reaches_oneof_variant() {
     );
 }
 
+#[test]
+fn test_oneof_attribute_on_oneof_not_message_or_enum() {
+    let mut file = proto3_file("mix.proto");
+    file.package = Some("pkg".to_string());
+    file.message_type
+        .push(oneof_message("Msg", "payload", &["a", "b"]));
+    file.enum_type.push(EnumDescriptorProto {
+        name: Some("Color".to_string()),
+        value: vec![enum_value("RED", 0)],
+        ..Default::default()
+    });
+    let config = CodeGenConfig {
+        generate_views: false,
+        oneof_attributes: vec![(".".to_string(), "#[derive(serde::Serialize)]".to_string())],
+        ..CodeGenConfig::default()
+    };
+    let files = generate(&[file], &["mix.proto".to_string()], &config).expect("should generate");
+    let content = &joined(&files);
+    // Appears exactly once: on the oneof enum, not on the message struct or the
+    // plain enum.
+    assert_eq!(
+        content.matches("derive(serde::Serialize)").count(),
+        1,
+        "oneof_attribute should appear only on the oneof enum: {content}"
+    );
+}
+
 // ── malformed attributes fail loudly ────────────────────────────────
 
 #[test]
