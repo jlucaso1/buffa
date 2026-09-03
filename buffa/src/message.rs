@@ -1096,6 +1096,61 @@ fn merge_length_delimited_erased<B: Buf>(
     Ok(())
 }
 
+/// Monomorphic decode loop for messages small enough that inlining pays for
+/// itself; see [`FieldMerge`] for the type-erased default.
+///
+/// Generated code overrides [`Message::merge_to_limit`] with this for
+/// "tiny" messages (at most four singular fields — a `Vertex { x, y, z }`, a
+/// `Timestamp`), where the per-field indirect call of the erased loop is
+/// comparable to the field's own decode work and where inlining the whole
+/// sub-decoder into the parent arm costs a few dozen bytes. Not part of the
+/// public API.
+#[doc(hidden)]
+#[inline]
+pub fn merge_to_limit_inline<M: Message, B: Buf>(
+    msg: &mut M,
+    buf: &mut B,
+    ctx: DecodeContext<'_>,
+    limit: usize,
+) -> Result<(), DecodeError> {
+    while buf.remaining() > limit {
+        let tag = crate::encoding::Tag::decode(buf)?;
+        msg.merge_field(tag, buf, ctx)?;
+    }
+    Ok(())
+}
+
+/// Monomorphic counterpart of [`Message::merge_length_delimited`] for tiny
+/// messages; see [`merge_to_limit_inline`]. Not part of the public API.
+#[doc(hidden)]
+#[inline]
+pub fn merge_length_delimited_inline<M: Message, B: Buf>(
+    msg: &mut M,
+    buf: &mut B,
+    ctx: DecodeContext<'_>,
+) -> Result<(), DecodeError> {
+    let ctx = ctx.descend()?;
+    let len_u64 = crate::encoding::decode_varint(buf)?;
+    if len_u64 > MAX_MESSAGE_BYTES as u64 {
+        return Err(DecodeError::MessageTooLarge);
+    }
+    let len = usize::try_from(len_u64).map_err(|_| DecodeError::MessageTooLarge)?;
+    if buf.remaining() < len {
+        return Err(DecodeError::UnexpectedEof);
+    }
+    let limit = buf.remaining() - len;
+    msg.merge_to_limit(buf, ctx, limit)?;
+    if buf.remaining() != limit {
+        let remaining = buf.remaining();
+        if remaining > limit {
+            buf.advance(remaining - limit);
+        } else {
+            return Err(DecodeError::UnexpectedEof);
+        }
+    }
+    Ok(())
+}
+
 /// Compile-time access to a generated message's protobuf identifiers.
 ///
 /// Generic code that needs to *name* a message type — type-erased event

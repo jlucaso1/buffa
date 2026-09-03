@@ -2401,6 +2401,23 @@ impl ::buffa::Message for Option {
         self.value = ::buffa::MessageField::none();
         self.__buffa_unknown_fields.clear();
     }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+    }
+    #[inline]
+    fn merge_length_delimited(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
+    }
 }
 impl ::buffa::ExtensionSet for Option {
     const PROTO_FQN: &'static str = "google.protobuf.Option";

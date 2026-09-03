@@ -309,6 +309,12 @@ pub mod __private {
     /// that downstream crates do not need a direct `once_cell` dependency.
     pub use once_cell::race::OnceBox;
 
+    /// Monomorphic decode loops that generated code installs as
+    /// `merge_to_limit` / `merge_length_delimited` overrides on tiny messages,
+    /// where the type-erased defaults' per-field indirect call would cost more
+    /// than it saves.
+    pub use crate::message::{merge_length_delimited_inline, merge_to_limit_inline};
+
     /// The concrete `map<K, V>` field type generated code uses by default.
     ///
     /// Generated code refers to this as `::buffa::__private::HashMap<K, V>`

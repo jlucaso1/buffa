@@ -190,6 +190,23 @@ impl ::buffa::Message for DoubleValue {
         self.value = 0f64;
         self.__buffa_unknown_fields.clear();
     }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+    }
+    #[inline]
+    fn merge_length_delimited(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
+    }
 }
 impl ::buffa::ExtensionSet for DoubleValue {
     const PROTO_FQN: &'static str = "google.protobuf.DoubleValue";
@@ -423,6 +440,23 @@ impl ::buffa::Message for FloatValue {
     fn clear(&mut self) {
         self.value = 0f32;
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+    }
+    #[inline]
+    fn merge_length_delimited(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
     }
 }
 impl ::buffa::ExtensionSet for FloatValue {
@@ -658,6 +692,23 @@ impl ::buffa::Message for Int64Value {
         self.value = 0i64;
         self.__buffa_unknown_fields.clear();
     }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+    }
+    #[inline]
+    fn merge_length_delimited(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
+    }
 }
 impl ::buffa::ExtensionSet for Int64Value {
     const PROTO_FQN: &'static str = "google.protobuf.Int64Value";
@@ -891,6 +942,23 @@ impl ::buffa::Message for UInt64Value {
     fn clear(&mut self) {
         self.value = 0u64;
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+    }
+    #[inline]
+    fn merge_length_delimited(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
     }
 }
 impl ::buffa::ExtensionSet for UInt64Value {
@@ -1126,6 +1194,23 @@ impl ::buffa::Message for Int32Value {
         self.value = 0i32;
         self.__buffa_unknown_fields.clear();
     }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+    }
+    #[inline]
+    fn merge_length_delimited(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
+    }
 }
 impl ::buffa::ExtensionSet for Int32Value {
     const PROTO_FQN: &'static str = "google.protobuf.Int32Value";
@@ -1359,6 +1444,23 @@ impl ::buffa::Message for UInt32Value {
     fn clear(&mut self) {
         self.value = 0u32;
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+    }
+    #[inline]
+    fn merge_length_delimited(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
     }
 }
 impl ::buffa::ExtensionSet for UInt32Value {
@@ -1594,6 +1696,23 @@ impl ::buffa::Message for BoolValue {
         self.value = false;
         self.__buffa_unknown_fields.clear();
     }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+    }
+    #[inline]
+    fn merge_length_delimited(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
+    }
 }
 impl ::buffa::ExtensionSet for BoolValue {
     const PROTO_FQN: &'static str = "google.protobuf.BoolValue";
@@ -1828,6 +1947,23 @@ impl ::buffa::Message for StringValue {
         self.value.clear();
         self.__buffa_unknown_fields.clear();
     }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+    }
+    #[inline]
+    fn merge_length_delimited(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
+    }
 }
 impl ::buffa::ExtensionSet for StringValue {
     const PROTO_FQN: &'static str = "google.protobuf.StringValue";
@@ -2061,6 +2197,23 @@ impl ::buffa::Message for BytesValue {
     fn clear(&mut self) {
         self.value.clear();
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+    }
+    #[inline]
+    fn merge_length_delimited(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
     }
 }
 impl ::buffa::ExtensionSet for BytesValue {
