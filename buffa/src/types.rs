@@ -881,8 +881,12 @@ pub fn put_len_delimited_header(field_number: u32, len: u64, buf: &mut impl Enco
 ///
 /// One call for what generated code used to spell as `consume_next` +
 /// [`put_len_delimited_header`]: every message-typed field arm in every
-/// `write_to` repeats that sequence.
-#[inline]
+/// `write_to` repeats that sequence. `inline(always)` like
+/// [`put_len_delimited_header`]: left to the heuristic, speed-optimised
+/// builds declined to inline it and lost 4% on dense encodes; the callees
+/// keep their own `#[inline]` hints, so size-optimised builds still make
+/// out-of-line calls for the varint work.
+#[inline(always)]
 pub fn put_submessage_header(
     field_number: u32,
     cache: &mut crate::SizeCache,
