@@ -19,6 +19,14 @@ pub struct VersionView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for VersionView<'a> {
     type Owned = super::super::Version;
+    #[inline]
+    fn merge_into_view(
+        &mut self,
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_into_view_inline(self, buf, ctx)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -455,11 +463,11 @@ impl<'a> ::buffa::MessageView<'a> for CodeGeneratorRequestView<'a> {
                 )?;
                 view.proto_file
                     .push(
-                        <super::super::super::__buffa::view::FileDescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::super::__buffa::view::FileDescriptorProtoView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.proto_file.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             17u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -475,11 +483,15 @@ impl<'a> ::buffa::MessageView<'a> for CodeGeneratorRequestView<'a> {
                 )?;
                 view.source_file_descriptors
                     .push(
-                        <super::super::super::__buffa::view::FileDescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::super::__buffa::view::FileDescriptorProtoView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view
+                    .source_file_descriptors
+                    .as_mut_vec()
+                    .last_mut()
+                {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -968,11 +980,11 @@ impl<'a> ::buffa::MessageView<'a> for CodeGeneratorResponseView<'a> {
                 )?;
                 view.file
                     .push(
-                        <super::super::__buffa::view::code_generator_response::FileView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::code_generator_response::FileView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.file.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -1377,6 +1389,14 @@ pub mod code_generator_response {
     }
     impl<'a> ::buffa::MessageView<'a> for FileView<'a> {
         type Owned = super::super::super::code_generator_response::File;
+        #[inline]
+        fn merge_into_view(
+            &mut self,
+            buf: &'a [u8],
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            ::buffa::__private::merge_into_view_inline(self, buf, ctx)
+        }
         fn decode_view(
             buf: &'a [u8],
         ) -> ::core::result::Result<Self, ::buffa::DecodeError> {

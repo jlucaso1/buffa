@@ -104,6 +104,57 @@ use crate::error::DecodeError;
 use crate::message::Message as _;
 use bytes::Bytes;
 
+/// Object-safe view of [`MessageView::merge_view_field`].
+///
+/// The view counterpart of `FieldMerge` in `message.rs`: the tag loop in
+/// [`MessageView::merge_into_view`] is identical for every view type, and as
+/// an inlined provided method it was instantiated once per view and then
+/// inlined again into every parent arm and every `decode_view_ctx`. Erasing
+/// the view type leaves one loop plus a vtable per view type; the generated
+/// `merge_view_field` is the only monomorphised decode code. Tiny views
+/// override the loop with the monomorphic
+/// [`__private::merge_into_view_inline`](crate::__private::merge_into_view_inline)
+/// instead, for the same reason as on the owned side.
+trait ViewFieldMerge<'a> {
+    fn merge_view_field_dyn(
+        &mut self,
+        tag: crate::encoding::Tag,
+        cur: &'a [u8],
+        before_tag: &'a [u8],
+        ctx: crate::DecodeContext<'_>,
+    ) -> Result<&'a [u8], DecodeError>;
+}
+
+impl<'a, V: MessageView<'a>> ViewFieldMerge<'a> for V {
+    #[inline]
+    fn merge_view_field_dyn(
+        &mut self,
+        tag: crate::encoding::Tag,
+        cur: &'a [u8],
+        before_tag: &'a [u8],
+        ctx: crate::DecodeContext<'_>,
+    ) -> Result<&'a [u8], DecodeError> {
+        self.merge_view_field(tag, cur, before_tag, ctx)
+    }
+}
+
+/// Type-erased body of [`MessageView::merge_into_view`].
+fn merge_into_view_erased<'a>(
+    this: &mut (dyn ViewFieldMerge<'a> + '_),
+    buf: &'a [u8],
+    ctx: crate::DecodeContext<'_>,
+) -> Result<(), DecodeError> {
+    let mut cur: &'a [u8] = buf;
+    while !cur.is_empty() {
+        // Captured so unknown fields can preserve their raw byte span
+        // (`before_tag.len() - cur.len()` after the payload is consumed).
+        let before_tag = cur;
+        let tag = crate::encoding::Tag::decode(&mut cur)?;
+        cur = this.merge_view_field_dyn(tag, cur, before_tag, ctx)?;
+    }
+    Ok(())
+}
+
 /// Trait for zero-copy borrowed message views.
 ///
 /// View types borrow from the input buffer and provide read-only access
@@ -240,15 +291,7 @@ pub trait MessageView<'a>: Sized {
         buf: &'a [u8],
         ctx: crate::DecodeContext<'_>,
     ) -> Result<(), DecodeError> {
-        let mut cur: &'a [u8] = buf;
-        while !cur.is_empty() {
-            // Captured so unknown fields can preserve their raw byte span
-            // (`before_tag.len() - cur.len()` after the payload is consumed).
-            let before_tag = cur;
-            let tag = crate::encoding::Tag::decode(&mut cur)?;
-            cur = self.merge_view_field(tag, cur, before_tag, ctx)?;
-        }
-        Ok(())
+        merge_into_view_erased(self, buf, ctx)
     }
 
     /// Decode one field's payload into this view (generated per message).

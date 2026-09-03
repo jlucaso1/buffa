@@ -1,0 +1,4 @@
+kind: Changed
+body: |-
+    **View decoders share one tag loop; repeated messages decode in place.** `MessageView::merge_into_view` now runs a single type-erased loop per lifetime instead of one instantiation per view type (and per parent arm it was inlined into); views with at most four singular fields keep a monomorphic `#[inline]` loop via a generated override, mirroring the owned side. Repeated message and group fields, owned (default `Vec`) and view, push a default element and decode into that slot instead of building the element on the stack and moving it into the collection, which removes a per-element copy and the separate `decode_view_ctx` instantiation the view arm carried.
+time: 2026-09-03T15:00:00.000000-03:00

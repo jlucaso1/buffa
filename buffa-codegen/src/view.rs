@@ -190,6 +190,29 @@ pub(crate) fn generate_view_with_nesting(
         &required.bit_stmts,
     )?;
 
+    // Tiny views (at most four singular fields, no repeated/map/oneof) keep a
+    // monomorphic, inlinable tag loop instead of the type-erased default;
+    // same rationale and threshold as the owned side (see `tiny` in
+    // `impl_message.rs`).
+    let tiny = !scalar_arms.is_empty()
+        && scalar_arms.len() <= 4
+        && repeated_arms.is_empty()
+        && oneof_arms.is_empty();
+    let tiny_loop_override = if tiny {
+        quote! {
+            #[inline]
+            fn merge_into_view(
+                &mut self,
+                buf: &'a [u8],
+                ctx: ::buffa::DecodeContext<'_>,
+            ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+                ::buffa::__private::merge_into_view_inline(self, buf, ctx)
+            }
+        }
+    } else {
+        quote! {}
+    };
+
     // to_owned_message field initialisers.
     let owned_fields = build_to_owned_fields(
         view_scope,
@@ -417,6 +440,8 @@ pub(crate) fn generate_view_with_nesting(
 
         impl<'a> ::buffa::MessageView<'a> for #view_ident<'a> {
             type Owned = #owned_path;
+
+            #tiny_loop_override
 
             fn decode_view(
                 buf: &'a [u8],
@@ -1488,7 +1513,12 @@ pub(crate) fn repeated_decode_arm(
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_bytes(&mut cur)?;
                 ctx.register_element_memory(::core::mem::size_of::<#vt>())?;
-                view.#ident.push(<#vt as ::buffa::MessageView>::decode_view_ctx(sub, __sub_ctx)?);
+                // Decode into the pushed slot: no stack temporary moved into
+                // the `Vec`, and one sub-decoder (`merge_into_view`) per arm.
+                view.#ident.push(<#vt as ::core::default::Default>::default());
+                if let Some(__elem) = view.#ident.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
         });
     }
@@ -1506,7 +1536,10 @@ pub(crate) fn repeated_decode_arm(
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_group(&mut cur, #field_number, __sub_ctx.depth())?;
                 ctx.register_element_memory(::core::mem::size_of::<#vt>())?;
-                view.#ident.push(<#vt as ::buffa::MessageView>::decode_view_ctx(sub, __sub_ctx)?);
+                view.#ident.push(<#vt as ::core::default::Default>::default());
+                if let Some(__elem) = view.#ident.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
         });
     }

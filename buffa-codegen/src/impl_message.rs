@@ -2442,14 +2442,30 @@ fn repeated_merge_arm(
             &quote! { tag },
             &quote! { ::buffa::encoding::WireType::LengthDelimited },
         );
-        return Ok(quote! {
-            #field_number => {
-                #list_use
-                #wire_check
+        // Default `Vec`: push the default element first and decode into the
+        // slot, so no stack temporary is moved into the collection. A custom
+        // `ProtoList` has no `last_mut`, so it keeps the temporary.
+        let body = if repr.is_default() {
+            quote! {
+                self.#ident.push(::core::default::Default::default());
+                if let Some(elem) = self.#ident.last_mut() {
+                    ctx.register_element_memory(::buffa::__private::element_footprint(elem))?;
+                    ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
+                }
+            }
+        } else {
+            quote! {
                 let mut elem = ::core::default::Default::default();
                 ctx.register_element_memory(::buffa::__private::element_footprint(&elem))?;
                 ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
                 self.#ident.push(elem);
+            }
+        };
+        return Ok(quote! {
+            #field_number => {
+                #list_use
+                #wire_check
+                #body
             }
         });
     }

@@ -158,11 +158,11 @@ impl<'a> ::buffa::MessageView<'a> for ApiView<'a> {
                 )?;
                 view.methods
                     .push(
-                        <super::super::__buffa::view::MethodView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::MethodView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.methods.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             3u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -176,11 +176,11 @@ impl<'a> ::buffa::MessageView<'a> for ApiView<'a> {
                 )?;
                 view.options
                     .push(
-                        <super::super::__buffa::view::OptionView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::OptionView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.options.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             6u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -194,11 +194,11 @@ impl<'a> ::buffa::MessageView<'a> for ApiView<'a> {
                 )?;
                 view.mixins
                     .push(
-                        <super::super::__buffa::view::MixinView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::MixinView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.mixins.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -823,11 +823,11 @@ impl<'a> ::buffa::MessageView<'a> for MethodView<'a> {
                 )?;
                 view.options
                     .push(
-                        <super::super::__buffa::view::OptionView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::OptionView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.options.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -1355,6 +1355,14 @@ pub struct MixinView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for MixinView<'a> {
     type Owned = super::super::Mixin;
+    #[inline]
+    fn merge_into_view(
+        &mut self,
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_into_view_inline(self, buf, ctx)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);

@@ -3011,3 +3011,37 @@ fn test_encoder_binds_message_field_with_as_option() {
         "owned encoder must not use is_set() + deref: {content}"
     );
 }
+
+#[test]
+fn test_repeated_message_decodes_into_pushed_slot_for_vec() {
+    let mut file = proto3_file("rep_vec.proto");
+    file.message_type.push(DescriptorProto {
+        name: Some("Item".to_string()),
+        field: vec![make_field("x", 1, Label::LABEL_OPTIONAL, Type::TYPE_INT32)],
+        ..Default::default()
+    });
+    file.message_type.push(DescriptorProto {
+        name: Some("List".to_string()),
+        field: vec![FieldDescriptorProto {
+            name: Some("items".to_string()),
+            number: Some(1),
+            label: Some(Label::LABEL_REPEATED),
+            r#type: Some(Type::TYPE_MESSAGE),
+            type_name: Some(".Item".to_string()),
+            ..Default::default()
+        }],
+        ..Default::default()
+    });
+    let files = generate(
+        &[file],
+        &["rep_vec.proto".to_string()],
+        &CodeGenConfig::default(),
+    )
+    .expect("should generate");
+    let content = &joined(&files);
+    assert!(
+        content.contains("self.items.push(::core::default::Default::default());")
+            && content.contains("self.items.last_mut()"),
+        "owned repeated message arm must decode into the pushed slot: {content}"
+    );
+}

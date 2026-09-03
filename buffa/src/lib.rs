@@ -333,6 +333,24 @@ pub mod __private {
         Ok(())
     }
 
+    /// Monomorphic counterpart of
+    /// [`MessageView::merge_into_view`](crate::MessageView::merge_into_view)
+    /// for tiny views; see [`merge_to_limit_inline`] for the rationale.
+    #[inline]
+    pub fn merge_into_view_inline<'a, V: crate::MessageView<'a>>(
+        view: &mut V,
+        buf: &'a [u8],
+        ctx: crate::DecodeContext<'_>,
+    ) -> Result<(), crate::DecodeError> {
+        let mut cur: &'a [u8] = buf;
+        while !cur.is_empty() {
+            let before_tag = cur;
+            let tag = crate::encoding::Tag::decode(&mut cur)?;
+            cur = view.merge_view_field(tag, cur, before_tag, ctx)?;
+        }
+        Ok(())
+    }
+
     /// Monomorphic counterpart of [`Message::merge_group`](crate::Message::merge_group)
     /// for tiny messages; see [`merge_to_limit_inline`].
     #[inline]

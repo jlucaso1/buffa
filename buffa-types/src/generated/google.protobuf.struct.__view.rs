@@ -1090,11 +1090,11 @@ impl<'a> ::buffa::MessageView<'a> for ListValueView<'a> {
                 )?;
                 view.values
                     .push(
-                        <super::super::__buffa::view::ValueView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::ValueView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.values.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;

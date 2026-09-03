@@ -367,24 +367,26 @@ impl ::buffa::Message for Api {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
-                let mut elem = ::core::default::Default::default();
-                ctx.register_element_memory(
-                    ::buffa::__private::element_footprint(&elem),
-                )?;
-                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                self.methods.push(elem);
+                self.methods.push(::core::default::Default::default());
+                if let Some(elem) = self.methods.last_mut() {
+                    ctx.register_element_memory(
+                        ::buffa::__private::element_footprint(elem),
+                    )?;
+                    ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
+                }
             }
             3u32 => {
                 ::buffa::encoding::check_wire_type(
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
-                let mut elem = ::core::default::Default::default();
-                ctx.register_element_memory(
-                    ::buffa::__private::element_footprint(&elem),
-                )?;
-                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                self.options.push(elem);
+                self.options.push(::core::default::Default::default());
+                if let Some(elem) = self.options.last_mut() {
+                    ctx.register_element_memory(
+                        ::buffa::__private::element_footprint(elem),
+                    )?;
+                    ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
+                }
             }
             4u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -409,12 +411,13 @@ impl ::buffa::Message for Api {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
-                let mut elem = ::core::default::Default::default();
-                ctx.register_element_memory(
-                    ::buffa::__private::element_footprint(&elem),
-                )?;
-                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                self.mixins.push(elem);
+                self.mixins.push(::core::default::Default::default());
+                if let Some(elem) = self.mixins.last_mut() {
+                    ctx.register_element_memory(
+                        ::buffa::__private::element_footprint(elem),
+                    )?;
+                    ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
+                }
             }
             7u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -913,12 +916,13 @@ impl ::buffa::Message for Method {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
-                let mut elem = ::core::default::Default::default();
-                ctx.register_element_memory(
-                    ::buffa::__private::element_footprint(&elem),
-                )?;
-                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                self.options.push(elem);
+                self.options.push(::core::default::Default::default());
+                if let Some(elem) = self.options.last_mut() {
+                    ctx.register_element_memory(
+                        ::buffa::__private::element_footprint(elem),
+                    )?;
+                    ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
+                }
             }
             7u32 => {
                 ::buffa::encoding::check_wire_type(

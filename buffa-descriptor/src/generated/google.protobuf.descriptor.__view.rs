@@ -56,11 +56,11 @@ impl<'a> ::buffa::MessageView<'a> for FileDescriptorSetView<'a> {
                 )?;
                 view.file
                     .push(
-                        <super::super::__buffa::view::FileDescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::FileDescriptorProtoView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.file.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -539,11 +539,11 @@ impl<'a> ::buffa::MessageView<'a> for FileDescriptorProtoView<'a> {
                 )?;
                 view.message_type
                     .push(
-                        <super::super::__buffa::view::DescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::DescriptorProtoView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.message_type.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             5u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -559,11 +559,11 @@ impl<'a> ::buffa::MessageView<'a> for FileDescriptorProtoView<'a> {
                 )?;
                 view.enum_type
                     .push(
-                        <super::super::__buffa::view::EnumDescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::EnumDescriptorProtoView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.enum_type.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             6u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -579,11 +579,11 @@ impl<'a> ::buffa::MessageView<'a> for FileDescriptorProtoView<'a> {
                 )?;
                 view.service
                     .push(
-                        <super::super::__buffa::view::ServiceDescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::ServiceDescriptorProtoView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.service.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             7u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -599,11 +599,11 @@ impl<'a> ::buffa::MessageView<'a> for FileDescriptorProtoView<'a> {
                 )?;
                 view.extension
                     .push(
-                        <super::super::__buffa::view::FieldDescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::FieldDescriptorProtoView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.extension.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -1319,11 +1319,11 @@ impl<'a> ::buffa::MessageView<'a> for DescriptorProtoView<'a> {
                 )?;
                 view.field
                     .push(
-                        <super::super::__buffa::view::FieldDescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::FieldDescriptorProtoView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.field.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             6u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -1339,11 +1339,11 @@ impl<'a> ::buffa::MessageView<'a> for DescriptorProtoView<'a> {
                 )?;
                 view.extension
                     .push(
-                        <super::super::__buffa::view::FieldDescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::FieldDescriptorProtoView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.extension.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             3u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -1359,11 +1359,11 @@ impl<'a> ::buffa::MessageView<'a> for DescriptorProtoView<'a> {
                 )?;
                 view.nested_type
                     .push(
-                        <super::super::__buffa::view::DescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::DescriptorProtoView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.nested_type.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             4u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -1379,11 +1379,11 @@ impl<'a> ::buffa::MessageView<'a> for DescriptorProtoView<'a> {
                 )?;
                 view.enum_type
                     .push(
-                        <super::super::__buffa::view::EnumDescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::EnumDescriptorProtoView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.enum_type.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             5u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -1399,11 +1399,11 @@ impl<'a> ::buffa::MessageView<'a> for DescriptorProtoView<'a> {
                 )?;
                 view.extension_range
                     .push(
-                        <super::super::__buffa::view::descriptor_proto::ExtensionRangeView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::descriptor_proto::ExtensionRangeView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.extension_range.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             8u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -1419,11 +1419,11 @@ impl<'a> ::buffa::MessageView<'a> for DescriptorProtoView<'a> {
                 )?;
                 view.oneof_decl
                     .push(
-                        <super::super::__buffa::view::OneofDescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::OneofDescriptorProtoView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.oneof_decl.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             9u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -1439,11 +1439,11 @@ impl<'a> ::buffa::MessageView<'a> for DescriptorProtoView<'a> {
                 )?;
                 view.reserved_range
                     .push(
-                        <super::super::__buffa::view::descriptor_proto::ReservedRangeView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::descriptor_proto::ReservedRangeView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.reserved_range.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             10u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -1999,6 +1999,14 @@ pub mod descriptor_proto {
     }
     impl<'a> ::buffa::MessageView<'a> for ExtensionRangeView<'a> {
         type Owned = super::super::super::descriptor_proto::ExtensionRange;
+        #[inline]
+        fn merge_into_view(
+            &mut self,
+            buf: &'a [u8],
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            ::buffa::__private::merge_into_view_inline(self, buf, ctx)
+        }
         fn decode_view(
             buf: &'a [u8],
         ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
@@ -2346,6 +2354,14 @@ pub mod descriptor_proto {
     }
     impl<'a> ::buffa::MessageView<'a> for ReservedRangeView<'a> {
         type Owned = super::super::super::descriptor_proto::ReservedRange;
+        #[inline]
+        fn merge_into_view(
+            &mut self,
+            buf: &'a [u8],
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            ::buffa::__private::merge_into_view_inline(self, buf, ctx)
+        }
         fn decode_view(
             buf: &'a [u8],
         ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
@@ -2732,11 +2748,11 @@ impl<'a> ::buffa::MessageView<'a> for ExtensionRangeOptionsView<'a> {
                 )?;
                 view.uninterpreted_option
                     .push(
-                        <super::super::__buffa::view::UninterpretedOptionView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::UninterpretedOptionView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.uninterpreted_option.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             2u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -2752,11 +2768,11 @@ impl<'a> ::buffa::MessageView<'a> for ExtensionRangeOptionsView<'a> {
                 )?;
                 view.declaration
                     .push(
-                        <super::super::__buffa::view::extension_range_options::DeclarationView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::extension_range_options::DeclarationView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.declaration.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -4149,6 +4165,14 @@ pub struct OneofDescriptorProtoView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for OneofDescriptorProtoView<'a> {
     type Owned = super::super::OneofDescriptorProto;
+    #[inline]
+    fn merge_into_view(
+        &mut self,
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_into_view_inline(self, buf, ctx)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -4562,11 +4586,11 @@ impl<'a> ::buffa::MessageView<'a> for EnumDescriptorProtoView<'a> {
                 )?;
                 view.value
                     .push(
-                        <super::super::__buffa::view::EnumValueDescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::EnumValueDescriptorProtoView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.value.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             4u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -4582,11 +4606,11 @@ impl<'a> ::buffa::MessageView<'a> for EnumDescriptorProtoView<'a> {
                 )?;
                 view.reserved_range
                     .push(
-                        <super::super::__buffa::view::enum_descriptor_proto::EnumReservedRangeView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::enum_descriptor_proto::EnumReservedRangeView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.reserved_range.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             5u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -4984,6 +5008,14 @@ pub mod enum_descriptor_proto {
     }
     impl<'a> ::buffa::MessageView<'a> for EnumReservedRangeView<'a> {
         type Owned = super::super::super::enum_descriptor_proto::EnumReservedRange;
+        #[inline]
+        fn merge_into_view(
+            &mut self,
+            buf: &'a [u8],
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            ::buffa::__private::merge_into_view_inline(self, buf, ctx)
+        }
         fn decode_view(
             buf: &'a [u8],
         ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
@@ -5280,6 +5312,14 @@ pub struct EnumValueDescriptorProtoView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for EnumValueDescriptorProtoView<'a> {
     type Owned = super::super::EnumValueDescriptorProto;
+    #[inline]
+    fn merge_into_view(
+        &mut self,
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_into_view_inline(self, buf, ctx)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -5683,11 +5723,11 @@ impl<'a> ::buffa::MessageView<'a> for ServiceDescriptorProtoView<'a> {
                 )?;
                 view.method
                     .push(
-                        <super::super::__buffa::view::MethodDescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::MethodDescriptorProtoView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.method.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -6776,11 +6816,11 @@ impl<'a> ::buffa::MessageView<'a> for FileOptionsView<'a> {
                 )?;
                 view.uninterpreted_option
                     .push(
-                        <super::super::__buffa::view::UninterpretedOptionView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::UninterpretedOptionView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.uninterpreted_option.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -7617,11 +7657,11 @@ impl<'a> ::buffa::MessageView<'a> for MessageOptionsView<'a> {
                 )?;
                 view.uninterpreted_option
                     .push(
-                        <super::super::__buffa::view::UninterpretedOptionView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::UninterpretedOptionView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.uninterpreted_option.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -8353,11 +8393,11 @@ impl<'a> ::buffa::MessageView<'a> for FieldOptionsView<'a> {
                 )?;
                 view.edition_defaults
                     .push(
-                        <super::super::__buffa::view::field_options::EditionDefaultView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::field_options::EditionDefaultView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.edition_defaults.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             999u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -8373,11 +8413,11 @@ impl<'a> ::buffa::MessageView<'a> for FieldOptionsView<'a> {
                 )?;
                 view.uninterpreted_option
                     .push(
-                        <super::super::__buffa::view::UninterpretedOptionView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::UninterpretedOptionView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.uninterpreted_option.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -8967,6 +9007,14 @@ pub mod field_options {
     }
     impl<'a> ::buffa::MessageView<'a> for EditionDefaultView<'a> {
         type Owned = super::super::super::field_options::EditionDefault;
+        #[inline]
+        fn merge_into_view(
+            &mut self,
+            buf: &'a [u8],
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            ::buffa::__private::merge_into_view_inline(self, buf, ctx)
+        }
         fn decode_view(
             buf: &'a [u8],
         ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
@@ -9284,6 +9332,14 @@ pub mod field_options {
     }
     impl<'a> ::buffa::MessageView<'a> for FeatureSupportView<'a> {
         type Owned = super::super::super::field_options::FeatureSupport;
+        #[inline]
+        fn merge_into_view(
+            &mut self,
+            buf: &'a [u8],
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            ::buffa::__private::merge_into_view_inline(self, buf, ctx)
+        }
         fn decode_view(
             buf: &'a [u8],
         ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
@@ -9740,11 +9796,11 @@ impl<'a> ::buffa::MessageView<'a> for OneofOptionsView<'a> {
                 )?;
                 view.uninterpreted_option
                     .push(
-                        <super::super::__buffa::view::UninterpretedOptionView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::UninterpretedOptionView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.uninterpreted_option.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -10134,11 +10190,11 @@ impl<'a> ::buffa::MessageView<'a> for EnumOptionsView<'a> {
                 )?;
                 view.uninterpreted_option
                     .push(
-                        <super::super::__buffa::view::UninterpretedOptionView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::UninterpretedOptionView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.uninterpreted_option.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -10595,11 +10651,11 @@ impl<'a> ::buffa::MessageView<'a> for EnumValueOptionsView<'a> {
                 )?;
                 view.uninterpreted_option
                     .push(
-                        <super::super::__buffa::view::UninterpretedOptionView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::UninterpretedOptionView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.uninterpreted_option.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -11046,11 +11102,11 @@ impl<'a> ::buffa::MessageView<'a> for ServiceOptionsView<'a> {
                 )?;
                 view.uninterpreted_option
                     .push(
-                        <super::super::__buffa::view::UninterpretedOptionView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::UninterpretedOptionView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.uninterpreted_option.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -11462,11 +11518,11 @@ impl<'a> ::buffa::MessageView<'a> for MethodOptionsView<'a> {
                 )?;
                 view.uninterpreted_option
                     .push(
-                        <super::super::__buffa::view::UninterpretedOptionView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::UninterpretedOptionView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.uninterpreted_option.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -11897,11 +11953,11 @@ impl<'a> ::buffa::MessageView<'a> for UninterpretedOptionView<'a> {
                 )?;
                 view.name
                     .push(
-                        <super::super::__buffa::view::uninterpreted_option::NamePartView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::uninterpreted_option::NamePartView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.name.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -12280,6 +12336,14 @@ Distinguishes a field that was absent from one explicitly encoded with its defau
     }
     impl<'a> ::buffa::MessageView<'a> for NamePartView<'a> {
         type Owned = super::super::super::uninterpreted_option::NamePart;
+        #[inline]
+        fn merge_into_view(
+            &mut self,
+            buf: &'a [u8],
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            ::buffa::__private::merge_into_view_inline(self, buf, ctx)
+        }
         fn decode_view(
             buf: &'a [u8],
         ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
@@ -13446,11 +13510,11 @@ impl<'a> ::buffa::MessageView<'a> for FeatureSetDefaultsView<'a> {
                 )?;
                 view.defaults
                     .push(
-                        <super::super::__buffa::view::feature_set_defaults::FeatureSetEditionDefaultView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::feature_set_defaults::FeatureSetEditionDefaultView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.defaults.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -13752,6 +13816,14 @@ pub mod feature_set_defaults {
     }
     impl<'a> ::buffa::MessageView<'a> for FeatureSetEditionDefaultView<'a> {
         type Owned = super::super::super::feature_set_defaults::FeatureSetEditionDefault;
+        #[inline]
+        fn merge_into_view(
+            &mut self,
+            buf: &'a [u8],
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            ::buffa::__private::merge_into_view_inline(self, buf, ctx)
+        }
         fn decode_view(
             buf: &'a [u8],
         ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
@@ -14247,11 +14319,11 @@ impl<'a> ::buffa::MessageView<'a> for SourceCodeInfoView<'a> {
                 )?;
                 view.location
                     .push(
-                        <super::super::__buffa::view::source_code_info::LocationView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::source_code_info::LocationView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.location.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -15178,11 +15250,11 @@ impl<'a> ::buffa::MessageView<'a> for GeneratedCodeInfoView<'a> {
                 )?;
                 view.annotation
                     .push(
-                        <super::super::__buffa::view::generated_code_info::AnnotationView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
+                        <super::super::__buffa::view::generated_code_info::AnnotationView as ::core::default::Default>::default(),
                     );
+                if let Some(__elem) = view.annotation.as_mut_vec().last_mut() {
+                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                }
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
