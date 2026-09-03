@@ -1422,35 +1422,29 @@ pub(crate) fn scalar_decode_arm(
             }
         }
         Type::TYPE_MESSAGE => {
-            let vt = resolve_view_decode_tokens(scope, field)?;
+            // Proto merge semantics: a repeated occurrence merges into the
+            // existing view. Routing the first occurrence through the same
+            // `get_or_insert_default` + `merge_into_view` slot (instead of a
+            // separate `decode_view_ctx` call) keeps one sub-decoder per arm.
             quote! {
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                // Proto merge semantics: if this field appeared before,
-                // merge the new bytes into the existing view.
-                match view.#ident.as_mut() {
-                    Some(existing) => {
-                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
-                    }
-                    None => view.#ident = ::buffa::MessageFieldView::set(
-                        <#vt as ::buffa::MessageView>::decode_view_ctx(sub, __sub_ctx)?
-                    ),
-                }
+                ::buffa::MessageView::merge_into_view(
+                    view.#ident.get_or_insert_default(),
+                    sub,
+                    __sub_ctx,
+                )?;
             }
         }
         Type::TYPE_GROUP => {
-            let vt = resolve_view_decode_tokens(scope, field)?;
             quote! {
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_group(&mut cur, #field_number, __sub_ctx.depth())?;
-                match view.#ident.as_mut() {
-                    Some(existing) => {
-                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
-                    }
-                    None => view.#ident = ::buffa::MessageFieldView::set(
-                        <#vt as ::buffa::MessageView>::decode_view_ctx(sub, __sub_ctx)?
-                    ),
-                }
+                ::buffa::MessageView::merge_into_view(
+                    view.#ident.get_or_insert_default(),
+                    sub,
+                    __sub_ctx,
+                )?;
             }
         }
         _ => {
@@ -1847,19 +1841,16 @@ pub(crate) fn oneof_decode_arms(
                             #wire_check
                             let __sub_ctx = ctx.descend()?;
                             let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                            if let Some(#view_enum::#variant(ref mut existing)) = view.#field_ident {
-                                ::buffa::MessageView::merge_into_view(
-                                    &mut **existing,
-                                    sub,
-                                    __sub_ctx,
-                                )?;
-                            } else {
-                                view.#field_ident = Some(#view_enum::#variant(
-                                    ::buffa::alloc::boxed::Box::new(
-                                        <#vt as ::buffa::MessageView>::decode_view_ctx(sub, __sub_ctx)?
-                                    )
-                                ));
-                            }
+                            let __slot: &mut #vt = match view.#field_ident {
+                                Some(#view_enum::#variant(ref mut existing)) => existing,
+                                ref mut __other => match __other.insert(#view_enum::#variant(
+                                    ::buffa::alloc::boxed::Box::default(),
+                                )) {
+                                    #view_enum::#variant(__fresh) => __fresh,
+                                    _ => ::core::unreachable!(),
+                                },
+                            };
+                            ::buffa::MessageView::merge_into_view(__slot, sub, __sub_ctx)?;
                         }
                     });
                 }
@@ -1870,19 +1861,16 @@ pub(crate) fn oneof_decode_arms(
                             #wire_check
                             let __sub_ctx = ctx.descend()?;
                             let sub = ::buffa::types::borrow_group(&mut cur, #field_number, __sub_ctx.depth())?;
-                            if let Some(#view_enum::#variant(ref mut existing)) = view.#field_ident {
-                                ::buffa::MessageView::merge_into_view(
-                                    &mut **existing,
-                                    sub,
-                                    __sub_ctx,
-                                )?;
-                            } else {
-                                view.#field_ident = Some(#view_enum::#variant(
-                                    ::buffa::alloc::boxed::Box::new(
-                                        <#vt as ::buffa::MessageView>::decode_view_ctx(sub, __sub_ctx)?
-                                    )
-                                ));
-                            }
+                            let __slot: &mut #vt = match view.#field_ident {
+                                Some(#view_enum::#variant(ref mut existing)) => existing,
+                                ref mut __other => match __other.insert(#view_enum::#variant(
+                                    ::buffa::alloc::boxed::Box::default(),
+                                )) {
+                                    #view_enum::#variant(__fresh) => __fresh,
+                                    _ => ::core::unreachable!(),
+                                },
+                            };
+                            ::buffa::MessageView::merge_into_view(__slot, sub, __sub_ctx)?;
                         }
                     });
                 }

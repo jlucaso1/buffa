@@ -124,19 +124,11 @@ impl<'a> ::buffa::MessageView<'a> for ApiView<'a> {
                 )?;
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                match view.source_context.as_mut() {
-                    Some(existing) => {
-                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
-                    }
-                    None => {
-                        view.source_context = ::buffa::MessageFieldView::set(
-                            <super::super::__buffa::view::SourceContextView as ::buffa::MessageView>::decode_view_ctx(
-                                sub,
-                                __sub_ctx,
-                            )?,
-                        );
-                    }
-                }
+                ::buffa::MessageView::merge_into_view(
+                    view.source_context.get_or_insert_default(),
+                    sub,
+                    __sub_ctx,
+                )?;
             }
             7u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -291,9 +283,9 @@ impl<'a> ::buffa::ViewEncode<'a> for ApiView<'a> {
         if !self.version.is_empty() {
             size += 1u64 + ::buffa::types::string_encoded_len(&self.version) as u64;
         }
-        if self.source_context.is_set() {
+        if let ::core::option::Option::Some(__v) = self.source_context.as_option() {
             let __slot = __cache.reserve();
-            let inner_size = self.source_context.compute_size(__cache);
+            let inner_size = __v.compute_size(__cache);
             __cache.set(__slot, inner_size);
             size
                 += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
@@ -349,13 +341,13 @@ impl<'a> ::buffa::ViewEncode<'a> for ApiView<'a> {
         if !self.version.is_empty() {
             ::buffa::types::put_string_field(4u32, &self.version, buf);
         }
-        if self.source_context.is_set() {
+        if let ::core::option::Option::Some(__v) = self.source_context.as_option() {
             ::buffa::types::put_len_delimited_header(
                 5u32,
                 u64::from(__cache.consume_next()),
                 buf,
             );
-            self.source_context.write_to(__cache, buf);
+            __v.write_to(__cache, buf);
         }
         for v in &self.mixins {
             ::buffa::types::put_len_delimited_header(

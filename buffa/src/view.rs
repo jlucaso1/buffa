@@ -1137,6 +1137,22 @@ impl<V> MessageFieldView<V> {
     pub fn as_mut(&mut self) -> Option<&mut V> {
         self.inner.as_deref_mut()
     }
+
+    /// Get a mutable reference to the inner view, setting it to `V::default()`
+    /// first if the field is unset.
+    ///
+    /// Generated decode code merges every occurrence of a message field
+    /// through this one slot, so a field's sub-decoder is instantiated once
+    /// per arm rather than once for the first occurrence and again for the
+    /// merge path.
+    #[inline]
+    pub fn get_or_insert_default(&mut self) -> &mut V
+    where
+        V: Default,
+    {
+        self.inner
+            .get_or_insert_with(|| alloc::boxed::Box::new(V::default()))
+    }
 }
 
 impl<'a, V: ViewEncode<'a>> MessageFieldView<V> {

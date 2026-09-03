@@ -879,12 +879,11 @@ pub trait Message: DefaultInstance + Clone + PartialEq + Send + Sync {
         buf: &mut impl Buf,
         ctx: DecodeContext<'_>,
         limit: usize,
-    ) -> Result<(), DecodeError> {
-        while buf.remaining() > limit {
-            let tag = crate::encoding::Tag::decode(buf)?;
-            self.merge_field(tag, buf, ctx)?;
-        }
-        Ok(())
+    ) -> Result<(), DecodeError>
+    where
+        Self: Sized,
+    {
+        merge_to_limit_erased(self, buf, ctx, limit)
     }
 
     /// Merges a group-encoded message from `buf`, reading fields until an
@@ -907,22 +906,11 @@ pub trait Message: DefaultInstance + Clone + PartialEq + Send + Sync {
         buf: &mut impl Buf,
         ctx: DecodeContext<'_>,
         field_number: u32,
-    ) -> Result<(), DecodeError> {
-        let ctx = ctx.descend()?;
-        loop {
-            if !buf.has_remaining() {
-                return Err(DecodeError::UnexpectedEof);
-            }
-            let tag = crate::encoding::Tag::decode(buf)?;
-            if tag.wire_type() == crate::encoding::WireType::EndGroup {
-                return if tag.field_number() == field_number {
-                    Ok(())
-                } else {
-                    Err(DecodeError::InvalidEndGroup(tag.field_number()))
-                };
-            }
-            self.merge_field(tag, buf, ctx)?;
-        }
+    ) -> Result<(), DecodeError>
+    where
+        Self: Sized,
+    {
+        merge_group_erased(self, buf, ctx, field_number)
     }
 
     /// Merge fields from a buffer into this message.
@@ -987,37 +975,125 @@ pub trait Message: DefaultInstance + Clone + PartialEq + Send + Sync {
         &mut self,
         buf: &mut impl Buf,
         ctx: DecodeContext<'_>,
-    ) -> Result<(), DecodeError> {
-        let ctx = ctx.descend()?;
-        let len_u64 = crate::encoding::decode_varint(buf)?;
-        if len_u64 > MAX_MESSAGE_BYTES as u64 {
-            return Err(DecodeError::MessageTooLarge);
-        }
-        let len = usize::try_from(len_u64).map_err(|_| DecodeError::MessageTooLarge)?;
-        if buf.remaining() < len {
-            return Err(DecodeError::UnexpectedEof);
-        }
-        // Arithmetic limit: the sub-message occupies `len` bytes, so the
-        // decode loop should stop when `buf.remaining()` drops to
-        // `remaining - len`.  This avoids wrapping the buffer in `Take`,
-        // which would grow the type at each recursion level and trigger
-        // E0275 for recursive message types like `Struct ↔ Value`.
-        let limit = buf.remaining() - len;
-        self.merge_to_limit(buf, ctx, limit)?;
-        if buf.remaining() != limit {
-            let remaining = buf.remaining();
-            if remaining > limit {
-                // Sub-message consumed fewer bytes than declared; skip the rest.
-                buf.advance(remaining - limit);
-            } else {
-                return Err(DecodeError::UnexpectedEof);
-            }
-        }
-        Ok(())
+    ) -> Result<(), DecodeError>
+    where
+        Self: Sized,
+    {
+        merge_length_delimited_erased(self, buf, ctx)
     }
 
     /// Clear all fields to their default values.
     fn clear(&mut self);
+}
+
+/// Object-safe view of [`Message::merge_field`] for one concrete buffer type.
+///
+/// The decode loops ([`Message::merge_to_limit`], [`Message::merge_group`],
+/// [`Message::merge_length_delimited`]) are identical for every message —
+/// only the `merge_field` call inside them differs. As inlined provided
+/// methods they were monomorphised once per (message type, buffer type)
+/// pair and, worse, inlined again into every parent arm that decodes the
+/// message as a sub-field, so each message paid for the loop prologue,
+/// the length-prefix checks and the `DecodeError` propagation tails several
+/// times over. Erasing the message type behind this trait leaves one copy
+/// of each loop per buffer type plus a vtable per message, and the
+/// per-message `merge_field` body becomes the only monomorphised code.
+///
+/// Measured on a 750-message schema (`whatsapp.proto`) at `opt-level = "z"`
+/// with fat LTO, this removed 13% of the binary's `.text` (215 KiB of
+/// 1.57 MiB). The cost is one indirect call per decoded field; the
+/// per-field work (tag decode, wire-type check, value decode) dwarfs it.
+trait FieldMerge<B: Buf> {
+    fn merge_field_dyn(
+        &mut self,
+        tag: crate::encoding::Tag,
+        buf: &mut B,
+        ctx: DecodeContext<'_>,
+    ) -> Result<(), DecodeError>;
+}
+
+impl<M: Message, B: Buf> FieldMerge<B> for M {
+    #[inline]
+    fn merge_field_dyn(
+        &mut self,
+        tag: crate::encoding::Tag,
+        buf: &mut B,
+        ctx: DecodeContext<'_>,
+    ) -> Result<(), DecodeError> {
+        self.merge_field(tag, buf, ctx)
+    }
+}
+
+/// Type-erased body of [`Message::merge_to_limit`].
+fn merge_to_limit_erased<B: Buf>(
+    this: &mut dyn FieldMerge<B>,
+    buf: &mut B,
+    ctx: DecodeContext<'_>,
+    limit: usize,
+) -> Result<(), DecodeError> {
+    while buf.remaining() > limit {
+        let tag = crate::encoding::Tag::decode(buf)?;
+        this.merge_field_dyn(tag, buf, ctx)?;
+    }
+    Ok(())
+}
+
+/// Type-erased body of [`Message::merge_group`].
+fn merge_group_erased<B: Buf>(
+    this: &mut dyn FieldMerge<B>,
+    buf: &mut B,
+    ctx: DecodeContext<'_>,
+    field_number: u32,
+) -> Result<(), DecodeError> {
+    let ctx = ctx.descend()?;
+    loop {
+        if !buf.has_remaining() {
+            return Err(DecodeError::UnexpectedEof);
+        }
+        let tag = crate::encoding::Tag::decode(buf)?;
+        if tag.wire_type() == crate::encoding::WireType::EndGroup {
+            return if tag.field_number() == field_number {
+                Ok(())
+            } else {
+                Err(DecodeError::InvalidEndGroup(tag.field_number()))
+            };
+        }
+        this.merge_field_dyn(tag, buf, ctx)?;
+    }
+}
+
+/// Type-erased body of [`Message::merge_length_delimited`].
+fn merge_length_delimited_erased<B: Buf>(
+    this: &mut dyn FieldMerge<B>,
+    buf: &mut B,
+    ctx: DecodeContext<'_>,
+) -> Result<(), DecodeError> {
+    let ctx = ctx.descend()?;
+    let len_u64 = crate::encoding::decode_varint(buf)?;
+    if len_u64 > MAX_MESSAGE_BYTES as u64 {
+        return Err(DecodeError::MessageTooLarge);
+    }
+    let len = usize::try_from(len_u64).map_err(|_| DecodeError::MessageTooLarge)?;
+    if buf.remaining() < len {
+        return Err(DecodeError::UnexpectedEof);
+    }
+    // Arithmetic limit: the sub-message occupies `len` bytes, so the decode
+    // loop should stop when `buf.remaining()` drops to `remaining - len`.
+    // This avoids wrapping the buffer in `Take`, which would grow the type
+    // at each recursion level and trigger E0275 for recursive message types
+    // like `Struct ↔ Value`.
+    let limit = buf.remaining() - len;
+    merge_to_limit_erased(this, buf, ctx, limit)?;
+    if buf.remaining() != limit {
+        let remaining = buf.remaining();
+        if remaining > limit {
+            // Sub-message consumed fewer bytes than declared; skip the rest.
+            buf.advance(remaining - limit);
+        } else {
+            return Err(DecodeError::UnexpectedEof);
+        }
+    }
+    Ok(())
 }
 
 /// Compile-time access to a generated message's protobuf identifiers.
