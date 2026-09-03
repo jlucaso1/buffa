@@ -413,7 +413,20 @@ pub fn generate_message_impl(
     // fields count as tiny too: their arm is one call into the child's own
     // loop. Repeated, map and oneof fields carry element loops or many arms,
     // so a message with any of those keeps the shared loops.
-    let tiny = fields.len() <= 4 && fields.iter().all(|k| matches!(k, FieldKind::Scalar(_)));
+    let is_message_set = msg
+        .options
+        .as_option()
+        .and_then(|o| o.message_set_wire_format)
+        .unwrap_or(false);
+    // A MessageSet has no regular fields but the heaviest fallthrough arm
+    // codegen emits (Item-group parsing), and an empty message's body is its
+    // fallthrough; neither is "a handful of arms", so both keep the shared
+    // loops. Groups are legacy proto2 and rare; the override covers them too
+    // so a tiny group-typed field decodes the same way as a message-typed one.
+    let tiny = !is_message_set
+        && !fields.is_empty()
+        && fields.len() <= 4
+        && fields.iter().all(|k| matches!(k, FieldKind::Scalar(_)));
     let tiny_loop_overrides = if tiny {
         quote! {
             #[inline]
@@ -433,6 +446,16 @@ pub fn generate_message_impl(
                 ctx: ::buffa::DecodeContext<'_>,
             ) -> ::core::result::Result<(), ::buffa::DecodeError> {
                 ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
+            }
+
+            #[inline]
+            fn merge_group(
+                &mut self,
+                buf: &mut impl ::buffa::bytes::Buf,
+                ctx: ::buffa::DecodeContext<'_>,
+                field_number: u32,
+            ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+                ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
             }
         }
     } else {
@@ -524,11 +547,6 @@ pub fn generate_message_impl(
     // but stored flat as `{number: type_id, data: LD(payload)}`. The gate
     // check (`CodeGenConfig::allow_message_set`) is in `message.rs`; by the
     // time we're here, the flag is set or the option was absent.
-    let is_message_set = msg
-        .options
-        .as_option()
-        .and_then(|o| o.message_set_wire_format)
-        .unwrap_or(false);
 
     // Generate unknown-fields snippets based on config.
     let unknown_fields_size_stmt = if is_message_set {

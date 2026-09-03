@@ -235,6 +235,15 @@ impl ::buffa::Message for Version {
     ) -> ::core::result::Result<(), ::buffa::DecodeError> {
         ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
     }
+    #[inline]
+    fn merge_group(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        field_number: u32,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
+    }
 }
 impl ::buffa::ExtensionSet for Version {
     const PROTO_FQN: &'static str = "google.protobuf.compiler.Version";
@@ -1607,6 +1616,15 @@ pub mod code_generator_response {
             ctx: ::buffa::DecodeContext<'_>,
         ) -> ::core::result::Result<(), ::buffa::DecodeError> {
             ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
+        }
+        #[inline]
+        fn merge_group(
+            &mut self,
+            buf: &mut impl ::buffa::bytes::Buf,
+            ctx: ::buffa::DecodeContext<'_>,
+            field_number: u32,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
         }
     }
     impl ::buffa::ExtensionSet for File {

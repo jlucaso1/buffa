@@ -333,6 +333,32 @@ pub mod __private {
         Ok(())
     }
 
+    /// Monomorphic counterpart of [`Message::merge_group`](crate::Message::merge_group)
+    /// for tiny messages; see [`merge_to_limit_inline`].
+    #[inline]
+    pub fn merge_group_inline<M: crate::Message, B: bytes::Buf>(
+        msg: &mut M,
+        buf: &mut B,
+        ctx: crate::DecodeContext<'_>,
+        field_number: u32,
+    ) -> Result<(), crate::DecodeError> {
+        let ctx = ctx.descend()?;
+        loop {
+            if !buf.has_remaining() {
+                return Err(crate::DecodeError::UnexpectedEof);
+            }
+            let tag = crate::encoding::Tag::decode(buf)?;
+            if tag.wire_type() == crate::encoding::WireType::EndGroup {
+                return if tag.field_number() == field_number {
+                    Ok(())
+                } else {
+                    Err(crate::DecodeError::InvalidEndGroup(tag.field_number()))
+                };
+            }
+            msg.merge_field(tag, buf, ctx)?;
+        }
+    }
+
     /// Monomorphic counterpart of
     /// [`Message::merge_length_delimited`](crate::Message::merge_length_delimited)
     /// for tiny messages; see [`merge_to_limit_inline`]. Like the erased

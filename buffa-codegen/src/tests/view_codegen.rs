@@ -691,19 +691,31 @@ fn test_view_single_variant_message_oneof_has_no_wildcard_match() {
     )
     .expect("should generate");
     let content = &joined(&files);
+    // Scope the checks to RequestView's decode impl so an unrelated codegen
+    // path cannot fail (or satisfy) them.
+    let start = content
+        .find("::buffa::MessageView<'a> for RequestView<'a>")
+        .expect("RequestView impl");
+    let arm = &content[start..];
+    let arm = &arm[..arm.find("fn to_owned_message").expect("end of decode impl")];
     assert!(
-        !content.contains("unreachable!"),
-        "oneof message arm must not emit an unreachable!() arm: {content}"
+        !arm.contains("unreachable!"),
+        "oneof message arm must not emit an unreachable!() arm: {arm}"
     );
     // Both the first occurrence and a merge go through one `merge_into_view`
-    // call on a box taken out of the oneof and put back before `?`.
+    // call on the box installed in the oneof.
     assert!(
-        content.contains("view.payload.take()"),
-        "oneof message arm must take the existing box: {content}"
+        arm.contains("::core::matches!(") && arm.contains("view.payload = Some("),
+        "oneof message arm must install the variant before merging: {arm}"
+    );
+    assert_eq!(
+        arm.matches("merge_into_view(").count(),
+        1,
+        "oneof message arm must have exactly one sub-decoder call: {arm}"
     );
     assert!(
-        !content.contains("decode_view_ctx(sub"),
-        "oneof message arm must not keep a separate first-occurrence decoder: {content}"
+        !arm.contains("decode_view_ctx(sub"),
+        "oneof message arm must not keep a separate first-occurrence decoder: {arm}"
     );
 }
 

@@ -195,8 +195,11 @@ pub trait MessageView<'a>: Sized {
     /// [`with_element_memory`](crate::DecodeContext::with_element_memory)
     /// turns every repeated-element charge in every field arm into a no-op.
     ///
-    /// Also called by generated sub-message decode arms with a descended
-    /// context. Not to be confused with
+    /// Also called by generated decode arms for *repeated* message fields
+    /// with a descended context (singular and oneof message fields decode in
+    /// place through [`merge_into_view`](Self::merge_into_view) instead, so
+    /// an override of this method is not consulted for them). Not to be
+    /// confused with
     /// [`decode_view_with_ctx`](Self::decode_view_with_ctx), the
     /// `DecodeOptions` override point whose *default* ignores the context.
     ///
@@ -228,7 +231,10 @@ pub trait MessageView<'a>: Sized {
     ///
     /// Returns a [`DecodeError`] on malformed input, a wire-type mismatch, or
     /// when a configured decode limit (recursion depth, unknown-field
-    /// allowance) is exceeded.
+    /// allowance) is exceeded. On error `self` is left in an unspecified,
+    /// partially merged state: fields decoded before the failure keep their
+    /// new values, and a message field whose first occurrence failed
+    /// mid-way is set rather than unset.
     fn merge_into_view(
         &mut self,
         buf: &'a [u8],
@@ -1130,9 +1136,6 @@ impl<V> MessageFieldView<V> {
     }
 
     /// Get a mutable reference to the inner view, or `None` if unset.
-    ///
-    /// Used by generated decode code to merge a second occurrence of a
-    /// message field into an existing value (proto merge semantics).
     #[inline]
     pub fn as_mut(&mut self) -> Option<&mut V> {
         self.inner.as_deref_mut()
@@ -1145,6 +1148,15 @@ impl<V> MessageFieldView<V> {
     /// as [`set`](Self::set) does; a field that is already set is returned
     /// without allocating. Generated decode code merges every occurrence of
     /// a message field through this one call.
+    ///
+    /// ```
+    /// use buffa::view::MessageFieldView;
+    ///
+    /// let mut field: MessageFieldView<Vec<u8>> = MessageFieldView::unset();
+    /// field.get_or_insert_default().push(1);
+    /// field.get_or_insert_default().push(2);
+    /// assert_eq!(field.as_option().map(Vec::as_slice), Some(&[1, 2][..]));
+    /// ```
     #[inline]
     pub fn get_or_insert_default(&mut self) -> &mut V
     where
@@ -2895,6 +2907,20 @@ mod tests {
         assert!(v.is_unset());
         assert!(!v.is_set());
         assert_eq!(v.as_option(), None);
+    }
+
+    #[test]
+    fn message_field_view_get_or_insert_default_sets_once() {
+        let mut v: MessageFieldView<Vec<u8>> = MessageFieldView::unset();
+        assert!(v.is_unset());
+        v.get_or_insert_default().push(7);
+        assert!(v.is_set());
+        // A second call returns the same value rather than a fresh default.
+        v.get_or_insert_default().push(8);
+        assert_eq!(v.as_option().map(Vec::as_slice), Some(&[7u8, 8][..]));
+        // On an already-set field it is the same slot `as_mut` exposes.
+        let ptr = v.as_mut().map(|x| x as *mut Vec<u8>);
+        assert_eq!(ptr, Some(v.get_or_insert_default() as *mut Vec<u8>));
     }
 
     #[test]

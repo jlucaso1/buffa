@@ -2418,6 +2418,15 @@ impl ::buffa::Message for Option {
     ) -> ::core::result::Result<(), ::buffa::DecodeError> {
         ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
     }
+    #[inline]
+    fn merge_group(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        field_number: u32,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
+    }
 }
 impl ::buffa::ExtensionSet for Option {
     const PROTO_FQN: &'static str = "google.protobuf.Option";

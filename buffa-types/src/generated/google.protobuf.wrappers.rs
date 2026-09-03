@@ -207,6 +207,15 @@ impl ::buffa::Message for DoubleValue {
     ) -> ::core::result::Result<(), ::buffa::DecodeError> {
         ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
     }
+    #[inline]
+    fn merge_group(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        field_number: u32,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
+    }
 }
 impl ::buffa::ExtensionSet for DoubleValue {
     const PROTO_FQN: &'static str = "google.protobuf.DoubleValue";
@@ -457,6 +466,15 @@ impl ::buffa::Message for FloatValue {
         ctx: ::buffa::DecodeContext<'_>,
     ) -> ::core::result::Result<(), ::buffa::DecodeError> {
         ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
+    }
+    #[inline]
+    fn merge_group(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        field_number: u32,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
     }
 }
 impl ::buffa::ExtensionSet for FloatValue {
@@ -709,6 +727,15 @@ impl ::buffa::Message for Int64Value {
     ) -> ::core::result::Result<(), ::buffa::DecodeError> {
         ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
     }
+    #[inline]
+    fn merge_group(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        field_number: u32,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
+    }
 }
 impl ::buffa::ExtensionSet for Int64Value {
     const PROTO_FQN: &'static str = "google.protobuf.Int64Value";
@@ -959,6 +986,15 @@ impl ::buffa::Message for UInt64Value {
         ctx: ::buffa::DecodeContext<'_>,
     ) -> ::core::result::Result<(), ::buffa::DecodeError> {
         ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
+    }
+    #[inline]
+    fn merge_group(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        field_number: u32,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
     }
 }
 impl ::buffa::ExtensionSet for UInt64Value {
@@ -1211,6 +1247,15 @@ impl ::buffa::Message for Int32Value {
     ) -> ::core::result::Result<(), ::buffa::DecodeError> {
         ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
     }
+    #[inline]
+    fn merge_group(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        field_number: u32,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
+    }
 }
 impl ::buffa::ExtensionSet for Int32Value {
     const PROTO_FQN: &'static str = "google.protobuf.Int32Value";
@@ -1461,6 +1506,15 @@ impl ::buffa::Message for UInt32Value {
         ctx: ::buffa::DecodeContext<'_>,
     ) -> ::core::result::Result<(), ::buffa::DecodeError> {
         ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
+    }
+    #[inline]
+    fn merge_group(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        field_number: u32,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
     }
 }
 impl ::buffa::ExtensionSet for UInt32Value {
@@ -1713,6 +1767,15 @@ impl ::buffa::Message for BoolValue {
     ) -> ::core::result::Result<(), ::buffa::DecodeError> {
         ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
     }
+    #[inline]
+    fn merge_group(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        field_number: u32,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
+    }
 }
 impl ::buffa::ExtensionSet for BoolValue {
     const PROTO_FQN: &'static str = "google.protobuf.BoolValue";
@@ -1964,6 +2027,15 @@ impl ::buffa::Message for StringValue {
     ) -> ::core::result::Result<(), ::buffa::DecodeError> {
         ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
     }
+    #[inline]
+    fn merge_group(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        field_number: u32,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
+    }
 }
 impl ::buffa::ExtensionSet for StringValue {
     const PROTO_FQN: &'static str = "google.protobuf.StringValue";
@@ -2214,6 +2286,15 @@ impl ::buffa::Message for BytesValue {
         ctx: ::buffa::DecodeContext<'_>,
     ) -> ::core::result::Result<(), ::buffa::DecodeError> {
         ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
+    }
+    #[inline]
+    fn merge_group(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        field_number: u32,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
     }
 }
 impl ::buffa::ExtensionSet for BytesValue {

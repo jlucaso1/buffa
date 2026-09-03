@@ -878,6 +878,12 @@ pub trait Message: DefaultInstance + Clone + PartialEq + Send + Sync {
     /// alone changes top-level decoding only; an implementation that needs
     /// its own loop on every path must override all three.
     ///
+    /// # Errors
+    ///
+    /// Returns the first error from decoding a tag or from
+    /// [`merge_field`](Self::merge_field); on error the message is left in
+    /// an unspecified, partially merged state.
+    ///
     /// `ctx` carries the remaining nesting depth and the shared allocation
     /// budget.  Each call to
     /// [`merge_length_delimited`](Self::merge_length_delimited) consumes one
@@ -888,10 +894,7 @@ pub trait Message: DefaultInstance + Clone + PartialEq + Send + Sync {
         buf: &mut impl Buf,
         ctx: DecodeContext<'_>,
         limit: usize,
-    ) -> Result<(), DecodeError>
-    where
-        Self: Sized,
-    {
+    ) -> Result<(), DecodeError> {
         merge_to_limit_erased(self, buf, ctx, limit)
     }
 
@@ -915,10 +918,7 @@ pub trait Message: DefaultInstance + Clone + PartialEq + Send + Sync {
         buf: &mut impl Buf,
         ctx: DecodeContext<'_>,
         field_number: u32,
-    ) -> Result<(), DecodeError>
-    where
-        Self: Sized,
-    {
+    ) -> Result<(), DecodeError> {
         merge_group_erased(self, buf, ctx, field_number)
     }
 
@@ -986,10 +986,7 @@ pub trait Message: DefaultInstance + Clone + PartialEq + Send + Sync {
         &mut self,
         buf: &mut impl Buf,
         ctx: DecodeContext<'_>,
-    ) -> Result<(), DecodeError>
-    where
-        Self: Sized,
-    {
+    ) -> Result<(), DecodeError> {
         merge_length_delimited_erased(self, buf, ctx)
     }
 

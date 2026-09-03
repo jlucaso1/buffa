@@ -2240,9 +2240,11 @@ fn editions_delimited_message_encoding() {
     // If the map-entry exemption fails, codegen panics in type_encoded_size_expr
     // (TYPE_GROUP is unreachable there), so reaching this line is the key
     // evidence. Spot-check group-decode call counts: only delim_child should
-    // use them (merge_group in owned impl, borrow_group in view).
+    // use them (a `Message::merge_group` call in the owned impl, borrow_group
+    // in the view). Tiny messages also emit a `merge_group` *override*, which
+    // is a definition rather than a group-decoding call site.
     assert_eq!(
-        content.matches("merge_group").count(),
+        content.matches("::buffa::Message::merge_group(").count(),
         1,
         "owned: {content}"
     );

@@ -2552,6 +2552,15 @@ pub mod descriptor_proto {
         ) -> ::core::result::Result<(), ::buffa::DecodeError> {
             ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
         }
+        #[inline]
+        fn merge_group(
+            &mut self,
+            buf: &mut impl ::buffa::bytes::Buf,
+            ctx: ::buffa::DecodeContext<'_>,
+            field_number: u32,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
+        }
     }
     impl ::buffa::ExtensionSet for ExtensionRange {
         const PROTO_FQN: &'static str = "google.protobuf.DescriptorProto.ExtensionRange";
@@ -2799,6 +2808,15 @@ pub mod descriptor_proto {
             ctx: ::buffa::DecodeContext<'_>,
         ) -> ::core::result::Result<(), ::buffa::DecodeError> {
             ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
+        }
+        #[inline]
+        fn merge_group(
+            &mut self,
+            buf: &mut impl ::buffa::bytes::Buf,
+            ctx: ::buffa::DecodeContext<'_>,
+            field_number: u32,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
         }
     }
     impl ::buffa::ExtensionSet for ReservedRange {
@@ -5305,6 +5323,15 @@ impl ::buffa::Message for OneofDescriptorProto {
     ) -> ::core::result::Result<(), ::buffa::DecodeError> {
         ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
     }
+    #[inline]
+    fn merge_group(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        field_number: u32,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
+    }
 }
 impl ::buffa::ExtensionSet for OneofDescriptorProto {
     const PROTO_FQN: &'static str = "google.protobuf.OneofDescriptorProto";
@@ -5999,6 +6026,15 @@ pub mod enum_descriptor_proto {
         ) -> ::core::result::Result<(), ::buffa::DecodeError> {
             ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
         }
+        #[inline]
+        fn merge_group(
+            &mut self,
+            buf: &mut impl ::buffa::bytes::Buf,
+            ctx: ::buffa::DecodeContext<'_>,
+            field_number: u32,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
+        }
     }
     impl ::buffa::ExtensionSet for EnumReservedRange {
         const PROTO_FQN: &'static str = "google.protobuf.EnumDescriptorProto.EnumReservedRange";
@@ -6283,6 +6319,15 @@ impl ::buffa::Message for EnumValueDescriptorProto {
         ctx: ::buffa::DecodeContext<'_>,
     ) -> ::core::result::Result<(), ::buffa::DecodeError> {
         ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
+    }
+    #[inline]
+    fn merge_group(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        field_number: u32,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
     }
 }
 impl ::buffa::ExtensionSet for EnumValueDescriptorProto {
@@ -11774,6 +11819,15 @@ pub mod field_options {
         ) -> ::core::result::Result<(), ::buffa::DecodeError> {
             ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
         }
+        #[inline]
+        fn merge_group(
+            &mut self,
+            buf: &mut impl ::buffa::bytes::Buf,
+            ctx: ::buffa::DecodeContext<'_>,
+            field_number: u32,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
+        }
     }
     impl ::buffa::ExtensionSet for EditionDefault {
         const PROTO_FQN: &'static str = "google.protobuf.FieldOptions.EditionDefault";
@@ -12145,6 +12199,15 @@ pub mod field_options {
             ctx: ::buffa::DecodeContext<'_>,
         ) -> ::core::result::Result<(), ::buffa::DecodeError> {
             ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
+        }
+        #[inline]
+        fn merge_group(
+            &mut self,
+            buf: &mut impl ::buffa::bytes::Buf,
+            ctx: ::buffa::DecodeContext<'_>,
+            field_number: u32,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
         }
     }
     impl ::buffa::ExtensionSet for FeatureSupport {
@@ -15631,6 +15694,15 @@ pub mod uninterpreted_option {
         ) -> ::core::result::Result<(), ::buffa::DecodeError> {
             ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
         }
+        #[inline]
+        fn merge_group(
+            &mut self,
+            buf: &mut impl ::buffa::bytes::Buf,
+            ctx: ::buffa::DecodeContext<'_>,
+            field_number: u32,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
+        }
     }
     impl ::buffa::ExtensionSet for NamePart {
         const PROTO_FQN: &'static str = "google.protobuf.UninterpretedOption.NamePart";
@@ -17809,23 +17881,6 @@ pub mod feature_set {
         fn clear(&mut self) {
             self.__buffa_unknown_fields.clear();
         }
-        #[inline]
-        fn merge_to_limit(
-            &mut self,
-            buf: &mut impl ::buffa::bytes::Buf,
-            ctx: ::buffa::DecodeContext<'_>,
-            limit: usize,
-        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
-            ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
-        }
-        #[inline]
-        fn merge_length_delimited(
-            &mut self,
-            buf: &mut impl ::buffa::bytes::Buf,
-            ctx: ::buffa::DecodeContext<'_>,
-        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
-            ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
-        }
     }
     impl ::buffa::ExtensionSet for VisibilityFeature {
         const PROTO_FQN: &'static str = "google.protobuf.FeatureSet.VisibilityFeature";
@@ -18650,6 +18705,15 @@ pub mod feature_set_defaults {
             ctx: ::buffa::DecodeContext<'_>,
         ) -> ::core::result::Result<(), ::buffa::DecodeError> {
             ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
+        }
+        #[inline]
+        fn merge_group(
+            &mut self,
+            buf: &mut impl ::buffa::bytes::Buf,
+            ctx: ::buffa::DecodeContext<'_>,
+            field_number: u32,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
         }
     }
     impl ::buffa::ExtensionSet for FeatureSetEditionDefault {
