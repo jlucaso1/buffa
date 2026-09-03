@@ -1,0 +1,4 @@
+kind: Changed
+body: |-
+    **One call per sub-message field in the generated encoders.** `compute_size` arms record a sub-message's size with the new `SizeCache::record_submessage` (store the slot and return the length-prefixed payload size in one call) and `write_to` arms emit its tag and length prefix with `buffa::types::put_submessage_header`, instead of spelling out `set` + `varint_len` and `consume_next` + `put_len_delimited_header` in every message-typed arm. Both are `#[inline]`, so speed-optimised builds see the same code as before; size-optimised builds get one out-of-line call per arm instead of two or three.
+time: 2026-09-03T17:00:00.000000-03:00

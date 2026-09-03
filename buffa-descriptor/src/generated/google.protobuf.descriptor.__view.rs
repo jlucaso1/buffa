@@ -116,10 +116,7 @@ impl<'a> ::buffa::ViewEncode<'a> for FileDescriptorSetView<'a> {
         for v in &self.file {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -133,11 +130,7 @@ impl<'a> ::buffa::ViewEncode<'a> for FileDescriptorSetView<'a> {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
         for v in &self.file {
-            ::buffa::types::put_len_delimited_header(
-                1u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(1u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -771,50 +764,32 @@ impl<'a> ::buffa::ViewEncode<'a> for FileDescriptorProtoView<'a> {
         for v in &self.message_type {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.enum_type {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.service {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.extension {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         if let ::core::option::Option::Some(__v) = self.options.as_option() {
             let __slot = __cache.reserve();
             let inner_size = __v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         if let ::core::option::Option::Some(__v) = self.source_code_info.as_option() {
             let __slot = __cache.reserve();
             let inner_size = __v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.public_dependency {
             size += 1u64 + ::buffa::types::int32_encoded_len(*v) as u64;
@@ -852,51 +827,27 @@ impl<'a> ::buffa::ViewEncode<'a> for FileDescriptorProtoView<'a> {
             ::buffa::types::put_string_field(3u32, v, buf);
         }
         for v in &self.message_type {
-            ::buffa::types::put_len_delimited_header(
-                4u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(4u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         for v in &self.enum_type {
-            ::buffa::types::put_len_delimited_header(
-                5u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(5u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         for v in &self.service {
-            ::buffa::types::put_len_delimited_header(
-                6u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(6u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         for v in &self.extension {
-            ::buffa::types::put_len_delimited_header(
-                7u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(7u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         if let ::core::option::Option::Some(__v) = self.options.as_option() {
-            ::buffa::types::put_len_delimited_header(
-                8u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(8u32, __cache, buf);
             __v.write_to(__cache, buf);
         }
         if let ::core::option::Option::Some(__v) = self.source_code_info.as_option() {
-            ::buffa::types::put_len_delimited_header(
-                9u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(9u32, __cache, buf);
             __v.write_to(__cache, buf);
         }
         for v in &self.public_dependency {
@@ -1698,66 +1649,42 @@ impl<'a> ::buffa::ViewEncode<'a> for DescriptorProtoView<'a> {
         for v in &self.field {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.nested_type {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.enum_type {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.extension_range {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.extension {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         if let ::core::option::Option::Some(__v) = self.options.as_option() {
             let __slot = __cache.reserve();
             let inner_size = __v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.oneof_decl {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.reserved_range {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.reserved_name {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
@@ -1780,67 +1707,35 @@ impl<'a> ::buffa::ViewEncode<'a> for DescriptorProtoView<'a> {
             ::buffa::types::put_string_field(1u32, v, buf);
         }
         for v in &self.field {
-            ::buffa::types::put_len_delimited_header(
-                2u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(2u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         for v in &self.nested_type {
-            ::buffa::types::put_len_delimited_header(
-                3u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(3u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         for v in &self.enum_type {
-            ::buffa::types::put_len_delimited_header(
-                4u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(4u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         for v in &self.extension_range {
-            ::buffa::types::put_len_delimited_header(
-                5u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(5u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         for v in &self.extension {
-            ::buffa::types::put_len_delimited_header(
-                6u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(6u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         if let ::core::option::Option::Some(__v) = self.options.as_option() {
-            ::buffa::types::put_len_delimited_header(
-                7u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(7u32, __cache, buf);
             __v.write_to(__cache, buf);
         }
         for v in &self.oneof_decl {
-            ::buffa::types::put_len_delimited_header(
-                8u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(8u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         for v in &self.reserved_range {
-            ::buffa::types::put_len_delimited_header(
-                9u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(9u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         for v in &self.reserved_name {
@@ -2279,10 +2174,7 @@ pub mod descriptor_proto {
             if let ::core::option::Option::Some(__v) = self.options.as_option() {
                 let __slot = __cache.reserve();
                 let inner_size = __v.compute_size(__cache);
-                __cache.set(__slot, inner_size);
-                size
-                    += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                        + inner_size as u64;
+                size += 1u64 + __cache.record_submessage(__slot, inner_size);
             }
             size += self.__buffa_unknown_fields.encoded_len() as u64;
             ::buffa::saturate_size(size)
@@ -2302,11 +2194,7 @@ pub mod descriptor_proto {
                 ::buffa::types::put_int32_field(2u32, v, buf);
             }
             if let ::core::option::Option::Some(__v) = self.options.as_option() {
-                ::buffa::types::put_len_delimited_header(
-                    3u32,
-                    u64::from(__cache.consume_next()),
-                    buf,
-                );
+                ::buffa::types::put_submessage_header(3u32, __cache, buf);
                 __v.write_to(__cache, buf);
             }
             self.__buffa_unknown_fields.write_to(buf);
@@ -3022,10 +2910,7 @@ impl<'a> ::buffa::ViewEncode<'a> for ExtensionRangeOptionsView<'a> {
         for v in &self.declaration {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         if let Some(ref v) = self.verification {
             size += 1u64 + ::buffa::types::int32_encoded_len(v.to_i32()) as u64;
@@ -3033,18 +2918,12 @@ impl<'a> ::buffa::ViewEncode<'a> for ExtensionRangeOptionsView<'a> {
         if let ::core::option::Option::Some(__v) = self.features.as_option() {
             let __slot = __cache.reserve();
             let inner_size = __v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.uninterpreted_option {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -3058,30 +2937,18 @@ impl<'a> ::buffa::ViewEncode<'a> for ExtensionRangeOptionsView<'a> {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
         for v in &self.declaration {
-            ::buffa::types::put_len_delimited_header(
-                2u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(2u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         if let Some(ref v) = self.verification {
             ::buffa::types::put_int32_field(3u32, v.to_i32(), buf);
         }
         if let ::core::option::Option::Some(__v) = self.features.as_option() {
-            ::buffa::types::put_len_delimited_header(
-                50u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(50u32, __cache, buf);
             __v.write_to(__cache, buf);
         }
         for v in &self.uninterpreted_option {
-            ::buffa::types::put_len_delimited_header(
-                999u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(999u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -3981,10 +3848,7 @@ impl<'a> ::buffa::ViewEncode<'a> for FieldDescriptorProtoView<'a> {
         if let ::core::option::Option::Some(__v) = self.options.as_option() {
             let __slot = __cache.reserve();
             let inner_size = __v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         if let Some(v) = self.oneof_index {
             size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
@@ -4028,11 +3892,7 @@ impl<'a> ::buffa::ViewEncode<'a> for FieldDescriptorProtoView<'a> {
             ::buffa::types::put_string_field(7u32, v, buf);
         }
         if let ::core::option::Option::Some(__v) = self.options.as_option() {
-            ::buffa::types::put_len_delimited_header(
-                8u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(8u32, __cache, buf);
             __v.write_to(__cache, buf);
         }
         if let Some(v) = self.oneof_index {
@@ -4462,10 +4322,7 @@ impl<'a> ::buffa::ViewEncode<'a> for OneofDescriptorProtoView<'a> {
         if let ::core::option::Option::Some(__v) = self.options.as_option() {
             let __slot = __cache.reserve();
             let inner_size = __v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -4482,11 +4339,7 @@ impl<'a> ::buffa::ViewEncode<'a> for OneofDescriptorProtoView<'a> {
             ::buffa::types::put_string_field(1u32, v, buf);
         }
         if let ::core::option::Option::Some(__v) = self.options.as_option() {
-            ::buffa::types::put_len_delimited_header(
-                2u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(2u32, __cache, buf);
             __v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -4902,26 +4755,17 @@ impl<'a> ::buffa::ViewEncode<'a> for EnumDescriptorProtoView<'a> {
         for v in &self.value {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         if let ::core::option::Option::Some(__v) = self.options.as_option() {
             let __slot = __cache.reserve();
             let inner_size = __v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.reserved_range {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.reserved_name {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
@@ -4944,27 +4788,15 @@ impl<'a> ::buffa::ViewEncode<'a> for EnumDescriptorProtoView<'a> {
             ::buffa::types::put_string_field(1u32, v, buf);
         }
         for v in &self.value {
-            ::buffa::types::put_len_delimited_header(
-                2u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(2u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         if let ::core::option::Option::Some(__v) = self.options.as_option() {
-            ::buffa::types::put_len_delimited_header(
-                3u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(3u32, __cache, buf);
             __v.write_to(__cache, buf);
         }
         for v in &self.reserved_range {
-            ::buffa::types::put_len_delimited_header(
-                4u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(4u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         for v in &self.reserved_name {
@@ -5646,10 +5478,7 @@ impl<'a> ::buffa::ViewEncode<'a> for EnumValueDescriptorProtoView<'a> {
         if let ::core::option::Option::Some(__v) = self.options.as_option() {
             let __slot = __cache.reserve();
             let inner_size = __v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -5669,11 +5498,7 @@ impl<'a> ::buffa::ViewEncode<'a> for EnumValueDescriptorProtoView<'a> {
             ::buffa::types::put_int32_field(2u32, v, buf);
         }
         if let ::core::option::Option::Some(__v) = self.options.as_option() {
-            ::buffa::types::put_len_delimited_header(
-                3u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(3u32, __cache, buf);
             __v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -6014,18 +5839,12 @@ impl<'a> ::buffa::ViewEncode<'a> for ServiceDescriptorProtoView<'a> {
         for v in &self.method {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         if let ::core::option::Option::Some(__v) = self.options.as_option() {
             let __slot = __cache.reserve();
             let inner_size = __v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -6042,19 +5861,11 @@ impl<'a> ::buffa::ViewEncode<'a> for ServiceDescriptorProtoView<'a> {
             ::buffa::types::put_string_field(1u32, v, buf);
         }
         for v in &self.method {
-            ::buffa::types::put_len_delimited_header(
-                2u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(2u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         if let ::core::option::Option::Some(__v) = self.options.as_option() {
-            ::buffa::types::put_len_delimited_header(
-                3u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(3u32, __cache, buf);
             __v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -6410,10 +6221,7 @@ impl<'a> ::buffa::ViewEncode<'a> for MethodDescriptorProtoView<'a> {
         if let ::core::option::Option::Some(__v) = self.options.as_option() {
             let __slot = __cache.reserve();
             let inner_size = __v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         if self.client_streaming.is_some() {
             size += 1u64 + ::buffa::types::BOOL_ENCODED_LEN as u64;
@@ -6442,11 +6250,7 @@ impl<'a> ::buffa::ViewEncode<'a> for MethodDescriptorProtoView<'a> {
             ::buffa::types::put_string_field(3u32, v, buf);
         }
         if let ::core::option::Option::Some(__v) = self.options.as_option() {
-            ::buffa::types::put_len_delimited_header(
-                4u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(4u32, __cache, buf);
             __v.write_to(__cache, buf);
         }
         if let Some(v) = self.client_streaming {
@@ -7190,18 +6994,12 @@ impl<'a> ::buffa::ViewEncode<'a> for FileOptionsView<'a> {
         if let ::core::option::Option::Some(__v) = self.features.as_option() {
             let __slot = __cache.reserve();
             let inner_size = __v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.uninterpreted_option {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -7272,19 +7070,11 @@ impl<'a> ::buffa::ViewEncode<'a> for FileOptionsView<'a> {
             ::buffa::types::put_string_field(45u32, v, buf);
         }
         if let ::core::option::Option::Some(__v) = self.features.as_option() {
-            ::buffa::types::put_len_delimited_header(
-                50u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(50u32, __cache, buf);
             __v.write_to(__cache, buf);
         }
         for v in &self.uninterpreted_option {
-            ::buffa::types::put_len_delimited_header(
-                999u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(999u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -7993,18 +7783,12 @@ impl<'a> ::buffa::ViewEncode<'a> for MessageOptionsView<'a> {
         if let ::core::option::Option::Some(__v) = self.features.as_option() {
             let __slot = __cache.reserve();
             let inner_size = __v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.uninterpreted_option {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -8033,19 +7817,11 @@ impl<'a> ::buffa::ViewEncode<'a> for MessageOptionsView<'a> {
             ::buffa::types::put_bool_field(11u32, v, buf);
         }
         if let ::core::option::Option::Some(__v) = self.features.as_option() {
-            ::buffa::types::put_len_delimited_header(
-                12u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(12u32, __cache, buf);
             __v.write_to(__cache, buf);
         }
         for v in &self.uninterpreted_option {
-            ::buffa::types::put_len_delimited_header(
-                999u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(999u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -8812,34 +8588,22 @@ impl<'a> ::buffa::ViewEncode<'a> for FieldOptionsView<'a> {
         for v in &self.edition_defaults {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
         if let ::core::option::Option::Some(__v) = self.features.as_option() {
             let __slot = __cache.reserve();
             let inner_size = __v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
         if let ::core::option::Option::Some(__v) = self.feature_support.as_option() {
             let __slot = __cache.reserve();
             let inner_size = __v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.uninterpreted_option {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -8883,35 +8647,19 @@ impl<'a> ::buffa::ViewEncode<'a> for FieldOptionsView<'a> {
             ::buffa::types::put_int32_field(19u32, v.to_i32(), buf);
         }
         for v in &self.edition_defaults {
-            ::buffa::types::put_len_delimited_header(
-                20u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(20u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         if let ::core::option::Option::Some(__v) = self.features.as_option() {
-            ::buffa::types::put_len_delimited_header(
-                21u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(21u32, __cache, buf);
             __v.write_to(__cache, buf);
         }
         if let ::core::option::Option::Some(__v) = self.feature_support.as_option() {
-            ::buffa::types::put_len_delimited_header(
-                22u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(22u32, __cache, buf);
             __v.write_to(__cache, buf);
         }
         for v in &self.uninterpreted_option {
-            ::buffa::types::put_len_delimited_header(
-                999u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(999u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -10158,18 +9906,12 @@ impl<'a> ::buffa::ViewEncode<'a> for OneofOptionsView<'a> {
         if let ::core::option::Option::Some(__v) = self.features.as_option() {
             let __slot = __cache.reserve();
             let inner_size = __v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.uninterpreted_option {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -10183,19 +9925,11 @@ impl<'a> ::buffa::ViewEncode<'a> for OneofOptionsView<'a> {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
         if let ::core::option::Option::Some(__v) = self.features.as_option() {
-            ::buffa::types::put_len_delimited_header(
-                1u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(1u32, __cache, buf);
             __v.write_to(__cache, buf);
         }
         for v in &self.uninterpreted_option {
-            ::buffa::types::put_len_delimited_header(
-                999u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(999u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -10582,18 +10316,12 @@ impl<'a> ::buffa::ViewEncode<'a> for EnumOptionsView<'a> {
         if let ::core::option::Option::Some(__v) = self.features.as_option() {
             let __slot = __cache.reserve();
             let inner_size = __v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.uninterpreted_option {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -10616,19 +10344,11 @@ impl<'a> ::buffa::ViewEncode<'a> for EnumOptionsView<'a> {
             ::buffa::types::put_bool_field(6u32, v, buf);
         }
         if let ::core::option::Option::Some(__v) = self.features.as_option() {
-            ::buffa::types::put_len_delimited_header(
-                7u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(7u32, __cache, buf);
             __v.write_to(__cache, buf);
         }
         for v in &self.uninterpreted_option {
-            ::buffa::types::put_len_delimited_header(
-                999u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(999u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -11061,10 +10781,7 @@ impl<'a> ::buffa::ViewEncode<'a> for EnumValueOptionsView<'a> {
         if let ::core::option::Option::Some(__v) = self.features.as_option() {
             let __slot = __cache.reserve();
             let inner_size = __v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         if self.debug_redact.is_some() {
             size += 1u64 + ::buffa::types::BOOL_ENCODED_LEN as u64;
@@ -11072,18 +10789,12 @@ impl<'a> ::buffa::ViewEncode<'a> for EnumValueOptionsView<'a> {
         if let ::core::option::Option::Some(__v) = self.feature_support.as_option() {
             let __slot = __cache.reserve();
             let inner_size = __v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.uninterpreted_option {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -11100,30 +10811,18 @@ impl<'a> ::buffa::ViewEncode<'a> for EnumValueOptionsView<'a> {
             ::buffa::types::put_bool_field(1u32, v, buf);
         }
         if let ::core::option::Option::Some(__v) = self.features.as_option() {
-            ::buffa::types::put_len_delimited_header(
-                2u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(2u32, __cache, buf);
             __v.write_to(__cache, buf);
         }
         if let Some(v) = self.debug_redact {
             ::buffa::types::put_bool_field(3u32, v, buf);
         }
         if let ::core::option::Option::Some(__v) = self.feature_support.as_option() {
-            ::buffa::types::put_len_delimited_header(
-                4u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(4u32, __cache, buf);
             __v.write_to(__cache, buf);
         }
         for v in &self.uninterpreted_option {
-            ::buffa::types::put_len_delimited_header(
-                999u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(999u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -11519,18 +11218,12 @@ impl<'a> ::buffa::ViewEncode<'a> for ServiceOptionsView<'a> {
         if let ::core::option::Option::Some(__v) = self.features.as_option() {
             let __slot = __cache.reserve();
             let inner_size = __v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.uninterpreted_option {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -11547,19 +11240,11 @@ impl<'a> ::buffa::ViewEncode<'a> for ServiceOptionsView<'a> {
             ::buffa::types::put_bool_field(33u32, v, buf);
         }
         if let ::core::option::Option::Some(__v) = self.features.as_option() {
-            ::buffa::types::put_len_delimited_header(
-                34u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(34u32, __cache, buf);
             __v.write_to(__cache, buf);
         }
         for v in &self.uninterpreted_option {
-            ::buffa::types::put_len_delimited_header(
-                999u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(999u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -11956,18 +11641,12 @@ impl<'a> ::buffa::ViewEncode<'a> for MethodOptionsView<'a> {
         if let ::core::option::Option::Some(__v) = self.features.as_option() {
             let __slot = __cache.reserve();
             let inner_size = __v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.uninterpreted_option {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -11987,19 +11666,11 @@ impl<'a> ::buffa::ViewEncode<'a> for MethodOptionsView<'a> {
             ::buffa::types::put_int32_field(34u32, v.to_i32(), buf);
         }
         if let ::core::option::Option::Some(__v) = self.features.as_option() {
-            ::buffa::types::put_len_delimited_header(
-                35u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(35u32, __cache, buf);
             __v.write_to(__cache, buf);
         }
         for v in &self.uninterpreted_option {
-            ::buffa::types::put_len_delimited_header(
-                999u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(999u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -12399,10 +12070,7 @@ impl<'a> ::buffa::ViewEncode<'a> for UninterpretedOptionView<'a> {
         for v in &self.name {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         if let Some(ref v) = self.identifier_value {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
@@ -12434,11 +12102,7 @@ impl<'a> ::buffa::ViewEncode<'a> for UninterpretedOptionView<'a> {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
         for v in &self.name {
-            ::buffa::types::put_len_delimited_header(
-                2u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(2u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         if let Some(ref v) = self.identifier_value {
@@ -13959,10 +13623,7 @@ impl<'a> ::buffa::ViewEncode<'a> for FeatureSetDefaultsView<'a> {
         for v in &self.defaults {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         if let Some(ref v) = self.minimum_edition {
             size += 1u64 + ::buffa::types::int32_encoded_len(v.to_i32()) as u64;
@@ -13982,11 +13643,7 @@ impl<'a> ::buffa::ViewEncode<'a> for FeatureSetDefaultsView<'a> {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
         for v in &self.defaults {
-            ::buffa::types::put_len_delimited_header(
-                1u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(1u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         if let Some(ref v) = self.minimum_edition {
@@ -14363,18 +14020,12 @@ pub mod feature_set_defaults {
             {
                 let __slot = __cache.reserve();
                 let inner_size = __v.compute_size(__cache);
-                __cache.set(__slot, inner_size);
-                size
-                    += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                        + inner_size as u64;
+                size += 1u64 + __cache.record_submessage(__slot, inner_size);
             }
             if let ::core::option::Option::Some(__v) = self.fixed_features.as_option() {
                 let __slot = __cache.reserve();
                 let inner_size = __v.compute_size(__cache);
-                __cache.set(__slot, inner_size);
-                size
-                    += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                        + inner_size as u64;
+                size += 1u64 + __cache.record_submessage(__slot, inner_size);
             }
             size += self.__buffa_unknown_fields.encoded_len() as u64;
             ::buffa::saturate_size(size)
@@ -14394,19 +14045,11 @@ pub mod feature_set_defaults {
                 .overridable_features
                 .as_option()
             {
-                ::buffa::types::put_len_delimited_header(
-                    4u32,
-                    u64::from(__cache.consume_next()),
-                    buf,
-                );
+                ::buffa::types::put_submessage_header(4u32, __cache, buf);
                 __v.write_to(__cache, buf);
             }
             if let ::core::option::Option::Some(__v) = self.fixed_features.as_option() {
-                ::buffa::types::put_len_delimited_header(
-                    5u32,
-                    u64::from(__cache.consume_next()),
-                    buf,
-                );
+                ::buffa::types::put_submessage_header(5u32, __cache, buf);
                 __v.write_to(__cache, buf);
             }
             self.__buffa_unknown_fields.write_to(buf);
@@ -14779,10 +14422,7 @@ impl<'a> ::buffa::ViewEncode<'a> for SourceCodeInfoView<'a> {
         for v in &self.location {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -14796,11 +14436,7 @@ impl<'a> ::buffa::ViewEncode<'a> for SourceCodeInfoView<'a> {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
         for v in &self.location {
-            ::buffa::types::put_len_delimited_header(
-                1u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(1u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -15723,10 +15359,7 @@ impl<'a> ::buffa::ViewEncode<'a> for GeneratedCodeInfoView<'a> {
         for v in &self.annotation {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -15740,11 +15373,7 @@ impl<'a> ::buffa::ViewEncode<'a> for GeneratedCodeInfoView<'a> {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
         for v in &self.annotation {
-            ::buffa::types::put_len_delimited_header(
-                1u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(1u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);

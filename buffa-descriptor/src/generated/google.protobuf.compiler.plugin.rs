@@ -485,26 +485,17 @@ impl ::buffa::Message for CodeGeneratorRequest {
         if let ::core::option::Option::Some(__v) = self.compiler_version.as_option() {
             let __slot = __cache.reserve();
             let inner_size = __v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.proto_file {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.source_file_descriptors {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -523,27 +514,15 @@ impl ::buffa::Message for CodeGeneratorRequest {
             ::buffa::types::put_string_field(2u32, v, buf);
         }
         if let ::core::option::Option::Some(__v) = self.compiler_version.as_option() {
-            ::buffa::types::put_len_delimited_header(
-                3u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(3u32, __cache, buf);
             __v.write_to(__cache, buf);
         }
         for v in &self.proto_file {
-            ::buffa::types::put_len_delimited_header(
-                15u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(15u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         for v in &self.source_file_descriptors {
-            ::buffa::types::put_len_delimited_header(
-                17u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(17u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -939,10 +918,7 @@ impl ::buffa::Message for CodeGeneratorResponse {
         for v in &self.file {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -967,11 +943,7 @@ impl ::buffa::Message for CodeGeneratorResponse {
             ::buffa::types::put_int32_field(4u32, v, buf);
         }
         for v in &self.file {
-            ::buffa::types::put_len_delimited_header(
-                15u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(15u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -1522,10 +1494,7 @@ pub mod code_generator_response {
             {
                 let __slot = __cache.reserve();
                 let inner_size = __v.compute_size(__cache);
-                __cache.set(__slot, inner_size);
-                size
-                    += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                        + inner_size as u64;
+                size += 2u64 + __cache.record_submessage(__slot, inner_size);
             }
             size += self.__buffa_unknown_fields.encoded_len() as u64;
             ::buffa::saturate_size(size)
@@ -1550,11 +1519,7 @@ pub mod code_generator_response {
                 .generated_code_info
                 .as_option()
             {
-                ::buffa::types::put_len_delimited_header(
-                    16u32,
-                    u64::from(__cache.consume_next()),
-                    buf,
-                );
+                ::buffa::types::put_submessage_header(16u32, __cache, buf);
                 __v.write_to(__cache, buf);
             }
             self.__buffa_unknown_fields.write_to(buf);

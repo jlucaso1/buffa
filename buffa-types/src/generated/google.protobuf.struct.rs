@@ -603,18 +603,12 @@ impl ::buffa::Message for Value {
                 __buffa::oneof::value::Kind::StructValue(x) => {
                     let __slot = __cache.reserve();
                     let inner = x.compute_size(__cache);
-                    __cache.set(__slot, inner);
-                    size
-                        += 1u64 + ::buffa::encoding::varint_len(inner as u64) as u64
-                            + inner as u64;
+                    size += 1u64 + __cache.record_submessage(__slot, inner);
                 }
                 __buffa::oneof::value::Kind::ListValue(x) => {
                     let __slot = __cache.reserve();
                     let inner = x.compute_size(__cache);
-                    __cache.set(__slot, inner);
-                    size
-                        += 1u64 + ::buffa::encoding::varint_len(inner as u64) as u64
-                            + inner as u64;
+                    size += 1u64 + __cache.record_submessage(__slot, inner);
                 }
             }
         }
@@ -643,19 +637,11 @@ impl ::buffa::Message for Value {
                     ::buffa::types::put_bool_field(4u32, *x, buf);
                 }
                 __buffa::oneof::value::Kind::StructValue(x) => {
-                    ::buffa::types::put_len_delimited_header(
-                        5u32,
-                        u64::from(__cache.consume_next()),
-                        buf,
-                    );
+                    ::buffa::types::put_submessage_header(5u32, __cache, buf);
                     x.write_to(__cache, buf);
                 }
                 __buffa::oneof::value::Kind::ListValue(x) => {
-                    ::buffa::types::put_len_delimited_header(
-                        6u32,
-                        u64::from(__cache.consume_next()),
-                        buf,
-                    );
+                    ::buffa::types::put_submessage_header(6u32, __cache, buf);
                     x.write_to(__cache, buf);
                 }
             }
@@ -1052,10 +1038,7 @@ impl ::buffa::Message for ListValue {
         for v in &self.values {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -1068,11 +1051,7 @@ impl ::buffa::Message for ListValue {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
         for v in &self.values {
-            ::buffa::types::put_len_delimited_header(
-                1u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(1u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);

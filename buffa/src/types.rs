@@ -876,6 +876,21 @@ pub fn put_len_delimited_header(field_number: u32, len: u64, buf: &mut impl Enco
     encode_varint(len, buf);
 }
 
+/// Write a message field's tag and the length prefix recorded for it by the
+/// preceding `compute_size` pass (the next `SizeCache` slot).
+///
+/// One call for what generated code used to spell as `consume_next` +
+/// [`put_len_delimited_header`]: every message-typed field arm in every
+/// `write_to` repeats that sequence.
+#[inline]
+pub fn put_submessage_header(
+    field_number: u32,
+    cache: &mut crate::SizeCache,
+    buf: &mut impl EncodeSink,
+) {
+    put_len_delimited_header(field_number, u64::from(cache.consume_next()), buf);
+}
+
 /// Write a group field's `StartGroup` tag.
 #[inline(always)]
 pub fn put_group_start(field_number: u32, buf: &mut impl EncodeSink) {

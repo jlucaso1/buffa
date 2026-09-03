@@ -1733,10 +1733,7 @@ fn scalar_compute_size_stmt(
                 if let ::core::option::Option::Some(__v) = self.#ident.as_option() {
                     let __slot = __cache.reserve();
                     let inner_size = __v.compute_size(__cache);
-                    __cache.set(__slot, inner_size);
-                    size += #tag_len
-                        + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                        + inner_size as u64;
+                    size += #tag_len + __cache.record_submessage(__slot, inner_size);
                 }
             });
         }
@@ -1858,11 +1855,7 @@ fn scalar_write_to_stmt(
             // `as_option()` for the same reason as in `compute_size`.
             return Ok(quote! {
                 if let ::core::option::Option::Some(__v) = self.#ident.as_option() {
-                    ::buffa::types::put_len_delimited_header(
-                        #field_number,
-                        u64::from(__cache.consume_next()),
-                        buf,
-                    );
+                    ::buffa::types::put_submessage_header(#field_number, __cache, buf);
                     __v.write_to(__cache, buf);
                 }
             });
@@ -2260,10 +2253,7 @@ fn repeated_compute_size_stmt(
             for v in #elems {
                 let __slot = __cache.reserve();
                 let inner_size = v.compute_size(__cache);
-                __cache.set(__slot, inner_size);
-                size += #ld_tag_len
-                    + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+                size += #ld_tag_len + __cache.record_submessage(__slot, inner_size);
             }
         });
     }
@@ -2351,11 +2341,7 @@ fn repeated_write_to_stmt(
     if ty == Type::TYPE_MESSAGE {
         return Ok(quote! {
             for v in #elems {
-                ::buffa::types::put_len_delimited_header(
-                    #field_number,
-                    u64::from(__cache.consume_next()),
-                    buf,
-                );
+                ::buffa::types::put_submessage_header(#field_number, __cache, buf);
                 v.write_to(__cache, buf);
             }
         });
@@ -2707,10 +2693,7 @@ fn oneof_size_arm(
             #enum_ident::#variant_ident(x) => {
                 let __slot = __cache.reserve();
                 let inner = x.compute_size(__cache);
-                __cache.set(__slot, inner);
-                size += #tag_len
-                    + ::buffa::encoding::varint_len(inner as u64) as u64
-                    + inner as u64;
+                size += #tag_len + __cache.record_submessage(__slot, inner);
             }
         },
         Type::TYPE_GROUP => quote! {
@@ -2776,11 +2759,7 @@ fn oneof_write_arm(
         },
         Type::TYPE_MESSAGE => quote! {
             #enum_ident::#variant_ident(x) => {
-                ::buffa::types::put_len_delimited_header(
-                    #field_number,
-                    u64::from(__cache.consume_next()),
-                    buf,
-                );
+                ::buffa::types::put_submessage_header(#field_number, __cache, buf);
                 x.write_to(__cache, buf);
             }
         },
@@ -3294,8 +3273,7 @@ fn map_view_compute_size_stmt(
             {
                 let __slot = __cache.reserve();
                 let inner = #v.compute_size(__cache);
-                __cache.set(__slot, inner);
-                ::buffa::encoding::varint_len(inner as u64) as u64 + inner as u64
+                __cache.record_submessage(__slot, inner)
             }
         }
     } else {

@@ -2020,8 +2020,8 @@ fn test_repeated_message_field() {
         "missing merge_length_delimited for repeated msg: {content}"
     );
     assert!(
-        content.contains("__cache.consume_next()"),
-        "missing SizeCache consume in write_to: {content}"
+        content.contains("::buffa::types::put_submessage_header("),
+        "missing SizeCache-backed sub-message header in write_to: {content}"
     );
 }
 
