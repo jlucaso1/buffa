@@ -1831,7 +1831,6 @@ pub(crate) fn oneof_decode_arms(
                 Type::TYPE_STRING => quote! { ::buffa::types::borrow_str(&mut cur)? },
                 Type::TYPE_BYTES => quote! { ::buffa::types::borrow_bytes(&mut cur)? },
                 Type::TYPE_MESSAGE => {
-                    let vt = resolve_view_decode_tokens(scope, field)?;
                     // Proto merge semantics: if this same variant is already set,
                     // merge into the existing boxed view rather than replacing.
                     // Uses an early `return Ok(...)` since the merge path doesn't
@@ -1859,7 +1858,6 @@ pub(crate) fn oneof_decode_arms(
                     });
                 }
                 Type::TYPE_GROUP => {
-                    let vt = resolve_view_decode_tokens(scope, field)?;
                     return Ok(quote! {
                         #field_number => {
                             #wire_check
