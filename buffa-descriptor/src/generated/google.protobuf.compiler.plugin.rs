@@ -598,12 +598,20 @@ impl ::buffa::Message for CodeGeneratorRequest {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
-                self.proto_file.push(::core::default::Default::default());
-                if let Some(elem) = self.proto_file.last_mut() {
-                    ctx.register_element_memory(
-                        ::buffa::__private::element_footprint(elem),
-                    )?;
-                    ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
+                ctx.register_element_memory(
+                    ::buffa::__private::vec_element_footprint(&self.proto_file),
+                )?;
+                if ::buffa::__private::vec_element_footprint(&self.proto_file)
+                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
+                {
+                    self.proto_file.push(::core::default::Default::default());
+                    if let Some(elem) = self.proto_file.last_mut() {
+                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
+                    }
+                } else {
+                    let mut elem = ::core::default::Default::default();
+                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                    self.proto_file.push(elem);
                 }
             }
             17u32 => {
@@ -611,12 +619,24 @@ impl ::buffa::Message for CodeGeneratorRequest {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
-                self.source_file_descriptors.push(::core::default::Default::default());
-                if let Some(elem) = self.source_file_descriptors.last_mut() {
-                    ctx.register_element_memory(
-                        ::buffa::__private::element_footprint(elem),
-                    )?;
-                    ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
+                ctx.register_element_memory(
+                    ::buffa::__private::vec_element_footprint(
+                        &self.source_file_descriptors,
+                    ),
+                )?;
+                if ::buffa::__private::vec_element_footprint(
+                    &self.source_file_descriptors,
+                ) > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
+                {
+                    self.source_file_descriptors
+                        .push(::core::default::Default::default());
+                    if let Some(elem) = self.source_file_descriptors.last_mut() {
+                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
+                    }
+                } else {
+                    let mut elem = ::core::default::Default::default();
+                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                    self.source_file_descriptors.push(elem);
                 }
             }
             _ => {
@@ -1009,12 +1029,20 @@ impl ::buffa::Message for CodeGeneratorResponse {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
-                self.file.push(::core::default::Default::default());
-                if let Some(elem) = self.file.last_mut() {
-                    ctx.register_element_memory(
-                        ::buffa::__private::element_footprint(elem),
-                    )?;
-                    ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
+                ctx.register_element_memory(
+                    ::buffa::__private::vec_element_footprint(&self.file),
+                )?;
+                if ::buffa::__private::vec_element_footprint(&self.file)
+                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
+                {
+                    self.file.push(::core::default::Default::default());
+                    if let Some(elem) = self.file.last_mut() {
+                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
+                    }
+                } else {
+                    let mut elem = ::core::default::Default::default();
+                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                    self.file.push(elem);
                 }
             }
             _ => {

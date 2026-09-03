@@ -2442,15 +2442,29 @@ fn repeated_merge_arm(
             &quote! { tag },
             &quote! { ::buffa::encoding::WireType::LengthDelimited },
         );
-        // Default `Vec`: push the default element first and decode into the
-        // slot, so no stack temporary is moved into the collection. A custom
-        // `ProtoList` has no `last_mut`, so it keeps the temporary.
+        // Default `Vec`: charge the element budget first (the `push` below
+        // may reallocate), then let element size pick the path. Large
+        // elements decode straight into the pushed slot, so no stack
+        // temporary is moved into the collection; small ones keep the
+        // temporary, which stays in registers while it decodes. The size
+        // test folds at compile time, so only one arm is emitted. A custom
+        // `ProtoList` has no `last_mut`, so it always keeps the temporary.
         let body = if repr.is_default() {
             quote! {
-                self.#ident.push(::core::default::Default::default());
-                if let Some(elem) = self.#ident.last_mut() {
-                    ctx.register_element_memory(::buffa::__private::element_footprint(elem))?;
-                    ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
+                ctx.register_element_memory(
+                    ::buffa::__private::vec_element_footprint(&self.#ident),
+                )?;
+                if ::buffa::__private::vec_element_footprint(&self.#ident)
+                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
+                {
+                    self.#ident.push(::core::default::Default::default());
+                    if let Some(elem) = self.#ident.last_mut() {
+                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
+                    }
+                } else {
+                    let mut elem = ::core::default::Default::default();
+                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                    self.#ident.push(elem);
                 }
             }
         } else {

@@ -117,12 +117,24 @@ impl<'a> ::buffa::MessageView<'a> for TypeView<'a> {
                 ctx.register_element_memory(
                     ::core::mem::size_of::<super::super::__buffa::view::FieldView>(),
                 )?;
-                view.fields
-                    .push(
-                        <super::super::__buffa::view::FieldView as ::core::default::Default>::default(),
-                    );
-                if let Some(__elem) = view.fields.as_mut_vec().last_mut() {
-                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                if ::core::mem::size_of::<super::super::__buffa::view::FieldView>()
+                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
+                {
+                    view.fields
+                        .push(
+                            <super::super::__buffa::view::FieldView as ::core::default::Default>::default(),
+                        );
+                    if let Some(__elem) = view.fields.as_mut_vec().last_mut() {
+                        ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                    }
+                } else {
+                    view.fields
+                        .push(
+                            <super::super::__buffa::view::FieldView as ::buffa::MessageView>::decode_view_ctx(
+                                sub,
+                                __sub_ctx,
+                            )?,
+                        );
                 }
             }
             3u32 => {
@@ -146,12 +158,24 @@ impl<'a> ::buffa::MessageView<'a> for TypeView<'a> {
                 ctx.register_element_memory(
                     ::core::mem::size_of::<super::super::__buffa::view::OptionView>(),
                 )?;
-                view.options
-                    .push(
-                        <super::super::__buffa::view::OptionView as ::core::default::Default>::default(),
-                    );
-                if let Some(__elem) = view.options.as_mut_vec().last_mut() {
-                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                if ::core::mem::size_of::<super::super::__buffa::view::OptionView>()
+                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
+                {
+                    view.options
+                        .push(
+                            <super::super::__buffa::view::OptionView as ::core::default::Default>::default(),
+                        );
+                    if let Some(__elem) = view.options.as_mut_vec().last_mut() {
+                        ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                    }
+                } else {
+                    view.options
+                        .push(
+                            <super::super::__buffa::view::OptionView as ::buffa::MessageView>::decode_view_ctx(
+                                sub,
+                                __sub_ctx,
+                            )?,
+                        );
                 }
             }
             _ => {
@@ -743,12 +767,24 @@ impl<'a> ::buffa::MessageView<'a> for FieldView<'a> {
                 ctx.register_element_memory(
                     ::core::mem::size_of::<super::super::__buffa::view::OptionView>(),
                 )?;
-                view.options
-                    .push(
-                        <super::super::__buffa::view::OptionView as ::core::default::Default>::default(),
-                    );
-                if let Some(__elem) = view.options.as_mut_vec().last_mut() {
-                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                if ::core::mem::size_of::<super::super::__buffa::view::OptionView>()
+                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
+                {
+                    view.options
+                        .push(
+                            <super::super::__buffa::view::OptionView as ::core::default::Default>::default(),
+                        );
+                    if let Some(__elem) = view.options.as_mut_vec().last_mut() {
+                        ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                    }
+                } else {
+                    view.options
+                        .push(
+                            <super::super::__buffa::view::OptionView as ::buffa::MessageView>::decode_view_ctx(
+                                sub,
+                                __sub_ctx,
+                            )?,
+                        );
                 }
             }
             _ => {
@@ -1315,12 +1351,24 @@ impl<'a> ::buffa::MessageView<'a> for EnumView<'a> {
                 ctx.register_element_memory(
                     ::core::mem::size_of::<super::super::__buffa::view::EnumValueView>(),
                 )?;
-                view.enumvalue
-                    .push(
-                        <super::super::__buffa::view::EnumValueView as ::core::default::Default>::default(),
-                    );
-                if let Some(__elem) = view.enumvalue.as_mut_vec().last_mut() {
-                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                if ::core::mem::size_of::<super::super::__buffa::view::EnumValueView>()
+                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
+                {
+                    view.enumvalue
+                        .push(
+                            <super::super::__buffa::view::EnumValueView as ::core::default::Default>::default(),
+                        );
+                    if let Some(__elem) = view.enumvalue.as_mut_vec().last_mut() {
+                        ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                    }
+                } else {
+                    view.enumvalue
+                        .push(
+                            <super::super::__buffa::view::EnumValueView as ::buffa::MessageView>::decode_view_ctx(
+                                sub,
+                                __sub_ctx,
+                            )?,
+                        );
                 }
             }
             3u32 => {
@@ -1333,12 +1381,24 @@ impl<'a> ::buffa::MessageView<'a> for EnumView<'a> {
                 ctx.register_element_memory(
                     ::core::mem::size_of::<super::super::__buffa::view::OptionView>(),
                 )?;
-                view.options
-                    .push(
-                        <super::super::__buffa::view::OptionView as ::core::default::Default>::default(),
-                    );
-                if let Some(__elem) = view.options.as_mut_vec().last_mut() {
-                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                if ::core::mem::size_of::<super::super::__buffa::view::OptionView>()
+                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
+                {
+                    view.options
+                        .push(
+                            <super::super::__buffa::view::OptionView as ::core::default::Default>::default(),
+                        );
+                    if let Some(__elem) = view.options.as_mut_vec().last_mut() {
+                        ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                    }
+                } else {
+                    view.options
+                        .push(
+                            <super::super::__buffa::view::OptionView as ::buffa::MessageView>::decode_view_ctx(
+                                sub,
+                                __sub_ctx,
+                            )?,
+                        );
                 }
             }
             _ => {
@@ -1831,12 +1891,24 @@ impl<'a> ::buffa::MessageView<'a> for EnumValueView<'a> {
                 ctx.register_element_memory(
                     ::core::mem::size_of::<super::super::__buffa::view::OptionView>(),
                 )?;
-                view.options
-                    .push(
-                        <super::super::__buffa::view::OptionView as ::core::default::Default>::default(),
-                    );
-                if let Some(__elem) = view.options.as_mut_vec().last_mut() {
-                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                if ::core::mem::size_of::<super::super::__buffa::view::OptionView>()
+                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
+                {
+                    view.options
+                        .push(
+                            <super::super::__buffa::view::OptionView as ::core::default::Default>::default(),
+                        );
+                    if let Some(__elem) = view.options.as_mut_vec().last_mut() {
+                        ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                    }
+                } else {
+                    view.options
+                        .push(
+                            <super::super::__buffa::view::OptionView as ::buffa::MessageView>::decode_view_ctx(
+                                sub,
+                                __sub_ctx,
+                            )?,
+                        );
                 }
             }
             _ => {

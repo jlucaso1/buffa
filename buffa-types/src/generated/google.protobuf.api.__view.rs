@@ -156,12 +156,24 @@ impl<'a> ::buffa::MessageView<'a> for ApiView<'a> {
                 ctx.register_element_memory(
                     ::core::mem::size_of::<super::super::__buffa::view::MethodView>(),
                 )?;
-                view.methods
-                    .push(
-                        <super::super::__buffa::view::MethodView as ::core::default::Default>::default(),
-                    );
-                if let Some(__elem) = view.methods.as_mut_vec().last_mut() {
-                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                if ::core::mem::size_of::<super::super::__buffa::view::MethodView>()
+                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
+                {
+                    view.methods
+                        .push(
+                            <super::super::__buffa::view::MethodView as ::core::default::Default>::default(),
+                        );
+                    if let Some(__elem) = view.methods.as_mut_vec().last_mut() {
+                        ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                    }
+                } else {
+                    view.methods
+                        .push(
+                            <super::super::__buffa::view::MethodView as ::buffa::MessageView>::decode_view_ctx(
+                                sub,
+                                __sub_ctx,
+                            )?,
+                        );
                 }
             }
             3u32 => {
@@ -174,12 +186,24 @@ impl<'a> ::buffa::MessageView<'a> for ApiView<'a> {
                 ctx.register_element_memory(
                     ::core::mem::size_of::<super::super::__buffa::view::OptionView>(),
                 )?;
-                view.options
-                    .push(
-                        <super::super::__buffa::view::OptionView as ::core::default::Default>::default(),
-                    );
-                if let Some(__elem) = view.options.as_mut_vec().last_mut() {
-                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                if ::core::mem::size_of::<super::super::__buffa::view::OptionView>()
+                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
+                {
+                    view.options
+                        .push(
+                            <super::super::__buffa::view::OptionView as ::core::default::Default>::default(),
+                        );
+                    if let Some(__elem) = view.options.as_mut_vec().last_mut() {
+                        ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                    }
+                } else {
+                    view.options
+                        .push(
+                            <super::super::__buffa::view::OptionView as ::buffa::MessageView>::decode_view_ctx(
+                                sub,
+                                __sub_ctx,
+                            )?,
+                        );
                 }
             }
             6u32 => {
@@ -192,12 +216,24 @@ impl<'a> ::buffa::MessageView<'a> for ApiView<'a> {
                 ctx.register_element_memory(
                     ::core::mem::size_of::<super::super::__buffa::view::MixinView>(),
                 )?;
-                view.mixins
-                    .push(
-                        <super::super::__buffa::view::MixinView as ::core::default::Default>::default(),
-                    );
-                if let Some(__elem) = view.mixins.as_mut_vec().last_mut() {
-                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                if ::core::mem::size_of::<super::super::__buffa::view::MixinView>()
+                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
+                {
+                    view.mixins
+                        .push(
+                            <super::super::__buffa::view::MixinView as ::core::default::Default>::default(),
+                        );
+                    if let Some(__elem) = view.mixins.as_mut_vec().last_mut() {
+                        ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                    }
+                } else {
+                    view.mixins
+                        .push(
+                            <super::super::__buffa::view::MixinView as ::buffa::MessageView>::decode_view_ctx(
+                                sub,
+                                __sub_ctx,
+                            )?,
+                        );
                 }
             }
             _ => {
@@ -821,12 +857,24 @@ impl<'a> ::buffa::MessageView<'a> for MethodView<'a> {
                 ctx.register_element_memory(
                     ::core::mem::size_of::<super::super::__buffa::view::OptionView>(),
                 )?;
-                view.options
-                    .push(
-                        <super::super::__buffa::view::OptionView as ::core::default::Default>::default(),
-                    );
-                if let Some(__elem) = view.options.as_mut_vec().last_mut() {
-                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                if ::core::mem::size_of::<super::super::__buffa::view::OptionView>()
+                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
+                {
+                    view.options
+                        .push(
+                            <super::super::__buffa::view::OptionView as ::core::default::Default>::default(),
+                        );
+                    if let Some(__elem) = view.options.as_mut_vec().last_mut() {
+                        ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                    }
+                } else {
+                    view.options
+                        .push(
+                            <super::super::__buffa::view::OptionView as ::buffa::MessageView>::decode_view_ctx(
+                                sub,
+                                __sub_ctx,
+                            )?,
+                        );
                 }
             }
             _ => {

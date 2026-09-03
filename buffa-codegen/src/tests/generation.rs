@@ -3039,9 +3039,18 @@ fn test_repeated_message_decodes_into_pushed_slot_for_vec() {
     )
     .expect("should generate");
     let content = &joined(&files);
+    // Budget is charged before anything is pushed, then element size picks
+    // the in-place slot or the stack temporary.
+    let charge = content
+        .find("vec_element_footprint(&self.items)")
+        .expect("charge before push");
+    let push = content.find("self.items.push(").expect("push");
     assert!(
-        content.contains("self.items.push(::core::default::Default::default());")
-            && content.contains("self.items.last_mut()"),
-        "owned repeated message arm must decode into the pushed slot: {content}"
+        charge < push,
+        "must charge the element budget before push: {content}"
+    );
+    assert!(
+        content.contains("IN_PLACE_ELEMENT_BYTES") && content.contains("self.items.last_mut()"),
+        "owned repeated message arm must offer the in-place slot path: {content}"
     );
 }

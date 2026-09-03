@@ -1093,12 +1093,20 @@ impl ::buffa::Message for ListValue {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
-                self.values.push(::core::default::Default::default());
-                if let Some(elem) = self.values.last_mut() {
-                    ctx.register_element_memory(
-                        ::buffa::__private::element_footprint(elem),
-                    )?;
-                    ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
+                ctx.register_element_memory(
+                    ::buffa::__private::vec_element_footprint(&self.values),
+                )?;
+                if ::buffa::__private::vec_element_footprint(&self.values)
+                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
+                {
+                    self.values.push(::core::default::Default::default());
+                    if let Some(elem) = self.values.last_mut() {
+                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
+                    }
+                } else {
+                    let mut elem = ::core::default::Default::default();
+                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                    self.values.push(elem);
                 }
             }
             _ => {

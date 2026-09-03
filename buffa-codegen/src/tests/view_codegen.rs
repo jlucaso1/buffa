@@ -784,12 +784,9 @@ fn test_view_repeated_message_decodes_into_pushed_slot() {
     .expect("should generate");
     let content = &joined(&files);
     assert!(
-        content.contains("view.items.as_mut_vec().last_mut()"),
-        "repeated message view arm must decode into the pushed slot: {content}"
-    );
-    assert!(
-        !content.contains("decode_view_ctx(sub"),
-        "repeated message view arm must not build the element on the stack: {content}"
+        content.contains("view.items.as_mut_vec().last_mut()")
+            && content.contains("IN_PLACE_ELEMENT_BYTES"),
+        "repeated message view arm must offer the in-place slot path: {content}"
     );
 }
 

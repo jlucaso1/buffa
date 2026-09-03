@@ -1088,12 +1088,24 @@ impl<'a> ::buffa::MessageView<'a> for ListValueView<'a> {
                 ctx.register_element_memory(
                     ::core::mem::size_of::<super::super::__buffa::view::ValueView>(),
                 )?;
-                view.values
-                    .push(
-                        <super::super::__buffa::view::ValueView as ::core::default::Default>::default(),
-                    );
-                if let Some(__elem) = view.values.as_mut_vec().last_mut() {
-                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                if ::core::mem::size_of::<super::super::__buffa::view::ValueView>()
+                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
+                {
+                    view.values
+                        .push(
+                            <super::super::__buffa::view::ValueView as ::core::default::Default>::default(),
+                        );
+                    if let Some(__elem) = view.values.as_mut_vec().last_mut() {
+                        ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                    }
+                } else {
+                    view.values
+                        .push(
+                            <super::super::__buffa::view::ValueView as ::buffa::MessageView>::decode_view_ctx(
+                                sub,
+                                __sub_ctx,
+                            )?,
+                        );
                 }
             }
             _ => {

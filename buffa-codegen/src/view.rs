@@ -1513,11 +1513,17 @@ pub(crate) fn repeated_decode_arm(
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_bytes(&mut cur)?;
                 ctx.register_element_memory(::core::mem::size_of::<#vt>())?;
-                // Decode into the pushed slot: no stack temporary moved into
-                // the `Vec`, and one sub-decoder (`merge_into_view`) per arm.
-                view.#ident.push(<#vt as ::core::default::Default>::default());
-                if let Some(__elem) = view.#ident.as_mut_vec().last_mut() {
-                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                // Large elements decode straight into the pushed slot (no stack
+                // temporary moved into the `Vec`); small ones keep the
+                // temporary, which decodes in registers. The size test folds
+                // at compile time, so only one arm is emitted.
+                if ::core::mem::size_of::<#vt>() > ::buffa::__private::IN_PLACE_ELEMENT_BYTES {
+                    view.#ident.push(<#vt as ::core::default::Default>::default());
+                    if let Some(__elem) = view.#ident.as_mut_vec().last_mut() {
+                        ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                    }
+                } else {
+                    view.#ident.push(<#vt as ::buffa::MessageView>::decode_view_ctx(sub, __sub_ctx)?);
                 }
             }
         });
@@ -1536,9 +1542,17 @@ pub(crate) fn repeated_decode_arm(
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_group(&mut cur, #field_number, __sub_ctx.depth())?;
                 ctx.register_element_memory(::core::mem::size_of::<#vt>())?;
-                view.#ident.push(<#vt as ::core::default::Default>::default());
-                if let Some(__elem) = view.#ident.as_mut_vec().last_mut() {
-                    ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                // Large elements decode straight into the pushed slot (no stack
+                // temporary moved into the `Vec`); small ones keep the
+                // temporary, which decodes in registers. The size test folds
+                // at compile time, so only one arm is emitted.
+                if ::core::mem::size_of::<#vt>() > ::buffa::__private::IN_PLACE_ELEMENT_BYTES {
+                    view.#ident.push(<#vt as ::core::default::Default>::default());
+                    if let Some(__elem) = view.#ident.as_mut_vec().last_mut() {
+                        ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
+                    }
+                } else {
+                    view.#ident.push(<#vt as ::buffa::MessageView>::decode_view_ctx(sub, __sub_ctx)?);
                 }
             }
         });
