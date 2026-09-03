@@ -800,6 +800,14 @@ fn test_view_repeated_message_merges_fresh_element() {
 fn test_tiny_view_gets_inline_loop_override() {
     let mut file = proto3_file("tiny_view.proto");
     file.message_type.push(DescriptorProto {
+        name: Some("Label".to_string()),
+        field: vec![
+            make_field("name", 1, Label::LABEL_OPTIONAL, Type::TYPE_STRING),
+            make_field("id", 2, Label::LABEL_OPTIONAL, Type::TYPE_BYTES),
+        ],
+        ..Default::default()
+    });
+    file.message_type.push(DescriptorProto {
         name: Some("Vertex".to_string()),
         field: vec![
             make_field("x", 1, Label::LABEL_OPTIONAL, Type::TYPE_FLOAT),

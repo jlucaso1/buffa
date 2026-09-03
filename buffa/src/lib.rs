@@ -314,7 +314,7 @@ pub mod __private {
     /// `message.rs`).
     ///
     /// Generated code overrides [`Message::merge_to_limit`](crate::Message::merge_to_limit)
-    /// with this for "tiny" messages (at most four singular fields — a
+    /// with this for "tiny" messages (at most four singular fields, none string or bytes — a
     /// `Vertex { x, y, z }`, a `Timestamp`), where the erased loop's per-field
     /// indirect call is comparable to the field's own decode work and where
     /// inlining the whole sub-decoder into the parent arm costs a few dozen

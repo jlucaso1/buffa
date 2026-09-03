@@ -3969,14 +3969,6 @@ pub struct OneofDescriptorProtoView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for OneofDescriptorProtoView<'a> {
     type Owned = super::super::OneofDescriptorProto;
-    #[inline]
-    fn merge_into_view(
-        &mut self,
-        buf: &'a [u8],
-        ctx: ::buffa::DecodeContext<'_>,
-    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
-        ::buffa::__private::merge_into_view_inline(self, buf, ctx)
-    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -5080,14 +5072,6 @@ pub struct EnumValueDescriptorProtoView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for EnumValueDescriptorProtoView<'a> {
     type Owned = super::super::EnumValueDescriptorProto;
-    #[inline]
-    fn merge_into_view(
-        &mut self,
-        buf: &'a [u8],
-        ctx: ::buffa::DecodeContext<'_>,
-    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
-        ::buffa::__private::merge_into_view_inline(self, buf, ctx)
-    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -8671,14 +8655,6 @@ pub mod field_options {
     }
     impl<'a> ::buffa::MessageView<'a> for EditionDefaultView<'a> {
         type Owned = super::super::super::field_options::EditionDefault;
-        #[inline]
-        fn merge_into_view(
-            &mut self,
-            buf: &'a [u8],
-            ctx: ::buffa::DecodeContext<'_>,
-        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
-            ::buffa::__private::merge_into_view_inline(self, buf, ctx)
-        }
         fn decode_view(
             buf: &'a [u8],
         ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
@@ -8996,14 +8972,6 @@ pub mod field_options {
     }
     impl<'a> ::buffa::MessageView<'a> for FeatureSupportView<'a> {
         type Owned = super::super::super::field_options::FeatureSupport;
-        #[inline]
-        fn merge_into_view(
-            &mut self,
-            buf: &'a [u8],
-            ctx: ::buffa::DecodeContext<'_>,
-        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
-            ::buffa::__private::merge_into_view_inline(self, buf, ctx)
-        }
         fn decode_view(
             buf: &'a [u8],
         ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
@@ -11892,14 +11860,6 @@ Distinguishes a field that was absent from one explicitly encoded with its defau
     }
     impl<'a> ::buffa::MessageView<'a> for NamePartView<'a> {
         type Owned = super::super::super::uninterpreted_option::NamePart;
-        #[inline]
-        fn merge_into_view(
-            &mut self,
-            buf: &'a [u8],
-            ctx: ::buffa::DecodeContext<'_>,
-        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
-            ::buffa::__private::merge_into_view_inline(self, buf, ctx)
-        }
         fn decode_view(
             buf: &'a [u8],
         ) -> ::core::result::Result<Self, ::buffa::DecodeError> {

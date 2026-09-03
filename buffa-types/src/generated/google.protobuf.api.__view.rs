@@ -1304,14 +1304,6 @@ pub struct MixinView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for MixinView<'a> {
     type Owned = super::super::Mixin;
-    #[inline]
-    fn merge_into_view(
-        &mut self,
-        buf: &'a [u8],
-        ctx: ::buffa::DecodeContext<'_>,
-    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
-        ::buffa::__private::merge_into_view_inline(self, buf, ctx)
-    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);

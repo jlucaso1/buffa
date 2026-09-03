@@ -2925,10 +2925,19 @@ fn test_exclude_packages_filter_runs_before_context_build() {
 
 #[test]
 fn test_tiny_message_gets_inline_loop_overrides() {
-    // At most four singular fields: monomorphic `#[inline]` overrides of the
-    // shared decode loops are emitted. A message with a repeated field keeps
-    // the trait defaults.
+    // At most four singular numeric fields: monomorphic `#[inline]` overrides
+    // of the shared decode loops are emitted. A message with a repeated field
+    // keeps the trait defaults, and so does a small message with a string or
+    // bytes field, whose per-field work dwarfs the shared loop's call.
     let mut file = proto3_file("tiny.proto");
+    file.message_type.push(DescriptorProto {
+        name: Some("Label".to_string()),
+        field: vec![
+            make_field("name", 1, Label::LABEL_OPTIONAL, Type::TYPE_STRING),
+            make_field("id", 2, Label::LABEL_OPTIONAL, Type::TYPE_BYTES),
+        ],
+        ..Default::default()
+    });
     file.message_type.push(DescriptorProto {
         name: Some("Vertex".to_string()),
         field: vec![

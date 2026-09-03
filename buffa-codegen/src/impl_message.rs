@@ -228,6 +228,16 @@ pub(crate) fn closed_enum_unknown_route(
 /// sequence (matching the field order of prost / protoc-C++). A `Oneof` entry
 /// stands in for all its member fields and is positioned at the group's
 /// minimum member field number.
+/// Whether `field` is a `string` or `bytes` field, whose decode does heap or
+/// validation work per occurrence (see the tiny-message rule in
+/// [`generate_message_impl`]).
+pub(crate) fn is_string_or_bytes(field: &FieldDescriptorProto) -> bool {
+    matches!(
+        field.r#type.unwrap_or_default(),
+        Type::TYPE_STRING | Type::TYPE_BYTES
+    )
+}
+
 enum FieldKind<'a> {
     Scalar(&'a FieldDescriptorProto),
     Repeated(&'a FieldDescriptorProto),
@@ -404,7 +414,7 @@ pub fn generate_message_impl(
     let name_ident = format_ident!("{}", rust_name);
 
     let fields = classify_fields_ordered(msg, oneof_idents)?;
-    // Tiny messages (at most four singular fields) override the type-erased
+    // Tiny messages (at most four singular fields, none string/bytes) override the type-erased
     // decode loops with monomorphic, inlinable ones. Their `merge_field` is a
     // handful of arms, so inlining the whole sub-decoder into the parent arm
     // costs a few dozen bytes, while the erased loop's per-field indirect
@@ -412,7 +422,12 @@ pub fn generate_message_impl(
     // vertex decoded through the erased loop was 45% slower). Singular message
     // fields count as tiny too: their arm is one call into the child's own
     // loop. Repeated, map and oneof fields carry element loops or many arms,
-    // so a message with any of those keeps the shared loops.
+    // so a message with any of those keeps the shared loops. So does one with
+    // a string or bytes field: decoding it allocates, copies or validates a
+    // payload, next to which the indirect call is noise, and in a large
+    // schema such two-string messages outnumber numeric ones (280 of the 436
+    // messages with at most four singular fields in `whatsapp.proto`), each
+    // carrying a private copy of the loop for no measurable speed.
     let is_message_set = msg
         .options
         .as_option()
@@ -426,7 +441,10 @@ pub fn generate_message_impl(
     let tiny = !is_message_set
         && !fields.is_empty()
         && fields.len() <= 4
-        && fields.iter().all(|k| matches!(k, FieldKind::Scalar(_)));
+        && fields.iter().all(|k| match k {
+            FieldKind::Scalar(f) => !is_string_or_bytes(f),
+            _ => false,
+        });
     let tiny_loop_overrides = if tiny {
         quote! {
             #[inline]

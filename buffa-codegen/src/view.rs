@@ -190,14 +190,18 @@ pub(crate) fn generate_view_with_nesting(
         &required.bit_stmts,
     )?;
 
-    // Tiny views (at most four singular fields, no repeated/map/oneof) keep a
-    // monomorphic, inlinable tag loop instead of the type-erased default;
-    // same rationale and threshold as the owned side (see `tiny` in
-    // `impl_message.rs`).
+    // Tiny views (at most four singular fields, none string/bytes, no
+    // repeated/map/oneof) keep a monomorphic, inlinable tag loop instead of
+    // the type-erased default; same rationale and threshold as the owned
+    // side (see `tiny` in `impl_message.rs`).
     let tiny = !scalar_arms.is_empty()
         && scalar_arms.len() <= 4
         && repeated_arms.is_empty()
-        && oneof_arms.is_empty();
+        && oneof_arms.is_empty()
+        && !msg
+            .field
+            .iter()
+            .any(crate::impl_message::is_string_or_bytes);
     let tiny_loop_override = if tiny {
         quote! {
             #[inline]

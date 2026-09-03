@@ -5159,32 +5159,6 @@ impl ::buffa::Message for OneofDescriptorProto {
         self.options = ::buffa::MessageField::none();
         self.__buffa_unknown_fields.clear();
     }
-    #[inline]
-    fn merge_to_limit(
-        &mut self,
-        buf: &mut impl ::buffa::bytes::Buf,
-        ctx: ::buffa::DecodeContext<'_>,
-        limit: usize,
-    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
-        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
-    }
-    #[inline]
-    fn merge_length_delimited(
-        &mut self,
-        buf: &mut impl ::buffa::bytes::Buf,
-        ctx: ::buffa::DecodeContext<'_>,
-    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
-        ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
-    }
-    #[inline]
-    fn merge_group(
-        &mut self,
-        buf: &mut impl ::buffa::bytes::Buf,
-        ctx: ::buffa::DecodeContext<'_>,
-        field_number: u32,
-    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
-        ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
-    }
 }
 impl ::buffa::ExtensionSet for OneofDescriptorProto {
     const PROTO_FQN: &'static str = "google.protobuf.OneofDescriptorProto";
@@ -6127,32 +6101,6 @@ impl ::buffa::Message for EnumValueDescriptorProto {
         self.number = ::core::option::Option::None;
         self.options = ::buffa::MessageField::none();
         self.__buffa_unknown_fields.clear();
-    }
-    #[inline]
-    fn merge_to_limit(
-        &mut self,
-        buf: &mut impl ::buffa::bytes::Buf,
-        ctx: ::buffa::DecodeContext<'_>,
-        limit: usize,
-    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
-        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
-    }
-    #[inline]
-    fn merge_length_delimited(
-        &mut self,
-        buf: &mut impl ::buffa::bytes::Buf,
-        ctx: ::buffa::DecodeContext<'_>,
-    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
-        ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
-    }
-    #[inline]
-    fn merge_group(
-        &mut self,
-        buf: &mut impl ::buffa::bytes::Buf,
-        ctx: ::buffa::DecodeContext<'_>,
-        field_number: u32,
-    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
-        ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
     }
 }
 impl ::buffa::ExtensionSet for EnumValueDescriptorProto {
@@ -11550,32 +11498,6 @@ pub mod field_options {
             self.edition = ::core::option::Option::None;
             self.__buffa_unknown_fields.clear();
         }
-        #[inline]
-        fn merge_to_limit(
-            &mut self,
-            buf: &mut impl ::buffa::bytes::Buf,
-            ctx: ::buffa::DecodeContext<'_>,
-            limit: usize,
-        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
-            ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
-        }
-        #[inline]
-        fn merge_length_delimited(
-            &mut self,
-            buf: &mut impl ::buffa::bytes::Buf,
-            ctx: ::buffa::DecodeContext<'_>,
-        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
-            ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
-        }
-        #[inline]
-        fn merge_group(
-            &mut self,
-            buf: &mut impl ::buffa::bytes::Buf,
-            ctx: ::buffa::DecodeContext<'_>,
-            field_number: u32,
-        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
-            ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
-        }
     }
     impl ::buffa::ExtensionSet for EditionDefault {
         const PROTO_FQN: &'static str = "google.protobuf.FieldOptions.EditionDefault";
@@ -11930,32 +11852,6 @@ pub mod field_options {
             self.deprecation_warning = ::core::option::Option::None;
             self.edition_removed = ::core::option::Option::None;
             self.__buffa_unknown_fields.clear();
-        }
-        #[inline]
-        fn merge_to_limit(
-            &mut self,
-            buf: &mut impl ::buffa::bytes::Buf,
-            ctx: ::buffa::DecodeContext<'_>,
-            limit: usize,
-        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
-            ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
-        }
-        #[inline]
-        fn merge_length_delimited(
-            &mut self,
-            buf: &mut impl ::buffa::bytes::Buf,
-            ctx: ::buffa::DecodeContext<'_>,
-        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
-            ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
-        }
-        #[inline]
-        fn merge_group(
-            &mut self,
-            buf: &mut impl ::buffa::bytes::Buf,
-            ctx: ::buffa::DecodeContext<'_>,
-            field_number: u32,
-        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
-            ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
         }
     }
     impl ::buffa::ExtensionSet for FeatureSupport {
@@ -15340,32 +15236,6 @@ pub mod uninterpreted_option {
             self.name_part.clear();
             self.is_extension = false;
             self.__buffa_unknown_fields.clear();
-        }
-        #[inline]
-        fn merge_to_limit(
-            &mut self,
-            buf: &mut impl ::buffa::bytes::Buf,
-            ctx: ::buffa::DecodeContext<'_>,
-            limit: usize,
-        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
-            ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
-        }
-        #[inline]
-        fn merge_length_delimited(
-            &mut self,
-            buf: &mut impl ::buffa::bytes::Buf,
-            ctx: ::buffa::DecodeContext<'_>,
-        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
-            ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
-        }
-        #[inline]
-        fn merge_group(
-            &mut self,
-            buf: &mut impl ::buffa::bytes::Buf,
-            ctx: ::buffa::DecodeContext<'_>,
-            field_number: u32,
-        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
-            ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
         }
     }
     impl ::buffa::ExtensionSet for NamePart {
