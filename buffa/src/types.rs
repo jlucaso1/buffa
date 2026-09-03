@@ -966,101 +966,148 @@ pub fn push_bytes_field(
 // Generated `write_to` bodies pair every payload write with a tag write.
 // These helpers fuse the two so each field arm is one call; the presence
 // check (`if !x.is_empty()`, `if let Some(v)`, …) stays in generated code
-// where the per-field semantics are visible. They are `#[inline(always)]`
-// shims over the `Tag::encode` + `encode_*` primitives: with the field number a
-// literal at every call site, forced inlining lets the optimizer const-fold the
-// tag to constant byte store(s) — recovering the codegen the pre-fusion
-// two-statement expansion produced. The fold relies on `Tag::encode` /
-// `encode_varint` continuing to inline at constant input. Plain `#[inline]` was
-// not sufficient: the inliner declined it for the larger string/bytes variants,
-// silently reintroducing a per-call runtime tag varint (~6-9% on encode-heavy
-// paths). They are shared by owned and view `write_to` impls (duck-typed:
-// `&String` / `&str` and `&Vec<u8>` / `&[u8]` both coerce to the borrowed
-// parameter).
+// where the per-field semantics are visible. Each `put_<type>_field` is an
+// `#[inline(always)]` shim that folds its literal field number into a
+// constant tag and hands it to one of four `#[inline]` primitives
+// (`put_tagged_varint` / `_fixed32` / `_fixed64` / `_len_delimited`). A
+// speed-optimised build inlines the primitive as well and the tag becomes
+// constant byte store(s), the codegen the pre-fusion two-statement
+// expansion produced; a size-optimised build, where the inliner takes
+// almost nothing, keeps the primitive out of line and emits one call per
+// field instead of one for the tag and one for the payload (−4.8% on a
+// 750-message schema). An earlier layout that made the whole shim plain
+// `#[inline]` lost the fold on the string/bytes variants (~6-9% on
+// encode-heavy paths); splitting the constant tag off from the shared body
+// keeps it. They are shared by owned and view `write_to` impls
+// (duck-typed: `&String` / `&str` and `&Vec<u8>` / `&[u8]` both coerce to
+// the borrowed parameter).
 
-/// Stamp a fused `put_<type>_field` writer over an existing `encode_<type>`.
+/// The wire form of a field's tag, for the fused writers below.
+#[inline(always)]
+fn tag_u32(field_number: u32, wire: WireType) -> u32 {
+    let tag = Tag::new(field_number, wire);
+    (tag.field_number() << 3) | tag.wire_type() as u32
+}
+
+/// Write a tag and a varint payload; the out-of-line half of every
+/// varint-family `put_<type>_field` writer.
+///
+/// Generated code calls those writers with a literal field number. They
+/// are `#[inline(always)]` shims that fold the tag to a constant and hand
+/// it here, so a speed-optimised build, which inlines this too, still
+/// emits constant byte store(s) for the tag, while a size-optimised build
+/// makes one call per field instead of one for the tag and one for the
+/// payload.
+#[inline]
+pub fn put_tagged_varint(tag: u32, value: u64, buf: &mut impl EncodeSink) {
+    encode_varint(u64::from(tag), buf);
+    encode_varint(value, buf);
+}
+
+/// Write a tag and a 4-byte little-endian payload; see
+/// [`put_tagged_varint`].
+#[inline]
+pub fn put_tagged_fixed32(tag: u32, value: u32, buf: &mut impl EncodeSink) {
+    encode_varint(u64::from(tag), buf);
+    buf.put_u32_le(value);
+}
+
+/// Write a tag and an 8-byte little-endian payload; see
+/// [`put_tagged_varint`].
+#[inline]
+pub fn put_tagged_fixed64(tag: u32, value: u64, buf: &mut impl EncodeSink) {
+    encode_varint(u64::from(tag), buf);
+    buf.put_u64_le(value);
+}
+
+/// Write a tag, a varint length prefix and the payload bytes; see
+/// [`put_tagged_varint`].
+#[inline]
+pub fn put_tagged_len_delimited(tag: u32, payload: &[u8], buf: &mut impl EncodeSink) {
+    encode_varint(u64::from(tag), buf);
+    encode_varint(payload.len() as u64, buf);
+    buf.put_slice(payload);
+}
+
+/// Stamp a fused `put_<type>_field` writer: `$tagged` is the out-of-line
+/// tag+payload primitive and `$conv` turns the value into its argument.
 macro_rules! put_field_fn {
-    ($(#[$doc:meta])* $name:ident, $value:ty, $wire:expr, $encode:ident) => {
+    ($(#[$doc:meta])* $name:ident, $value:ty, $wire:expr, $encode:ident, $tagged:ident, $conv:expr) => {
         $(#[$doc])*
         ///
         #[doc = concat!(
             "Fused tag+payload sibling of [`", stringify!($encode), "`]; ",
             "exists so generated `write_to` bodies are one call per field."
         )]
-        // `#[inline(always)]`, applied uniformly by the macro. It is load-bearing
-        // for the larger string/bytes variants — the inliner declined the plain
-        // `#[inline]` hint there, leaving `field_number` a runtime arg that
-        // re-encodes the tag varint per call — and harmless for the small scalar
-        // variants (already inlined). With the field number a literal at the call
-        // site, inlining const-folds the tag to constant byte store(s): one byte
-        // for field numbers 1-15, a few for larger numbers.
+        // `#[inline(always)]`, applied uniformly by the macro, so that the
+        // literal field number at every call site folds into a constant tag
+        // before it reaches the shared primitive.
         #[inline(always)]
         pub fn $name(field_number: u32, value: $value, buf: &mut impl EncodeSink) {
-            Tag::new(field_number, $wire).encode(buf);
-            $encode(value, buf);
+            $tagged(tag_u32(field_number, $wire), ($conv)(value), buf);
         }
     };
 }
 
 put_field_fn!(
     /// Write a tagged `int32` field (tag + varint payload).
-    put_int32_field, i32, WireType::Varint, encode_int32
+    put_int32_field, i32, WireType::Varint, encode_int32, put_tagged_varint, |v| v as i64 as u64
 );
 put_field_fn!(
     /// Write a tagged `int64` field (tag + varint payload).
-    put_int64_field, i64, WireType::Varint, encode_int64
+    put_int64_field, i64, WireType::Varint, encode_int64, put_tagged_varint, |v| v as u64
 );
 put_field_fn!(
     /// Write a tagged `uint32` field (tag + varint payload).
-    put_uint32_field, u32, WireType::Varint, encode_uint32
+    put_uint32_field, u32, WireType::Varint, encode_uint32, put_tagged_varint, u64::from
 );
 put_field_fn!(
     /// Write a tagged `uint64` field (tag + varint payload).
-    put_uint64_field, u64, WireType::Varint, encode_uint64
+    put_uint64_field, u64, WireType::Varint, encode_uint64, put_tagged_varint, |v| v
 );
 put_field_fn!(
     /// Write a tagged `sint32` field (tag + zigzag varint payload).
-    put_sint32_field, i32, WireType::Varint, encode_sint32
+    put_sint32_field, i32, WireType::Varint, encode_sint32, put_tagged_varint, |v| u64::from(zigzag_encode_i32(v))
 );
 put_field_fn!(
     /// Write a tagged `sint64` field (tag + zigzag varint payload).
-    put_sint64_field, i64, WireType::Varint, encode_sint64
+    put_sint64_field, i64, WireType::Varint, encode_sint64, put_tagged_varint, zigzag_encode_i64
 );
 put_field_fn!(
     /// Write a tagged `bool` field (tag + one-byte payload).
-    put_bool_field, bool, WireType::Varint, encode_bool
+    put_bool_field, bool, WireType::Varint, encode_bool, put_tagged_varint, u64::from
 );
 put_field_fn!(
     /// Write a tagged `fixed32` field (tag + 4-byte payload).
-    put_fixed32_field, u32, WireType::Fixed32, encode_fixed32
+    put_fixed32_field, u32, WireType::Fixed32, encode_fixed32, put_tagged_fixed32, |v| v
 );
 put_field_fn!(
     /// Write a tagged `fixed64` field (tag + 8-byte payload).
-    put_fixed64_field, u64, WireType::Fixed64, encode_fixed64
+    put_fixed64_field, u64, WireType::Fixed64, encode_fixed64, put_tagged_fixed64, |v| v
 );
 put_field_fn!(
     /// Write a tagged `sfixed32` field (tag + 4-byte payload).
-    put_sfixed32_field, i32, WireType::Fixed32, encode_sfixed32
+    put_sfixed32_field, i32, WireType::Fixed32, encode_sfixed32, put_tagged_fixed32, |v| v as u32
 );
 put_field_fn!(
     /// Write a tagged `sfixed64` field (tag + 8-byte payload).
-    put_sfixed64_field, i64, WireType::Fixed64, encode_sfixed64
+    put_sfixed64_field, i64, WireType::Fixed64, encode_sfixed64, put_tagged_fixed64, |v| v as u64
 );
 put_field_fn!(
     /// Write a tagged `float` field (tag + 4-byte payload).
-    put_float_field, f32, WireType::Fixed32, encode_float
+    put_float_field, f32, WireType::Fixed32, encode_float, put_tagged_fixed32, f32::to_bits
 );
 put_field_fn!(
     /// Write a tagged `double` field (tag + 8-byte payload).
-    put_double_field, f64, WireType::Fixed64, encode_double
+    put_double_field, f64, WireType::Fixed64, encode_double, put_tagged_fixed64, f64::to_bits
 );
 put_field_fn!(
     /// Write a tagged `string` field (tag + length-prefixed UTF-8 payload).
-    put_string_field, &str, WireType::LengthDelimited, encode_string
+    put_string_field, &str, WireType::LengthDelimited, encode_string, put_tagged_len_delimited, str::as_bytes
 );
 put_field_fn!(
     /// Write a tagged `bytes` field (tag + length-prefixed payload).
-    put_bytes_field, &[u8], WireType::LengthDelimited, encode_bytes
+    put_bytes_field, &[u8], WireType::LengthDelimited, encode_bytes, put_tagged_len_delimited, |v| v
 );
 
 /// A value a `bytes` field can encode from: every [`ProtoBytes`]
@@ -1127,8 +1174,16 @@ pub fn put_shared_bytes_field<B: AsSharedBytes, S: EncodeSink>(
     value: &B,
     buf: &mut S,
 ) {
-    Tag::new(field_number, WireType::LengthDelimited).encode(buf);
-    encode_shared_bytes(value, buf);
+    if S::IS_SEGMENTED {
+        Tag::new(field_number, WireType::LengthDelimited).encode(buf);
+        encode_shared_bytes(value, buf);
+    } else {
+        put_tagged_len_delimited(
+            tag_u32(field_number, WireType::LengthDelimited),
+            value.as_bytes_slice(),
+            buf,
+        );
+    }
 }
 
 /// Encode a length-delimited `bytes` value (varint length prefix + payload,
@@ -1172,8 +1227,7 @@ pub fn encode_shared_bytes<B: AsSharedBytes, S: EncodeSink>(value: &B, buf: &mut
 /// `u64::from`.
 #[inline(always)]
 pub fn put_len_delimited_header(field_number: u32, len: u64, buf: &mut impl EncodeSink) {
-    Tag::new(field_number, WireType::LengthDelimited).encode(buf);
-    encode_varint(len, buf);
+    put_tagged_varint(tag_u32(field_number, WireType::LengthDelimited), len, buf);
 }
 
 /// Write a message field's tag and the length prefix recorded for it by the

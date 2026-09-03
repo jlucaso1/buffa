@@ -1,0 +1,4 @@
+kind: Changed
+body: |-
+    **Field writers share four tag+payload primitives.** `types::put_<type>_field`, `put_len_delimited_header`, `put_submessage_header` and (on contiguous sinks) `put_shared_bytes_field` now fold the literal field number into a constant tag and call one of the new `put_tagged_varint` / `put_tagged_fixed32` / `put_tagged_fixed64` / `put_tagged_len_delimited` primitives. A speed-optimised build inlines those and emits the same constant tag bytes as before; a size-optimised build keeps them out of line, so each field costs one call instead of one for the tag and one for the payload (−4.8% owned-codec `.text` on a 750-message schema, encode instruction counts within 0.3%). The primitives are public for hand-written encoders.
+time: 2026-09-03T21:00:00.000000-03:00
