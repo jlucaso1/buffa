@@ -913,6 +913,52 @@ pub fn borrow_opt_bytes_field<'a>(
     Ok(())
 }
 
+/// Read one element of a repeated `string` field and append it; the fused
+/// reader for the default `Vec<String>` representation. The element's
+/// footprint is charged against `ctx`'s budget before the push.
+///
+/// # Errors
+///
+/// Returns [`DecodeError::WireTypeMismatch`] when `tag`'s wire type is not
+/// `LengthDelimited`, [`DecodeError::ElementMemoryLimitExceeded`] when the
+/// budget is exhausted, or [`decode_string`]'s error.
+#[inline]
+pub fn push_string_field(
+    tag: Tag,
+    dst: &mut Vec<String>,
+    buf: &mut impl Buf,
+    ctx: crate::DecodeContext<'_>,
+) -> Result<(), DecodeError> {
+    crate::encoding::check_wire_type(tag, WireType::LengthDelimited)?;
+    let elem = decode_string(buf)?;
+    ctx.register_element_memory(core::mem::size_of::<String>())?;
+    dst.push(elem);
+    Ok(())
+}
+
+/// Read one element of a repeated `bytes` field and append it; the fused
+/// reader for the default `Vec<Vec<u8>>` representation. The element's
+/// footprint is charged against `ctx`'s budget before the push.
+///
+/// # Errors
+///
+/// Returns [`DecodeError::WireTypeMismatch`] when `tag`'s wire type is not
+/// `LengthDelimited`, [`DecodeError::ElementMemoryLimitExceeded`] when the
+/// budget is exhausted, or [`decode_bytes`]'s error.
+#[inline]
+pub fn push_bytes_field(
+    tag: Tag,
+    dst: &mut Vec<Vec<u8>>,
+    buf: &mut impl Buf,
+    ctx: crate::DecodeContext<'_>,
+) -> Result<(), DecodeError> {
+    crate::encoding::check_wire_type(tag, WireType::LengthDelimited)?;
+    let elem = decode_bytes(buf)?;
+    ctx.register_element_memory(core::mem::size_of::<Vec<u8>>())?;
+    dst.push(elem);
+    Ok(())
+}
+
 // ---------------------------------------------------------------------------
 // Fused tag + payload field writers
 // ---------------------------------------------------------------------------
@@ -2441,6 +2487,43 @@ mod tests {
             err,
             DecodeError::WireTypeMismatch {
                 field_number: 3,
+                ..
+            }
+        ));
+    }
+
+    #[test]
+    fn fused_repeated_readers_charge_the_budget_before_pushing() {
+        let ld = Tag::new(1, WireType::LengthDelimited);
+        let unknown = core::cell::Cell::new(crate::DEFAULT_UNKNOWN_FIELD_LIMIT);
+        // Room for exactly one String element.
+        let budget = core::cell::Cell::new(core::mem::size_of::<String>());
+        let ctx = crate::DecodeContext::new(8, &unknown).with_element_memory(&budget);
+        let mut strings = Vec::new();
+        push_string_field(ld, &mut strings, &mut &b"\x02hi"[..], ctx).unwrap();
+        assert_eq!(strings, ["hi"]);
+        let err = push_string_field(ld, &mut strings, &mut &b"\x02yo"[..], ctx).unwrap_err();
+        assert_eq!(err, DecodeError::ElementMemoryLimitExceeded);
+        assert_eq!(
+            strings.len(),
+            1,
+            "an over-budget element must not be pushed"
+        );
+        let mut bytes = Vec::new();
+        let err = push_bytes_field(ld, &mut bytes, &mut &b"\x01\xff"[..], ctx).unwrap_err();
+        assert_eq!(err, DecodeError::ElementMemoryLimitExceeded);
+        assert!(bytes.is_empty());
+        let err = push_bytes_field(
+            Tag::new(1, WireType::Varint),
+            &mut bytes,
+            &mut &[0u8][..],
+            ctx,
+        )
+        .unwrap_err();
+        assert!(matches!(
+            err,
+            DecodeError::WireTypeMismatch {
+                field_number: 1,
                 ..
             }
         ));

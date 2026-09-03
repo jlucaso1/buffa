@@ -393,15 +393,7 @@ impl ::buffa::Message for FieldMask {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                let __elem = ::buffa::types::decode_string(buf)?;
-                ctx.register_element_memory(
-                    ::buffa::__private::element_footprint(&__elem),
-                )?;
-                self.paths.push(__elem);
+                ::buffa::types::push_string_field(tag, &mut self.paths, buf, ctx)?;
             }
             _ => {
                 self.__buffa_unknown_fields

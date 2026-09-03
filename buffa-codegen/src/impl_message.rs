@@ -2512,6 +2512,30 @@ fn repeated_merge_arm(
             }
         });
     }
+    // Default `Vec<String>` / `Vec<Vec<u8>>` append through one fused reader
+    // (wire check, decode, budget charge, push); see `push_string_field`.
+    // Only the non-generic readers pay off: a reader generic over the
+    // element type instantiates once per type, which measured larger than
+    // the arm bytes it saves, so message and enum arms keep the spelled-out
+    // form.
+    if !is_packed_type(ty) && repr.is_default() {
+        let fused = match ty {
+            Type::TYPE_STRING if field_string_repr(ctx, proto_fqn, field_name).is_default() => {
+                Some(quote! { ::buffa::types::push_string_field })
+            }
+            Type::TYPE_BYTES if bytes_repr.is_default() => {
+                Some(quote! { ::buffa::types::push_bytes_field })
+            }
+            _ => None,
+        };
+        if let Some(reader) = fused {
+            return Ok(quote! {
+                #field_number => {
+                    #reader(tag, &mut self.#ident, buf, ctx)?;
+                }
+            });
+        }
+    }
     if !is_packed_type(ty) {
         let wire_check = wire_type_check(
             &quote! { tag },

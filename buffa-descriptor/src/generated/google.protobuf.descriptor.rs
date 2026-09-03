@@ -1147,15 +1147,7 @@ impl ::buffa::Message for FileDescriptorProto {
                 ::buffa::types::merge_opt_string_field(tag, &mut self.package, buf)?;
             }
             3u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                let __elem = ::buffa::types::decode_string(buf)?;
-                ctx.register_element_memory(
-                    ::buffa::__private::element_footprint(&__elem),
-                )?;
-                self.dependency.push(__elem);
+                ::buffa::types::push_string_field(tag, &mut self.dependency, buf, ctx)?;
             }
             4u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -1330,15 +1322,12 @@ impl ::buffa::Message for FileDescriptorProto {
                 }
             }
             15u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::push_string_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut self.option_dependency,
+                    buf,
+                    ctx,
                 )?;
-                let __elem = ::buffa::types::decode_string(buf)?;
-                ctx.register_element_memory(
-                    ::buffa::__private::element_footprint(&__elem),
-                )?;
-                self.option_dependency.push(__elem);
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -1982,15 +1971,12 @@ impl ::buffa::Message for DescriptorProto {
                 self.reserved_range.push(elem);
             }
             10u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::push_string_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut self.reserved_name,
+                    buf,
+                    ctx,
                 )?;
-                let __elem = ::buffa::types::decode_string(buf)?;
-                ctx.register_element_memory(
-                    ::buffa::__private::element_footprint(&__elem),
-                )?;
-                self.reserved_name.push(__elem);
             }
             11u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -5399,15 +5385,12 @@ impl ::buffa::Message for EnumDescriptorProto {
                 self.reserved_range.push(elem);
             }
             5u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::push_string_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut self.reserved_name,
+                    buf,
+                    ctx,
                 )?;
-                let __elem = ::buffa::types::decode_string(buf)?;
-                ctx.register_element_memory(
-                    ::buffa::__private::element_footprint(&__elem),
-                )?;
-                self.reserved_name.push(__elem);
             }
             6u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -18910,15 +18893,12 @@ pub mod source_code_info {
                     )?;
                 }
                 6u32 => {
-                    ::buffa::encoding::check_wire_type(
+                    ::buffa::types::push_string_field(
                         tag,
-                        ::buffa::encoding::WireType::LengthDelimited,
+                        &mut self.leading_detached_comments,
+                        buf,
+                        ctx,
                     )?;
-                    let __elem = ::buffa::types::decode_string(buf)?;
-                    ctx.register_element_memory(
-                        ::buffa::__private::element_footprint(&__elem),
-                    )?;
-                    self.leading_detached_comments.push(__elem);
                 }
                 _ => {
                     self.__buffa_unknown_fields

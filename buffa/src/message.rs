@@ -876,7 +876,7 @@ pub trait Message: DefaultInstance + Clone + PartialEq + Send + Sync {
     /// object-safe trait), not a per-message instantiation.  The top-level
     /// entry points ([`merge`](Self::merge),
     /// [`decode_length_delimited`](Self::decode_length_delimited),
-    /// [`DecodeOptions`](crate::DecodeOptions)) call this method, so an
+    /// [`DecodeOptions`]) call this method, so an
     /// override applies to them; generated code overrides it with a
     /// monomorphic loop for that reason.  The default
     /// [`merge_length_delimited`](Self::merge_length_delimited) and

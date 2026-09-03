@@ -1978,8 +1978,8 @@ fn test_repeated_unpacked_string() {
         "missing put_string_field: {content}"
     );
     assert!(
-        content.contains("decode_string"),
-        "missing decode_string: {content}"
+        content.contains("::buffa::types::push_string_field(tag, &mut self."),
+        "repeated string must append through push_string_field: {content}"
     );
 }
 

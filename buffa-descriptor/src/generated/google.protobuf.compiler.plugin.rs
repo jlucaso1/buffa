@@ -497,15 +497,12 @@ impl ::buffa::Message for CodeGeneratorRequest {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::push_string_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut self.file_to_generate,
+                    buf,
+                    ctx,
                 )?;
-                let __elem = ::buffa::types::decode_string(buf)?;
-                ctx.register_element_memory(
-                    ::buffa::__private::element_footprint(&__elem),
-                )?;
-                self.file_to_generate.push(__elem);
             }
             2u32 => {
                 ::buffa::types::merge_opt_string_field(tag, &mut self.parameter, buf)?;

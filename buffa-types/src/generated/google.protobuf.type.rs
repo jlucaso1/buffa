@@ -359,15 +359,7 @@ impl ::buffa::Message for Type {
                 self.fields.push(elem);
             }
             3u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                let __elem = ::buffa::types::decode_string(buf)?;
-                ctx.register_element_memory(
-                    ::buffa::__private::element_footprint(&__elem),
-                )?;
-                self.oneofs.push(__elem);
+                ::buffa::types::push_string_field(tag, &mut self.oneofs, buf, ctx)?;
             }
             4u32 => {
                 ::buffa::encoding::check_wire_type(
