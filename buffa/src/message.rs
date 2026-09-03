@@ -817,7 +817,9 @@ pub trait Message: DefaultInstance + Clone + PartialEq + Send + Sync {
         let field_limit = core::cell::Cell::new(DEFAULT_UNKNOWN_FIELD_LIMIT);
         let elem_budget = core::cell::Cell::new(DEFAULT_ELEMENT_MEMORY_LIMIT);
         let mut msg = Self::default();
-        msg.merge_to_limit(
+        // Monomorphic top-level loop; see `merge`.
+        crate::__private::merge_to_limit_inline(
+            &mut msg,
             buf,
             DecodeContext::new(RECURSION_LIMIT, &field_limit).with_element_memory(&elem_budget),
             limit,
@@ -938,7 +940,14 @@ pub trait Message: DefaultInstance + Clone + PartialEq + Send + Sync {
     /// [`merge_from_slice`](Self::merge_from_slice)) which do this
     /// automatically.
     fn merge(&mut self, buf: &mut impl Buf, ctx: DecodeContext<'_>) -> Result<(), DecodeError> {
-        self.merge_to_limit(buf, ctx, 0)
+        // Top-level entry: a monomorphic loop with a direct `merge_field`
+        // call. The type-erased loop behind `merge_to_limit` shares one
+        // indirect call site across every message type, which mispredicts
+        // as parent and child decoders alternate; measured +11–13% on flat
+        // top-level decodes. Only the types an application decodes directly
+        // instantiate this, so the size cost is bounded by that set, while
+        // every nested sub-message still goes through the shared loop.
+        crate::__private::merge_to_limit_inline(self, buf, ctx, 0)
     }
 
     /// Merge fields from a byte slice into this message.
@@ -1492,7 +1501,9 @@ impl DecodeOptions {
         let field_limit = core::cell::Cell::new(self.unknown_field_limit);
         let elem_budget = core::cell::Cell::new(self.element_memory_limit);
         let mut msg = M::default();
-        msg.merge_to_limit(
+        // Monomorphic top-level loop; see `Message::merge`.
+        crate::__private::merge_to_limit_inline(
+            &mut msg,
             buf,
             DecodeContext::new(self.recursion_limit, &field_limit)
                 .with_element_memory(&elem_budget),

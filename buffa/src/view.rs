@@ -264,7 +264,10 @@ pub trait MessageView<'a>: Sized {
         Self: Default,
     {
         let mut view = Self::default();
-        view.merge_into_view(buf, ctx)?;
+        // Top-level entry: monomorphic loop with a direct `merge_view_field`
+        // call, for the same reason as `Message::merge`; nested message
+        // fields go through the shared erased loop in `merge_into_view`.
+        crate::__private::merge_into_view_inline(&mut view, buf, ctx)?;
         Ok(view)
     }
 
