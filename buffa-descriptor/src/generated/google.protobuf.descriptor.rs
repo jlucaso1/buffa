@@ -500,21 +500,12 @@ impl ::buffa::Message for FileDescriptorSet {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
+                let mut elem = ::core::default::Default::default();
                 ctx.register_element_memory(
-                    ::buffa::__private::vec_element_footprint(&self.file),
+                    ::buffa::__private::element_footprint(&elem),
                 )?;
-                if ::buffa::__private::vec_element_footprint(&self.file)
-                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
-                {
-                    self.file.push(::core::default::Default::default());
-                    if let Some(elem) = self.file.last_mut() {
-                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
-                    }
-                } else {
-                    let mut elem = ::core::default::Default::default();
-                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                    self.file.push(elem);
-                }
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.file.push(elem);
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -1176,84 +1167,48 @@ impl ::buffa::Message for FileDescriptorProto {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
+                let mut elem = ::core::default::Default::default();
                 ctx.register_element_memory(
-                    ::buffa::__private::vec_element_footprint(&self.message_type),
+                    ::buffa::__private::element_footprint(&elem),
                 )?;
-                if ::buffa::__private::vec_element_footprint(&self.message_type)
-                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
-                {
-                    self.message_type.push(::core::default::Default::default());
-                    if let Some(elem) = self.message_type.last_mut() {
-                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
-                    }
-                } else {
-                    let mut elem = ::core::default::Default::default();
-                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                    self.message_type.push(elem);
-                }
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.message_type.push(elem);
             }
             5u32 => {
                 ::buffa::encoding::check_wire_type(
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
+                let mut elem = ::core::default::Default::default();
                 ctx.register_element_memory(
-                    ::buffa::__private::vec_element_footprint(&self.enum_type),
+                    ::buffa::__private::element_footprint(&elem),
                 )?;
-                if ::buffa::__private::vec_element_footprint(&self.enum_type)
-                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
-                {
-                    self.enum_type.push(::core::default::Default::default());
-                    if let Some(elem) = self.enum_type.last_mut() {
-                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
-                    }
-                } else {
-                    let mut elem = ::core::default::Default::default();
-                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                    self.enum_type.push(elem);
-                }
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.enum_type.push(elem);
             }
             6u32 => {
                 ::buffa::encoding::check_wire_type(
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
+                let mut elem = ::core::default::Default::default();
                 ctx.register_element_memory(
-                    ::buffa::__private::vec_element_footprint(&self.service),
+                    ::buffa::__private::element_footprint(&elem),
                 )?;
-                if ::buffa::__private::vec_element_footprint(&self.service)
-                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
-                {
-                    self.service.push(::core::default::Default::default());
-                    if let Some(elem) = self.service.last_mut() {
-                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
-                    }
-                } else {
-                    let mut elem = ::core::default::Default::default();
-                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                    self.service.push(elem);
-                }
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.service.push(elem);
             }
             7u32 => {
                 ::buffa::encoding::check_wire_type(
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
+                let mut elem = ::core::default::Default::default();
                 ctx.register_element_memory(
-                    ::buffa::__private::vec_element_footprint(&self.extension),
+                    ::buffa::__private::element_footprint(&elem),
                 )?;
-                if ::buffa::__private::vec_element_footprint(&self.extension)
-                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
-                {
-                    self.extension.push(::core::default::Default::default());
-                    if let Some(elem) = self.extension.last_mut() {
-                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
-                    }
-                } else {
-                    let mut elem = ::core::default::Default::default();
-                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                    self.extension.push(elem);
-                }
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.extension.push(elem);
             }
             8u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -1946,105 +1901,60 @@ impl ::buffa::Message for DescriptorProto {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
+                let mut elem = ::core::default::Default::default();
                 ctx.register_element_memory(
-                    ::buffa::__private::vec_element_footprint(&self.field),
+                    ::buffa::__private::element_footprint(&elem),
                 )?;
-                if ::buffa::__private::vec_element_footprint(&self.field)
-                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
-                {
-                    self.field.push(::core::default::Default::default());
-                    if let Some(elem) = self.field.last_mut() {
-                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
-                    }
-                } else {
-                    let mut elem = ::core::default::Default::default();
-                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                    self.field.push(elem);
-                }
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.field.push(elem);
             }
             3u32 => {
                 ::buffa::encoding::check_wire_type(
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
+                let mut elem = ::core::default::Default::default();
                 ctx.register_element_memory(
-                    ::buffa::__private::vec_element_footprint(&self.nested_type),
+                    ::buffa::__private::element_footprint(&elem),
                 )?;
-                if ::buffa::__private::vec_element_footprint(&self.nested_type)
-                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
-                {
-                    self.nested_type.push(::core::default::Default::default());
-                    if let Some(elem) = self.nested_type.last_mut() {
-                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
-                    }
-                } else {
-                    let mut elem = ::core::default::Default::default();
-                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                    self.nested_type.push(elem);
-                }
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.nested_type.push(elem);
             }
             4u32 => {
                 ::buffa::encoding::check_wire_type(
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
+                let mut elem = ::core::default::Default::default();
                 ctx.register_element_memory(
-                    ::buffa::__private::vec_element_footprint(&self.enum_type),
+                    ::buffa::__private::element_footprint(&elem),
                 )?;
-                if ::buffa::__private::vec_element_footprint(&self.enum_type)
-                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
-                {
-                    self.enum_type.push(::core::default::Default::default());
-                    if let Some(elem) = self.enum_type.last_mut() {
-                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
-                    }
-                } else {
-                    let mut elem = ::core::default::Default::default();
-                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                    self.enum_type.push(elem);
-                }
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.enum_type.push(elem);
             }
             5u32 => {
                 ::buffa::encoding::check_wire_type(
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
+                let mut elem = ::core::default::Default::default();
                 ctx.register_element_memory(
-                    ::buffa::__private::vec_element_footprint(&self.extension_range),
+                    ::buffa::__private::element_footprint(&elem),
                 )?;
-                if ::buffa::__private::vec_element_footprint(&self.extension_range)
-                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
-                {
-                    self.extension_range.push(::core::default::Default::default());
-                    if let Some(elem) = self.extension_range.last_mut() {
-                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
-                    }
-                } else {
-                    let mut elem = ::core::default::Default::default();
-                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                    self.extension_range.push(elem);
-                }
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.extension_range.push(elem);
             }
             6u32 => {
                 ::buffa::encoding::check_wire_type(
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
+                let mut elem = ::core::default::Default::default();
                 ctx.register_element_memory(
-                    ::buffa::__private::vec_element_footprint(&self.extension),
+                    ::buffa::__private::element_footprint(&elem),
                 )?;
-                if ::buffa::__private::vec_element_footprint(&self.extension)
-                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
-                {
-                    self.extension.push(::core::default::Default::default());
-                    if let Some(elem) = self.extension.last_mut() {
-                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
-                    }
-                } else {
-                    let mut elem = ::core::default::Default::default();
-                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                    self.extension.push(elem);
-                }
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.extension.push(elem);
             }
             7u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -2062,42 +1972,24 @@ impl ::buffa::Message for DescriptorProto {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
+                let mut elem = ::core::default::Default::default();
                 ctx.register_element_memory(
-                    ::buffa::__private::vec_element_footprint(&self.oneof_decl),
+                    ::buffa::__private::element_footprint(&elem),
                 )?;
-                if ::buffa::__private::vec_element_footprint(&self.oneof_decl)
-                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
-                {
-                    self.oneof_decl.push(::core::default::Default::default());
-                    if let Some(elem) = self.oneof_decl.last_mut() {
-                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
-                    }
-                } else {
-                    let mut elem = ::core::default::Default::default();
-                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                    self.oneof_decl.push(elem);
-                }
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.oneof_decl.push(elem);
             }
             9u32 => {
                 ::buffa::encoding::check_wire_type(
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
+                let mut elem = ::core::default::Default::default();
                 ctx.register_element_memory(
-                    ::buffa::__private::vec_element_footprint(&self.reserved_range),
+                    ::buffa::__private::element_footprint(&elem),
                 )?;
-                if ::buffa::__private::vec_element_footprint(&self.reserved_range)
-                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
-                {
-                    self.reserved_range.push(::core::default::Default::default());
-                    if let Some(elem) = self.reserved_range.last_mut() {
-                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
-                    }
-                } else {
-                    let mut elem = ::core::default::Default::default();
-                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                    self.reserved_range.push(elem);
-                }
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.reserved_range.push(elem);
             }
             10u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -3072,21 +2964,12 @@ impl ::buffa::Message for ExtensionRangeOptions {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
+                let mut elem = ::core::default::Default::default();
                 ctx.register_element_memory(
-                    ::buffa::__private::vec_element_footprint(&self.declaration),
+                    ::buffa::__private::element_footprint(&elem),
                 )?;
-                if ::buffa::__private::vec_element_footprint(&self.declaration)
-                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
-                {
-                    self.declaration.push(::core::default::Default::default());
-                    if let Some(elem) = self.declaration.last_mut() {
-                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
-                    }
-                } else {
-                    let mut elem = ::core::default::Default::default();
-                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                    self.declaration.push(elem);
-                }
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.declaration.push(elem);
             }
             3u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -3123,21 +3006,12 @@ impl ::buffa::Message for ExtensionRangeOptions {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
+                let mut elem = ::core::default::Default::default();
                 ctx.register_element_memory(
-                    ::buffa::__private::vec_element_footprint(&self.uninterpreted_option),
+                    ::buffa::__private::element_footprint(&elem),
                 )?;
-                if ::buffa::__private::vec_element_footprint(&self.uninterpreted_option)
-                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
-                {
-                    self.uninterpreted_option.push(::core::default::Default::default());
-                    if let Some(elem) = self.uninterpreted_option.last_mut() {
-                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
-                    }
-                } else {
-                    let mut elem = ::core::default::Default::default();
-                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                    self.uninterpreted_option.push(elem);
-                }
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.uninterpreted_option.push(elem);
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -5608,21 +5482,12 @@ impl ::buffa::Message for EnumDescriptorProto {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
+                let mut elem = ::core::default::Default::default();
                 ctx.register_element_memory(
-                    ::buffa::__private::vec_element_footprint(&self.value),
+                    ::buffa::__private::element_footprint(&elem),
                 )?;
-                if ::buffa::__private::vec_element_footprint(&self.value)
-                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
-                {
-                    self.value.push(::core::default::Default::default());
-                    if let Some(elem) = self.value.last_mut() {
-                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
-                    }
-                } else {
-                    let mut elem = ::core::default::Default::default();
-                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                    self.value.push(elem);
-                }
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.value.push(elem);
             }
             3u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -5640,21 +5505,12 @@ impl ::buffa::Message for EnumDescriptorProto {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
+                let mut elem = ::core::default::Default::default();
                 ctx.register_element_memory(
-                    ::buffa::__private::vec_element_footprint(&self.reserved_range),
+                    ::buffa::__private::element_footprint(&elem),
                 )?;
-                if ::buffa::__private::vec_element_footprint(&self.reserved_range)
-                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
-                {
-                    self.reserved_range.push(::core::default::Default::default());
-                    if let Some(elem) = self.reserved_range.last_mut() {
-                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
-                    }
-                } else {
-                    let mut elem = ::core::default::Default::default();
-                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                    self.reserved_range.push(elem);
-                }
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.reserved_range.push(elem);
             }
             5u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -6526,21 +6382,12 @@ impl ::buffa::Message for ServiceDescriptorProto {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
+                let mut elem = ::core::default::Default::default();
                 ctx.register_element_memory(
-                    ::buffa::__private::vec_element_footprint(&self.method),
+                    ::buffa::__private::element_footprint(&elem),
                 )?;
-                if ::buffa::__private::vec_element_footprint(&self.method)
-                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
-                {
-                    self.method.push(::core::default::Default::default());
-                    if let Some(elem) = self.method.last_mut() {
-                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
-                    }
-                } else {
-                    let mut elem = ::core::default::Default::default();
-                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                    self.method.push(elem);
-                }
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.method.push(elem);
             }
             3u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -8013,21 +7860,12 @@ impl ::buffa::Message for FileOptions {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
+                let mut elem = ::core::default::Default::default();
                 ctx.register_element_memory(
-                    ::buffa::__private::vec_element_footprint(&self.uninterpreted_option),
+                    ::buffa::__private::element_footprint(&elem),
                 )?;
-                if ::buffa::__private::vec_element_footprint(&self.uninterpreted_option)
-                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
-                {
-                    self.uninterpreted_option.push(::core::default::Default::default());
-                    if let Some(elem) = self.uninterpreted_option.last_mut() {
-                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
-                    }
-                } else {
-                    let mut elem = ::core::default::Default::default();
-                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                    self.uninterpreted_option.push(elem);
-                }
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.uninterpreted_option.push(elem);
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -9252,21 +9090,12 @@ impl ::buffa::Message for MessageOptions {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
+                let mut elem = ::core::default::Default::default();
                 ctx.register_element_memory(
-                    ::buffa::__private::vec_element_footprint(&self.uninterpreted_option),
+                    ::buffa::__private::element_footprint(&elem),
                 )?;
-                if ::buffa::__private::vec_element_footprint(&self.uninterpreted_option)
-                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
-                {
-                    self.uninterpreted_option.push(::core::default::Default::default());
-                    if let Some(elem) = self.uninterpreted_option.last_mut() {
-                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
-                    }
-                } else {
-                    let mut elem = ::core::default::Default::default();
-                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                    self.uninterpreted_option.push(elem);
-                }
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.uninterpreted_option.push(elem);
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -10246,21 +10075,12 @@ impl ::buffa::Message for FieldOptions {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
+                let mut elem = ::core::default::Default::default();
                 ctx.register_element_memory(
-                    ::buffa::__private::vec_element_footprint(&self.edition_defaults),
+                    ::buffa::__private::element_footprint(&elem),
                 )?;
-                if ::buffa::__private::vec_element_footprint(&self.edition_defaults)
-                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
-                {
-                    self.edition_defaults.push(::core::default::Default::default());
-                    if let Some(elem) = self.edition_defaults.last_mut() {
-                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
-                    }
-                } else {
-                    let mut elem = ::core::default::Default::default();
-                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                    self.edition_defaults.push(elem);
-                }
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.edition_defaults.push(elem);
             }
             21u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -10289,21 +10109,12 @@ impl ::buffa::Message for FieldOptions {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
+                let mut elem = ::core::default::Default::default();
                 ctx.register_element_memory(
-                    ::buffa::__private::vec_element_footprint(&self.uninterpreted_option),
+                    ::buffa::__private::element_footprint(&elem),
                 )?;
-                if ::buffa::__private::vec_element_footprint(&self.uninterpreted_option)
-                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
-                {
-                    self.uninterpreted_option.push(::core::default::Default::default());
-                    if let Some(elem) = self.uninterpreted_option.last_mut() {
-                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
-                    }
-                } else {
-                    let mut elem = ::core::default::Default::default();
-                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                    self.uninterpreted_option.push(elem);
-                }
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.uninterpreted_option.push(elem);
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -12387,21 +12198,12 @@ impl ::buffa::Message for OneofOptions {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
+                let mut elem = ::core::default::Default::default();
                 ctx.register_element_memory(
-                    ::buffa::__private::vec_element_footprint(&self.uninterpreted_option),
+                    ::buffa::__private::element_footprint(&elem),
                 )?;
-                if ::buffa::__private::vec_element_footprint(&self.uninterpreted_option)
-                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
-                {
-                    self.uninterpreted_option.push(::core::default::Default::default());
-                    if let Some(elem) = self.uninterpreted_option.last_mut() {
-                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
-                    }
-                } else {
-                    let mut elem = ::core::default::Default::default();
-                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                    self.uninterpreted_option.push(elem);
-                }
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.uninterpreted_option.push(elem);
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -12903,21 +12705,12 @@ impl ::buffa::Message for EnumOptions {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
+                let mut elem = ::core::default::Default::default();
                 ctx.register_element_memory(
-                    ::buffa::__private::vec_element_footprint(&self.uninterpreted_option),
+                    ::buffa::__private::element_footprint(&elem),
                 )?;
-                if ::buffa::__private::vec_element_footprint(&self.uninterpreted_option)
-                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
-                {
-                    self.uninterpreted_option.push(::core::default::Default::default());
-                    if let Some(elem) = self.uninterpreted_option.last_mut() {
-                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
-                    }
-                } else {
-                    let mut elem = ::core::default::Default::default();
-                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                    self.uninterpreted_option.push(elem);
-                }
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.uninterpreted_option.push(elem);
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -13474,21 +13267,12 @@ impl ::buffa::Message for EnumValueOptions {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
+                let mut elem = ::core::default::Default::default();
                 ctx.register_element_memory(
-                    ::buffa::__private::vec_element_footprint(&self.uninterpreted_option),
+                    ::buffa::__private::element_footprint(&elem),
                 )?;
-                if ::buffa::__private::vec_element_footprint(&self.uninterpreted_option)
-                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
-                {
-                    self.uninterpreted_option.push(::core::default::Default::default());
-                    if let Some(elem) = self.uninterpreted_option.last_mut() {
-                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
-                    }
-                } else {
-                    let mut elem = ::core::default::Default::default();
-                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                    self.uninterpreted_option.push(elem);
-                }
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.uninterpreted_option.push(elem);
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -13982,21 +13766,12 @@ impl ::buffa::Message for ServiceOptions {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
+                let mut elem = ::core::default::Default::default();
                 ctx.register_element_memory(
-                    ::buffa::__private::vec_element_footprint(&self.uninterpreted_option),
+                    ::buffa::__private::element_footprint(&elem),
                 )?;
-                if ::buffa::__private::vec_element_footprint(&self.uninterpreted_option)
-                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
-                {
-                    self.uninterpreted_option.push(::core::default::Default::default());
-                    if let Some(elem) = self.uninterpreted_option.last_mut() {
-                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
-                    }
-                } else {
-                    let mut elem = ::core::default::Default::default();
-                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                    self.uninterpreted_option.push(elem);
-                }
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.uninterpreted_option.push(elem);
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -14490,21 +14265,12 @@ impl ::buffa::Message for MethodOptions {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
+                let mut elem = ::core::default::Default::default();
                 ctx.register_element_memory(
-                    ::buffa::__private::vec_element_footprint(&self.uninterpreted_option),
+                    ::buffa::__private::element_footprint(&elem),
                 )?;
-                if ::buffa::__private::vec_element_footprint(&self.uninterpreted_option)
-                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
-                {
-                    self.uninterpreted_option.push(::core::default::Default::default());
-                    if let Some(elem) = self.uninterpreted_option.last_mut() {
-                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
-                    }
-                } else {
-                    let mut elem = ::core::default::Default::default();
-                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                    self.uninterpreted_option.push(elem);
-                }
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.uninterpreted_option.push(elem);
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -15237,21 +15003,12 @@ impl ::buffa::Message for UninterpretedOption {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
+                let mut elem = ::core::default::Default::default();
                 ctx.register_element_memory(
-                    ::buffa::__private::vec_element_footprint(&self.name),
+                    ::buffa::__private::element_footprint(&elem),
                 )?;
-                if ::buffa::__private::vec_element_footprint(&self.name)
-                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
-                {
-                    self.name.push(::core::default::Default::default());
-                    if let Some(elem) = self.name.last_mut() {
-                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
-                    }
-                } else {
-                    let mut elem = ::core::default::Default::default();
-                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                    self.name.push(elem);
-                }
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.name.push(elem);
             }
             3u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -18213,21 +17970,12 @@ impl ::buffa::Message for FeatureSetDefaults {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
+                let mut elem = ::core::default::Default::default();
                 ctx.register_element_memory(
-                    ::buffa::__private::vec_element_footprint(&self.defaults),
+                    ::buffa::__private::element_footprint(&elem),
                 )?;
-                if ::buffa::__private::vec_element_footprint(&self.defaults)
-                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
-                {
-                    self.defaults.push(::core::default::Default::default());
-                    if let Some(elem) = self.defaults.last_mut() {
-                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
-                    }
-                } else {
-                    let mut elem = ::core::default::Default::default();
-                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                    self.defaults.push(elem);
-                }
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.defaults.push(elem);
             }
             4u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -18845,21 +18593,12 @@ impl ::buffa::Message for SourceCodeInfo {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
+                let mut elem = ::core::default::Default::default();
                 ctx.register_element_memory(
-                    ::buffa::__private::vec_element_footprint(&self.location),
+                    ::buffa::__private::element_footprint(&elem),
                 )?;
-                if ::buffa::__private::vec_element_footprint(&self.location)
-                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
-                {
-                    self.location.push(::core::default::Default::default());
-                    if let Some(elem) = self.location.last_mut() {
-                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
-                    }
-                } else {
-                    let mut elem = ::core::default::Default::default();
-                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                    self.location.push(elem);
-                }
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.location.push(elem);
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -19723,21 +19462,12 @@ impl ::buffa::Message for GeneratedCodeInfo {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
+                let mut elem = ::core::default::Default::default();
                 ctx.register_element_memory(
-                    ::buffa::__private::vec_element_footprint(&self.annotation),
+                    ::buffa::__private::element_footprint(&elem),
                 )?;
-                if ::buffa::__private::vec_element_footprint(&self.annotation)
-                    > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
-                {
-                    self.annotation.push(::core::default::Default::default());
-                    if let Some(elem) = self.annotation.last_mut() {
-                        ::buffa::Message::merge_length_delimited(elem, buf, ctx)?;
-                    }
-                } else {
-                    let mut elem = ::core::default::Default::default();
-                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                    self.annotation.push(elem);
-                }
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.annotation.push(elem);
             }
             _ => {
                 self.__buffa_unknown_fields

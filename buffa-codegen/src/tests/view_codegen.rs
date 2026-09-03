@@ -757,40 +757,6 @@ fn test_view_singular_message_field_merges_through_one_slot() {
 }
 
 #[test]
-fn test_view_repeated_message_decodes_into_pushed_slot() {
-    let mut file = proto3_file("rep_slot.proto");
-    file.message_type.push(DescriptorProto {
-        name: Some("Item".to_string()),
-        field: vec![make_field("x", 1, Label::LABEL_OPTIONAL, Type::TYPE_INT32)],
-        ..Default::default()
-    });
-    file.message_type.push(DescriptorProto {
-        name: Some("List".to_string()),
-        field: vec![FieldDescriptorProto {
-            name: Some("items".to_string()),
-            number: Some(1),
-            label: Some(Label::LABEL_REPEATED),
-            r#type: Some(Type::TYPE_MESSAGE),
-            type_name: Some(".Item".to_string()),
-            ..Default::default()
-        }],
-        ..Default::default()
-    });
-    let files = generate(
-        &[file],
-        &["rep_slot.proto".to_string()],
-        &CodeGenConfig::default(),
-    )
-    .expect("should generate");
-    let content = &joined(&files);
-    assert!(
-        content.contains("view.items.as_mut_vec().last_mut()")
-            && content.contains("IN_PLACE_ELEMENT_BYTES"),
-        "repeated message view arm must offer the in-place slot path: {content}"
-    );
-}
-
-#[test]
 fn test_tiny_view_gets_inline_loop_override() {
     let mut file = proto3_file("tiny_view.proto");
     file.message_type.push(DescriptorProto {

@@ -303,28 +303,6 @@ pub mod __private {
         core::mem::size_of::<T>()
     }
 
-    /// Element size of the default `Vec`-backed repeated container, for
-    /// charging against the element-memory budget *before* the element is
-    /// materialised (the `Vec` may reallocate on `push`).
-    #[inline(always)]
-    #[must_use]
-    pub fn vec_element_footprint<T>(_list: &alloc::vec::Vec<T>) -> usize {
-        core::mem::size_of::<T>()
-    }
-
-    /// Elements larger than this decode straight into their pushed `Vec`
-    /// slot; smaller ones decode into a stack temporary that stays in
-    /// registers and is then moved. Generated code compares
-    /// `size_of::<T>()` against it, so the comparison folds at compile time
-    /// and only one of the two arms is emitted.
-    ///
-    /// 128 bytes is where the move stops being a couple of vector stores;
-    /// a 3-float vertex (24 bytes owned, 12 as a view) measured 5–8% faster
-    /// through the temporary, while a 40-field message or a view with a
-    /// dozen borrowed strings is a `memcpy` per element the in-place path
-    /// avoids.
-    pub const IN_PLACE_ELEMENT_BYTES: usize = 128;
-
     /// Re-exported for use in generated `DefaultInstance` implementations.
     ///
     /// Generated code refers to this as `::buffa::__private::OnceBox<T>` so

@@ -168,10 +168,7 @@ impl ::buffa::Message for LogEntry {
         if let ::core::option::Option::Some(__v) = self.timestamp.as_option() {
             let __slot = __cache.reserve();
             let inner_size = __v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         {
             let val = self.severity.to_i32();
@@ -188,10 +185,7 @@ impl ::buffa::Message for LogEntry {
         if let ::core::option::Option::Some(__v) = self.context.as_option() {
             let __slot = __cache.reserve();
             let inner_size = __v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         size
             += ::buffa::map_codec::field_len::<
@@ -210,11 +204,7 @@ impl ::buffa::Message for LogEntry {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
         if let ::core::option::Option::Some(__v) = self.timestamp.as_option() {
-            ::buffa::types::put_len_delimited_header(
-                1u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(1u32, __cache, buf);
             __v.write_to(__cache, buf);
         }
         {
@@ -230,11 +220,7 @@ impl ::buffa::Message for LogEntry {
             ::buffa::types::put_string_field(4u32, &self.logger, buf);
         }
         if let ::core::option::Option::Some(__v) = self.context.as_option() {
-            ::buffa::types::put_len_delimited_header(
-                5u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(5u32, __cache, buf);
             __v.write_to(__cache, buf);
         }
         ::buffa::map_codec::write_field::<
@@ -380,10 +366,7 @@ impl ::buffa::Message for LogBatch {
         for v in &self.entries {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -396,11 +379,7 @@ impl ::buffa::Message for LogBatch {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
         for v in &self.entries {
-            ::buffa::types::put_len_delimited_header(
-                1u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(1u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);

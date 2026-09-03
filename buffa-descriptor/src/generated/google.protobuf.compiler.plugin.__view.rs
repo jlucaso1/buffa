@@ -461,26 +461,13 @@ impl<'a> ::buffa::MessageView<'a> for CodeGeneratorRequestView<'a> {
                         super::super::super::__buffa::view::FileDescriptorProtoView,
                     >(),
                 )?;
-                if ::core::mem::size_of::<
-                    super::super::super::__buffa::view::FileDescriptorProtoView,
-                >() > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
-                {
-                    view.proto_file
-                        .push(
-                            <super::super::super::__buffa::view::FileDescriptorProtoView as ::core::default::Default>::default(),
-                        );
-                    if let Some(__elem) = view.proto_file.as_mut_vec().last_mut() {
-                        ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
-                    }
-                } else {
-                    view.proto_file
-                        .push(
-                            <super::super::super::__buffa::view::FileDescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
-                                sub,
-                                __sub_ctx,
-                            )?,
-                        );
-                }
+                view.proto_file
+                    .push(
+                        <super::super::super::__buffa::view::FileDescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
+                            sub,
+                            __sub_ctx,
+                        )?,
+                    );
             }
             17u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -494,30 +481,13 @@ impl<'a> ::buffa::MessageView<'a> for CodeGeneratorRequestView<'a> {
                         super::super::super::__buffa::view::FileDescriptorProtoView,
                     >(),
                 )?;
-                if ::core::mem::size_of::<
-                    super::super::super::__buffa::view::FileDescriptorProtoView,
-                >() > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
-                {
-                    view.source_file_descriptors
-                        .push(
-                            <super::super::super::__buffa::view::FileDescriptorProtoView as ::core::default::Default>::default(),
-                        );
-                    if let Some(__elem) = view
-                        .source_file_descriptors
-                        .as_mut_vec()
-                        .last_mut()
-                    {
-                        ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
-                    }
-                } else {
-                    view.source_file_descriptors
-                        .push(
-                            <super::super::super::__buffa::view::FileDescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
-                                sub,
-                                __sub_ctx,
-                            )?,
-                        );
-                }
+                view.source_file_descriptors
+                    .push(
+                        <super::super::super::__buffa::view::FileDescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
+                            sub,
+                            __sub_ctx,
+                        )?,
+                    );
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -983,26 +953,13 @@ impl<'a> ::buffa::MessageView<'a> for CodeGeneratorResponseView<'a> {
                         super::super::__buffa::view::code_generator_response::FileView,
                     >(),
                 )?;
-                if ::core::mem::size_of::<
-                    super::super::__buffa::view::code_generator_response::FileView,
-                >() > ::buffa::__private::IN_PLACE_ELEMENT_BYTES
-                {
-                    view.file
-                        .push(
-                            <super::super::__buffa::view::code_generator_response::FileView as ::core::default::Default>::default(),
-                        );
-                    if let Some(__elem) = view.file.as_mut_vec().last_mut() {
-                        ::buffa::MessageView::merge_into_view(__elem, sub, __sub_ctx)?;
-                    }
-                } else {
-                    view.file
-                        .push(
-                            <super::super::__buffa::view::code_generator_response::FileView as ::buffa::MessageView>::decode_view_ctx(
-                                sub,
-                                __sub_ctx,
-                            )?,
-                        );
-                }
+                view.file
+                    .push(
+                        <super::super::__buffa::view::code_generator_response::FileView as ::buffa::MessageView>::decode_view_ctx(
+                            sub,
+                            __sub_ctx,
+                        )?,
+                    );
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
