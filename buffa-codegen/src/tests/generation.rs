@@ -2974,6 +2974,45 @@ fn test_tiny_message_gets_inline_loop_overrides() {
 }
 
 #[test]
+fn test_repeated_message_charges_budget_before_push() {
+    let mut file = proto3_file("rep_budget.proto");
+    file.message_type.push(DescriptorProto {
+        name: Some("Item".to_string()),
+        field: vec![make_field("x", 1, Label::LABEL_OPTIONAL, Type::TYPE_INT32)],
+        ..Default::default()
+    });
+    file.message_type.push(DescriptorProto {
+        name: Some("List".to_string()),
+        field: vec![FieldDescriptorProto {
+            name: Some("items".to_string()),
+            number: Some(1),
+            label: Some(Label::LABEL_REPEATED),
+            r#type: Some(Type::TYPE_MESSAGE),
+            type_name: Some(".Item".to_string()),
+            ..Default::default()
+        }],
+        ..Default::default()
+    });
+    let files = generate(
+        &[file],
+        &["rep_budget.proto".to_string()],
+        &CodeGenConfig::default(),
+    )
+    .expect("should generate");
+    let content = &joined(&files);
+    // The element-memory budget must reject an element before the `Vec` can
+    // grow for it, so the charge has to precede the push in the arm.
+    let charge = content
+        .find("ctx.register_element_memory(")
+        .expect("charge against the element budget");
+    let push = content.find("self.items.push(elem)").expect("push");
+    assert!(
+        charge < push,
+        "must charge the element budget before push: {content}"
+    );
+}
+
+#[test]
 fn test_encoder_binds_message_field_with_as_option() {
     // `is_set()` + deref would instantiate `T::default_instance()` for every
     // encodable message type; the encoder must bind the Option instead.

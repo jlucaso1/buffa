@@ -2428,17 +2428,14 @@ fn repeated_merge_arm(
             &quote! { tag },
             &quote! { ::buffa::encoding::WireType::LengthDelimited },
         );
-        let body = quote! {
-            let mut elem = ::core::default::Default::default();
-            ctx.register_element_memory(::buffa::__private::element_footprint(&elem))?;
-            ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-            self.#ident.push(elem);
-        };
         return Ok(quote! {
             #field_number => {
                 #list_use
                 #wire_check
-                #body
+                let mut elem = ::core::default::Default::default();
+                ctx.register_element_memory(::buffa::__private::element_footprint(&elem))?;
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.#ident.push(elem);
             }
         });
     }
