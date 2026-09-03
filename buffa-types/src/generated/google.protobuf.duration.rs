@@ -256,18 +256,10 @@ impl ::buffa::Message for Duration {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.seconds = ::buffa::types::decode_int64(buf)?;
+                ::buffa::types::merge_int64_field(tag, &mut self.seconds, buf)?;
             }
             2u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.nanos = ::buffa::types::decode_int32(buf)?;
+                ::buffa::types::merge_int32_field(tag, &mut self.nanos, buf)?;
             }
             _ => {
                 self.__buffa_unknown_fields

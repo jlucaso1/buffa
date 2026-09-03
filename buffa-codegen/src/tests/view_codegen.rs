@@ -800,10 +800,18 @@ fn test_view_repeated_message_merges_fresh_element() {
 fn test_tiny_view_gets_inline_loop_override() {
     let mut file = proto3_file("tiny_view.proto");
     file.message_type.push(DescriptorProto {
-        name: Some("Label".to_string()),
+        name: Some("KeyValue".to_string()),
         field: vec![
             make_field("name", 1, Label::LABEL_OPTIONAL, Type::TYPE_STRING),
             make_field("id", 2, Label::LABEL_OPTIONAL, Type::TYPE_BYTES),
+        ],
+        ..Default::default()
+    });
+    file.message_type.push(DescriptorProto {
+        name: Some("NamedVertex".to_string()),
+        field: vec![
+            make_field("x", 1, Label::LABEL_OPTIONAL, Type::TYPE_FLOAT),
+            make_field("label", 2, Label::LABEL_OPTIONAL, Type::TYPE_STRING),
         ],
         ..Default::default()
     });
@@ -834,11 +842,22 @@ fn test_tiny_view_gets_inline_loop_override() {
     )
     .expect("should generate");
     let content = &joined(&files);
-    assert_eq!(
-        content
-            .matches("::buffa::__private::merge_into_view_inline(self")
-            .count(),
-        1,
-        "exactly the tiny VertexView should override merge_into_view: {content}"
+    let block = |name: &str| {
+        let head = format!("for {name}View<'a> {{");
+        let start = content
+            .find(&head)
+            .unwrap_or_else(|| panic!("no MessageView impl for {name}: {content}"));
+        let rest = &content[start + head.len()..];
+        &rest[..rest.find("\nimpl").unwrap_or(rest.len())]
+    };
+    assert!(
+        block("Vertex").contains("::buffa::__private::merge_into_view_inline(self"),
+        "the tiny VertexView should override merge_into_view: {content}"
     );
+    for not_tiny in ["KeyValue", "NamedVertex"] {
+        assert!(
+            !block(not_tiny).contains("merge_into_view_inline(self"),
+            "{not_tiny}View must keep the shared view loop: {content}"
+        );
+    }
 }

@@ -51,11 +51,7 @@ impl<'a> ::buffa::MessageView<'a> for DoubleValueView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Fixed64,
-                )?;
-                view.value = ::buffa::types::decode_double(&mut cur)?;
+                ::buffa::types::merge_double_field(tag, &mut view.value, &mut cur)?;
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -380,11 +376,7 @@ impl<'a> ::buffa::MessageView<'a> for FloatValueView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Fixed32,
-                )?;
-                view.value = ::buffa::types::decode_float(&mut cur)?;
+                ::buffa::types::merge_float_field(tag, &mut view.value, &mut cur)?;
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -709,11 +701,7 @@ impl<'a> ::buffa::MessageView<'a> for Int64ValueView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.value = ::buffa::types::decode_int64(&mut cur)?;
+                ::buffa::types::merge_int64_field(tag, &mut view.value, &mut cur)?;
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -1038,11 +1026,7 @@ impl<'a> ::buffa::MessageView<'a> for UInt64ValueView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.value = ::buffa::types::decode_uint64(&mut cur)?;
+                ::buffa::types::merge_uint64_field(tag, &mut view.value, &mut cur)?;
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -1367,11 +1351,7 @@ impl<'a> ::buffa::MessageView<'a> for Int32ValueView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.value = ::buffa::types::decode_int32(&mut cur)?;
+                ::buffa::types::merge_int32_field(tag, &mut view.value, &mut cur)?;
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -1696,11 +1676,7 @@ impl<'a> ::buffa::MessageView<'a> for UInt32ValueView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.value = ::buffa::types::decode_uint32(&mut cur)?;
+                ::buffa::types::merge_uint32_field(tag, &mut view.value, &mut cur)?;
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -2025,11 +2001,7 @@ impl<'a> ::buffa::MessageView<'a> for BoolValueView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.value = ::buffa::types::decode_bool(&mut cur)?;
+                ::buffa::types::merge_bool_field(tag, &mut view.value, &mut cur)?;
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -2346,11 +2318,7 @@ impl<'a> ::buffa::MessageView<'a> for StringValueView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.value = ::buffa::types::borrow_str(&mut cur)?;
+                ::buffa::types::borrow_str_field(tag, &mut view.value, &mut cur)?;
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -2667,11 +2635,7 @@ impl<'a> ::buffa::MessageView<'a> for BytesValueView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.value = ::buffa::types::borrow_bytes(&mut cur)?;
+                ::buffa::types::borrow_bytes_field(tag, &mut view.value, &mut cur)?;
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;

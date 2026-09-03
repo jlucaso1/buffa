@@ -1582,8 +1582,8 @@ fn test_message_proto3_optional() {
         "missing if-let in impl: {content}"
     );
     assert!(
-        content.contains("Option::Some"),
-        "missing Some assignment in merge: {content}"
+        content.contains("::buffa::types::merge_opt_int32_field(tag, &mut self.count, buf)?"),
+        "optional scalar must decode through the fused explicit-presence reader: {content}"
     );
 }
 
@@ -1624,8 +1624,8 @@ fn test_message_proto3_optional_string() {
         "missing put_string_field in write_to: {content}"
     );
     assert!(
-        content.contains("merge_string"),
-        "missing merge_string in merge: {content}"
+        content.contains("::buffa::types::merge_opt_string_field(tag, &mut self.label, buf)?"),
+        "optional string must decode through the fused explicit-presence reader: {content}"
     );
 }
 
@@ -2931,10 +2931,21 @@ fn test_tiny_message_gets_inline_loop_overrides() {
     // bytes field, whose per-field work dwarfs the shared loop's call.
     let mut file = proto3_file("tiny.proto");
     file.message_type.push(DescriptorProto {
-        name: Some("Label".to_string()),
+        name: Some("KeyValue".to_string()),
         field: vec![
             make_field("name", 1, Label::LABEL_OPTIONAL, Type::TYPE_STRING),
             make_field("id", 2, Label::LABEL_OPTIONAL, Type::TYPE_BYTES),
+        ],
+        ..Default::default()
+    });
+    // One string among numeric fields is enough to keep the shared loops.
+    file.message_type.push(DescriptorProto {
+        name: Some("NamedVertex".to_string()),
+        field: vec![
+            make_field("x", 1, Label::LABEL_OPTIONAL, Type::TYPE_FLOAT),
+            make_field("y", 2, Label::LABEL_OPTIONAL, Type::TYPE_FLOAT),
+            make_field("z", 3, Label::LABEL_OPTIONAL, Type::TYPE_FLOAT),
+            make_field("label", 4, Label::LABEL_OPTIONAL, Type::TYPE_STRING),
         ],
         ..Default::default()
     });
@@ -2966,20 +2977,31 @@ fn test_tiny_message_gets_inline_loop_overrides() {
     )
     .expect("should generate");
     let content = &joined(&files);
-    assert_eq!(
-        content
-            .matches("::buffa::__private::merge_to_limit_inline(self")
-            .count(),
-        1,
-        "exactly the tiny Vertex should override merge_to_limit: {content}"
+    let vertex = message_impl_block(content, "Vertex");
+    assert!(
+        vertex.contains("::buffa::__private::merge_to_limit_inline(self")
+            && vertex.contains("::buffa::__private::merge_length_delimited_inline(self"),
+        "the tiny Vertex should override merge_to_limit and merge_length_delimited: {vertex}"
     );
-    assert_eq!(
-        content
-            .matches("::buffa::__private::merge_length_delimited_inline(self")
-            .count(),
-        1,
-        "exactly the tiny Vertex should override merge_length_delimited: {content}"
-    );
+    for not_tiny in ["KeyValue", "NamedVertex", "Mesh"] {
+        let block = message_impl_block(content, not_tiny);
+        assert!(
+            !block.contains("_inline(self"),
+            "{not_tiny} must keep the shared decode loops: {block}"
+        );
+    }
+}
+
+/// The `impl ::buffa::Message for <name>` block of `content`, up to the next
+/// `impl`.
+fn message_impl_block<'a>(content: &'a str, name: &str) -> &'a str {
+    let head = format!("impl ::buffa::Message for {name} {{");
+    let start = content
+        .find(&head)
+        .unwrap_or_else(|| panic!("no Message impl for {name}: {content}"));
+    let rest = &content[start + head.len()..];
+    let end = rest.find("\nimpl").unwrap_or(rest.len());
+    &rest[..end]
 }
 
 #[test]

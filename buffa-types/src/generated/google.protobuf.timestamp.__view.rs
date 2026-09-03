@@ -158,18 +158,10 @@ impl<'a> ::buffa::MessageView<'a> for TimestampView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.seconds = ::buffa::types::decode_int64(&mut cur)?;
+                ::buffa::types::merge_int64_field(tag, &mut view.seconds, &mut cur)?;
             }
             2u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.nanos = ::buffa::types::decode_int32(&mut cur)?;
+                ::buffa::types::merge_int32_field(tag, &mut view.nanos, &mut cur)?;
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;

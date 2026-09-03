@@ -168,41 +168,16 @@ impl ::buffa::Message for Version {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.major = ::core::option::Option::Some(
-                    ::buffa::types::decode_int32(buf)?,
-                );
+                ::buffa::types::merge_opt_int32_field(tag, &mut self.major, buf)?;
             }
             2u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.minor = ::core::option::Option::Some(
-                    ::buffa::types::decode_int32(buf)?,
-                );
+                ::buffa::types::merge_opt_int32_field(tag, &mut self.minor, buf)?;
             }
             3u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.patch = ::core::option::Option::Some(
-                    ::buffa::types::decode_int32(buf)?,
-                );
+                ::buffa::types::merge_opt_int32_field(tag, &mut self.patch, buf)?;
             }
             4u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(
-                    self.suffix.get_or_insert_with(::buffa::alloc::string::String::new),
-                    buf,
-                )?;
+                ::buffa::types::merge_opt_string_field(tag, &mut self.suffix, buf)?;
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -524,16 +499,7 @@ impl ::buffa::Message for CodeGeneratorRequest {
                 self.file_to_generate.push(__elem);
             }
             2u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(
-                    self
-                        .parameter
-                        .get_or_insert_with(::buffa::alloc::string::String::new),
-                    buf,
-                )?;
+                ::buffa::types::merge_opt_string_field(tag, &mut self.parameter, buf)?;
             }
             3u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -912,41 +878,28 @@ impl ::buffa::Message for CodeGeneratorResponse {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_string_field(tag, &mut self.error, buf)?;
+            }
+            2u32 => {
+                ::buffa::types::merge_opt_uint64_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(
-                    self.error.get_or_insert_with(::buffa::alloc::string::String::new),
+                    &mut self.supported_features,
                     buf,
                 )?;
             }
-            2u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.supported_features = ::core::option::Option::Some(
-                    ::buffa::types::decode_uint64(buf)?,
-                );
-            }
             3u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_int32_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut self.minimum_edition,
+                    buf,
                 )?;
-                self.minimum_edition = ::core::option::Option::Some(
-                    ::buffa::types::decode_int32(buf)?,
-                );
             }
             4u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_int32_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut self.maximum_edition,
+                    buf,
                 )?;
-                self.maximum_edition = ::core::option::Option::Some(
-                    ::buffa::types::decode_int32(buf)?,
-                );
             }
             15u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -1479,40 +1432,17 @@ pub mod code_generator_response {
             use ::buffa::Enumeration as _;
             match tag.field_number() {
                 1u32 => {
-                    ::buffa::encoding::check_wire_type(
-                        tag,
-                        ::buffa::encoding::WireType::LengthDelimited,
-                    )?;
-                    ::buffa::types::merge_string(
-                        self
-                            .name
-                            .get_or_insert_with(::buffa::alloc::string::String::new),
-                        buf,
-                    )?;
+                    ::buffa::types::merge_opt_string_field(tag, &mut self.name, buf)?;
                 }
                 2u32 => {
-                    ::buffa::encoding::check_wire_type(
+                    ::buffa::types::merge_opt_string_field(
                         tag,
-                        ::buffa::encoding::WireType::LengthDelimited,
-                    )?;
-                    ::buffa::types::merge_string(
-                        self
-                            .insertion_point
-                            .get_or_insert_with(::buffa::alloc::string::String::new),
+                        &mut self.insertion_point,
                         buf,
                     )?;
                 }
                 15u32 => {
-                    ::buffa::encoding::check_wire_type(
-                        tag,
-                        ::buffa::encoding::WireType::LengthDelimited,
-                    )?;
-                    ::buffa::types::merge_string(
-                        self
-                            .content
-                            .get_or_insert_with(::buffa::alloc::string::String::new),
-                        buf,
-                    )?;
+                    ::buffa::types::merge_opt_string_field(tag, &mut self.content, buf)?;
                 }
                 16u32 => {
                     ::buffa::encoding::check_wire_type(

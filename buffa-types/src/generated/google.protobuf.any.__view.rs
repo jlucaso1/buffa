@@ -168,18 +168,10 @@ impl<'a> ::buffa::MessageView<'a> for AnyView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.type_url = ::buffa::types::borrow_str(&mut cur)?;
+                ::buffa::types::borrow_str_field(tag, &mut view.type_url, &mut cur)?;
             }
             2u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.value = ::buffa::types::borrow_bytes(&mut cur)?;
+                ::buffa::types::borrow_bytes_field(tag, &mut view.value, &mut cur)?;
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;

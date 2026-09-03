@@ -20,9 +20,9 @@ use crate::impl_message::{
     closed_enum_decode, closed_enum_decode_with_unknown, decode_fn_token, effective_type,
     effective_type_in_map_entry, extend_packed_fn_token, extend_packed_varint_fn_token,
     field_string_repr, find_map_entry_fields, is_explicit_presence_scalar, is_packed_type,
-    is_real_oneof_member, is_required_field, is_supported_field_type, map_string_repr,
-    map_value_bytes_repr, packed_decode_fn_token, validated_field_number, wire_type_check,
-    wire_type_token,
+    is_real_oneof_member, is_required_field, is_string_or_bytes, is_supported_field_type,
+    map_string_repr, map_value_bytes_repr, merge_field_fn_token, packed_decode_fn_token,
+    validated_field_number, wire_type_check, wire_type_token,
 };
 use crate::message::{is_closed_enum, is_map_field, make_field_ident, rust_path_to_tokens};
 use crate::oneof::{is_null_value_field, serde_helper_path};
@@ -192,16 +192,17 @@ pub(crate) fn generate_view_with_nesting(
 
     // Tiny views (at most four singular fields, none string/bytes, no
     // repeated/map/oneof) keep a monomorphic, inlinable tag loop instead of
-    // the type-erased default; same rationale and threshold as the owned
-    // side (see `tiny` in `impl_message.rs`).
+    // the type-erased default; same threshold as the owned side (see `tiny`
+    // in `impl_message.rs`). A view's string or bytes arm only borrows, so
+    // the owned rationale for excluding those fields (per-field allocation
+    // dwarfing the indirect call) does not carry over; they are excluded
+    // here for the measured size (−2.7% on a 750-message schema) and so the
+    // two sides pick the same messages.
     let tiny = !scalar_arms.is_empty()
         && scalar_arms.len() <= 4
         && repeated_arms.is_empty()
         && oneof_arms.is_empty()
-        && !msg
-            .field
-            .iter()
-            .any(crate::impl_message::is_string_or_bytes);
+        && !msg.field.iter().any(is_string_or_bytes);
     let tiny_loop_override = if tiny {
         quote! {
             #[inline]
@@ -1400,13 +1401,25 @@ pub(crate) fn scalar_decode_arm(
 
     let wire_check = wire_type_check(&quote! { tag }, &wire_type);
 
+    // Numeric, bool, string and bytes fields decode through one fused reader
+    // (wire check + decode + store); see `merge_field_fn!` in `buffa::types`
+    // and the owned-side arms in `impl_message.rs`. The owned numeric readers
+    // serve views as well, `&mut &[u8]` being a `Buf`.
     if is_explicit_presence_scalar(field, ty, features) {
         let assign = match ty {
             Type::TYPE_STRING => {
-                quote! { view.#ident = Some(::buffa::types::borrow_str(&mut cur)?); }
+                return Ok(quote! {
+                    #field_number => {
+                        ::buffa::types::borrow_opt_str_field(tag, &mut view.#ident, &mut cur)?;
+                    }
+                });
             }
             Type::TYPE_BYTES => {
-                quote! { view.#ident = Some(::buffa::types::borrow_bytes(&mut cur)?); }
+                return Ok(quote! {
+                    #field_number => {
+                        ::buffa::types::borrow_opt_bytes_field(tag, &mut view.#ident, &mut cur)?;
+                    }
+                });
             }
             Type::TYPE_ENUM => {
                 if is_closed_enum(features) {
@@ -1423,8 +1436,12 @@ pub(crate) fn scalar_decode_arm(
                 }
             }
             _ => {
-                let dfn = decode_fn_token(ty);
-                quote! { view.#ident = Some(#dfn(&mut cur)?); }
+                let merge_fn = merge_field_fn_token(ty, true);
+                return Ok(quote! {
+                    #field_number => {
+                        #merge_fn(tag, &mut view.#ident, &mut cur)?;
+                    }
+                });
             }
         };
         return Ok(quote! { #field_number => { #wire_check #assign } });
@@ -1433,10 +1450,20 @@ pub(crate) fn scalar_decode_arm(
     let bit_stmt = required_bit_stmt.cloned().unwrap_or_default();
     let assign = match ty {
         Type::TYPE_STRING => {
-            quote! { view.#ident = ::buffa::types::borrow_str(&mut cur)?; #bit_stmt }
+            return Ok(quote! {
+                #field_number => {
+                    ::buffa::types::borrow_str_field(tag, &mut view.#ident, &mut cur)?;
+                    #bit_stmt
+                }
+            });
         }
         Type::TYPE_BYTES => {
-            quote! { view.#ident = ::buffa::types::borrow_bytes(&mut cur)?; #bit_stmt }
+            return Ok(quote! {
+                #field_number => {
+                    ::buffa::types::borrow_bytes_field(tag, &mut view.#ident, &mut cur)?;
+                    #bit_stmt
+                }
+            });
         }
         Type::TYPE_ENUM => {
             if is_closed_enum(features) {
@@ -1477,8 +1504,13 @@ pub(crate) fn scalar_decode_arm(
             }
         }
         _ => {
-            let dfn = decode_fn_token(ty);
-            quote! { view.#ident = #dfn(&mut cur)?; #bit_stmt }
+            let merge_fn = merge_field_fn_token(ty, false);
+            return Ok(quote! {
+                #field_number => {
+                    #merge_fn(tag, &mut view.#ident, &mut cur)?;
+                    #bit_stmt
+                }
+            });
         }
     };
 

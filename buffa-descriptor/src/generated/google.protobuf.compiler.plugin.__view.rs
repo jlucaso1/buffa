@@ -48,32 +48,16 @@ impl<'a> ::buffa::MessageView<'a> for VersionView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.major = Some(::buffa::types::decode_int32(&mut cur)?);
+                ::buffa::types::merge_opt_int32_field(tag, &mut view.major, &mut cur)?;
             }
             2u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.minor = Some(::buffa::types::decode_int32(&mut cur)?);
+                ::buffa::types::merge_opt_int32_field(tag, &mut view.minor, &mut cur)?;
             }
             3u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.patch = Some(::buffa::types::decode_int32(&mut cur)?);
+                ::buffa::types::merge_opt_int32_field(tag, &mut view.patch, &mut cur)?;
             }
             4u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.suffix = Some(::buffa::types::borrow_str(&mut cur)?);
+                ::buffa::types::borrow_opt_str_field(tag, &mut view.suffix, &mut cur)?;
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -411,11 +395,11 @@ impl<'a> ::buffa::MessageView<'a> for CodeGeneratorRequestView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             2u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::borrow_opt_str_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut view.parameter,
+                    &mut cur,
                 )?;
-                view.parameter = Some(::buffa::types::borrow_str(&mut cur)?);
             }
             3u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -898,32 +882,28 @@ impl<'a> ::buffa::MessageView<'a> for CodeGeneratorResponseView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.error = Some(::buffa::types::borrow_str(&mut cur)?);
+                ::buffa::types::borrow_opt_str_field(tag, &mut view.error, &mut cur)?;
             }
             2u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_uint64_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.supported_features,
+                    &mut cur,
                 )?;
-                view.supported_features = Some(::buffa::types::decode_uint64(&mut cur)?);
             }
             3u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_int32_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.minimum_edition,
+                    &mut cur,
                 )?;
-                view.minimum_edition = Some(::buffa::types::decode_int32(&mut cur)?);
             }
             4u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_int32_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.maximum_edition,
+                    &mut cur,
                 )?;
-                view.maximum_edition = Some(::buffa::types::decode_int32(&mut cur)?);
             }
             15u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -1368,25 +1348,21 @@ pub mod code_generator_response {
             let mut cur = cur;
             match tag.field_number() {
                 1u32 => {
-                    ::buffa::encoding::check_wire_type(
-                        tag,
-                        ::buffa::encoding::WireType::LengthDelimited,
-                    )?;
-                    view.name = Some(::buffa::types::borrow_str(&mut cur)?);
+                    ::buffa::types::borrow_opt_str_field(tag, &mut view.name, &mut cur)?;
                 }
                 2u32 => {
-                    ::buffa::encoding::check_wire_type(
+                    ::buffa::types::borrow_opt_str_field(
                         tag,
-                        ::buffa::encoding::WireType::LengthDelimited,
+                        &mut view.insertion_point,
+                        &mut cur,
                     )?;
-                    view.insertion_point = Some(::buffa::types::borrow_str(&mut cur)?);
                 }
                 15u32 => {
-                    ::buffa::encoding::check_wire_type(
+                    ::buffa::types::borrow_opt_str_field(
                         tag,
-                        ::buffa::encoding::WireType::LengthDelimited,
+                        &mut view.content,
+                        &mut cur,
                     )?;
-                    view.content = Some(::buffa::types::borrow_str(&mut cur)?);
                 }
                 16u32 => {
                     ::buffa::encoding::check_wire_type(

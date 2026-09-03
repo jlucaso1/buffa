@@ -262,18 +262,10 @@ impl ::buffa::Message for LogEntry {
                 );
             }
             3u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(&mut self.message, buf)?;
+                ::buffa::types::merge_string_field(tag, &mut self.message, buf)?;
             }
             4u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(&mut self.logger, buf)?;
+                ::buffa::types::merge_string_field(tag, &mut self.logger, buf)?;
             }
             5u32 => {
                 ::buffa::encoding::check_wire_type(

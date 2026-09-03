@@ -328,11 +328,7 @@ impl ::buffa::Message for Api {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(&mut self.name, buf)?;
+                ::buffa::types::merge_string_field(tag, &mut self.name, buf)?;
             }
             2u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -359,11 +355,7 @@ impl ::buffa::Message for Api {
                 self.options.push(elem);
             }
             4u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(&mut self.version, buf)?;
+                ::buffa::types::merge_string_field(tag, &mut self.version, buf)?;
             }
             5u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -398,11 +390,7 @@ impl ::buffa::Message for Api {
                 );
             }
             8u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(&mut self.edition, buf)?;
+                ::buffa::types::merge_string_field(tag, &mut self.edition, buf)?;
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -839,39 +827,31 @@ impl ::buffa::Message for Method {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(&mut self.name, buf)?;
+                ::buffa::types::merge_string_field(tag, &mut self.name, buf)?;
             }
             2u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_string_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut self.request_type_url,
+                    buf,
                 )?;
-                ::buffa::types::merge_string(&mut self.request_type_url, buf)?;
             }
             3u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.request_streaming = ::buffa::types::decode_bool(buf)?;
+                ::buffa::types::merge_bool_field(tag, &mut self.request_streaming, buf)?;
             }
             4u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_string_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut self.response_type_url,
+                    buf,
                 )?;
-                ::buffa::types::merge_string(&mut self.response_type_url, buf)?;
             }
             5u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_bool_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut self.response_streaming,
+                    buf,
                 )?;
-                self.response_streaming = ::buffa::types::decode_bool(buf)?;
             }
             6u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -895,11 +875,7 @@ impl ::buffa::Message for Method {
                 );
             }
             8u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(&mut self.edition, buf)?;
+                ::buffa::types::merge_string_field(tag, &mut self.edition, buf)?;
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -1292,18 +1268,10 @@ impl ::buffa::Message for Mixin {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(&mut self.name, buf)?;
+                ::buffa::types::merge_string_field(tag, &mut self.name, buf)?;
             }
             2u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(&mut self.root, buf)?;
+                ::buffa::types::merge_string_field(tag, &mut self.root, buf)?;
             }
             _ => {
                 self.__buffa_unknown_fields

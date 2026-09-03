@@ -173,11 +173,7 @@ impl ::buffa::Message for DoubleValue {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Fixed64,
-                )?;
-                self.value = ::buffa::types::decode_double(buf)?;
+                ::buffa::types::merge_double_field(tag, &mut self.value, buf)?;
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -433,11 +429,7 @@ impl ::buffa::Message for FloatValue {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Fixed32,
-                )?;
-                self.value = ::buffa::types::decode_float(buf)?;
+                ::buffa::types::merge_float_field(tag, &mut self.value, buf)?;
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -693,11 +685,7 @@ impl ::buffa::Message for Int64Value {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.value = ::buffa::types::decode_int64(buf)?;
+                ::buffa::types::merge_int64_field(tag, &mut self.value, buf)?;
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -953,11 +941,7 @@ impl ::buffa::Message for UInt64Value {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.value = ::buffa::types::decode_uint64(buf)?;
+                ::buffa::types::merge_uint64_field(tag, &mut self.value, buf)?;
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -1213,11 +1197,7 @@ impl ::buffa::Message for Int32Value {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.value = ::buffa::types::decode_int32(buf)?;
+                ::buffa::types::merge_int32_field(tag, &mut self.value, buf)?;
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -1473,11 +1453,7 @@ impl ::buffa::Message for UInt32Value {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.value = ::buffa::types::decode_uint32(buf)?;
+                ::buffa::types::merge_uint32_field(tag, &mut self.value, buf)?;
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -1733,11 +1709,7 @@ impl ::buffa::Message for BoolValue {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.value = ::buffa::types::decode_bool(buf)?;
+                ::buffa::types::merge_bool_field(tag, &mut self.value, buf)?;
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -1993,11 +1965,7 @@ impl ::buffa::Message for StringValue {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(&mut self.value, buf)?;
+                ::buffa::types::merge_string_field(tag, &mut self.value, buf)?;
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -2227,11 +2195,7 @@ impl ::buffa::Message for BytesValue {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_bytes(&mut self.value, buf)?;
+                ::buffa::types::merge_bytes_field(tag, &mut self.value, buf)?;
             }
             _ => {
                 self.__buffa_unknown_fields

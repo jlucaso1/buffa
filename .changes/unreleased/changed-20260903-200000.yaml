@@ -1,0 +1,4 @@
+kind: Changed
+body: |-
+    **Singular scalar, string and bytes arms decode through one fused reader.** Generated `merge_field` arms for singular numeric, bool, `string` and `bytes` fields now call `buffa::types::merge_<type>_field` (or the `merge_opt_<type>_field` sibling for explicit presence), which checks the wire type, decodes and stores in one function, instead of spelling the three steps out per arm. At `opt-level = "z"`, where the inliner takes almost nothing, that turns each arm into one call; at `opt-level = 3` the `#[inline]` readers inline back to the spelled-out form. The readers are public so hand-written `Message` impls can use them too.
+time: 2026-09-03T20:00:00.000000-03:00

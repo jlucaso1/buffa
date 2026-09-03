@@ -228,16 +228,6 @@ pub(crate) fn closed_enum_unknown_route(
 /// sequence (matching the field order of prost / protoc-C++). A `Oneof` entry
 /// stands in for all its member fields and is positioned at the group's
 /// minimum member field number.
-/// Whether `field` is a `string` or `bytes` field, whose decode does heap or
-/// validation work per occurrence (see the tiny-message rule in
-/// [`generate_message_impl`]).
-pub(crate) fn is_string_or_bytes(field: &FieldDescriptorProto) -> bool {
-    matches!(
-        field.r#type.unwrap_or_default(),
-        Type::TYPE_STRING | Type::TYPE_BYTES
-    )
-}
-
 enum FieldKind<'a> {
     Scalar(&'a FieldDescriptorProto),
     Repeated(&'a FieldDescriptorProto),
@@ -247,6 +237,21 @@ enum FieldKind<'a> {
         enum_ident: proc_macro2::Ident,
         fields: Vec<&'a FieldDescriptorProto>,
     },
+}
+
+/// Whether `field` is a `string` or `bytes` field, whose owned decode
+/// allocates, copies or validates a payload per occurrence (see the
+/// tiny-message rule in [`generate_message_impl`]).
+///
+/// Tests the declared type rather than [`effective_type`]: the only rewrites
+/// that function applies are `MESSAGE → GROUP` (editions `DELIMITED`) and
+/// `STRING → BYTES` (`utf8_validation = NONE`), and `{STRING, BYTES}` is
+/// closed under both, so the answer is the same without a `ctx`.
+pub(crate) fn is_string_or_bytes(field: &FieldDescriptorProto) -> bool {
+    matches!(
+        field.r#type.unwrap_or_default(),
+        Type::TYPE_STRING | Type::TYPE_BYTES
+    )
 }
 
 /// Classify every field of `msg` and return the result sorted by ascending
@@ -414,8 +419,8 @@ pub fn generate_message_impl(
     let name_ident = format_ident!("{}", rust_name);
 
     let fields = classify_fields_ordered(msg, oneof_idents)?;
-    // Tiny messages (at most four singular fields, none string/bytes) override the type-erased
-    // decode loops with monomorphic, inlinable ones. Their `merge_field` is a
+    // Tiny messages (at most four singular fields, none string/bytes)
+    // override the type-erased decode loops with monomorphic, inlinable ones. Their `merge_field` is a
     // handful of arms, so inlining the whole sub-decoder into the parent arm
     // costs a few dozen bytes, while the erased loop's per-field indirect
     // call is a measurable fraction of decoding a trivial field (a 3-float
@@ -425,9 +430,10 @@ pub fn generate_message_impl(
     // so a message with any of those keeps the shared loops. So does one with
     // a string or bytes field: decoding it allocates, copies or validates a
     // payload, next to which the indirect call is noise, and in a large
-    // schema such two-string messages outnumber numeric ones (280 of the 436
-    // messages with at most four singular fields in `whatsapp.proto`), each
-    // carrying a private copy of the loop for no measurable speed.
+    // schema such messages outnumber the numeric ones (280 of the 436
+    // messages with at most four singular fields in `whatsapp.proto` carry
+    // a string or bytes field), each with a private copy of the loop that
+    // bought no measurable change on the benchmark shapes.
     let is_message_set = msg
         .options
         .as_option()
@@ -1474,6 +1480,42 @@ fn put_field_fn_token(ty: Type) -> TokenStream {
     }
 }
 
+/// Path of the fused singular reader (`merge_<type>_field`, or the
+/// `merge_opt_<type>_field` sibling when `optional` is set) for a numeric or
+/// bool field; see `merge_field_fn!` in `buffa::types`.
+pub(crate) fn merge_field_fn_token(ty: Type, optional: bool) -> TokenStream {
+    let base = match ty {
+        Type::TYPE_INT32 => "int32",
+        Type::TYPE_INT64 => "int64",
+        Type::TYPE_UINT32 => "uint32",
+        Type::TYPE_UINT64 => "uint64",
+        Type::TYPE_SINT32 => "sint32",
+        Type::TYPE_SINT64 => "sint64",
+        Type::TYPE_FIXED32 => "fixed32",
+        Type::TYPE_FIXED64 => "fixed64",
+        Type::TYPE_SFIXED32 => "sfixed32",
+        Type::TYPE_SFIXED64 => "sfixed64",
+        Type::TYPE_FLOAT => "float",
+        Type::TYPE_DOUBLE => "double",
+        Type::TYPE_BOOL => "bool",
+        // String and bytes readers are named directly by the arms that
+        // emit them (their `_field` readers take the concrete container).
+        Type::TYPE_STRING
+        | Type::TYPE_BYTES
+        | Type::TYPE_ENUM
+        | Type::TYPE_MESSAGE
+        | Type::TYPE_GROUP => {
+            unreachable!("merge_field_fn_token called for {:?}", ty)
+        }
+    };
+    let name = if optional {
+        format_ident!("merge_opt_{}_field", base)
+    } else {
+        format_ident!("merge_{}_field", base)
+    };
+    quote! { ::buffa::types::#name }
+}
+
 pub(crate) fn decode_fn_token(ty: Type) -> TokenStream {
     match ty {
         Type::TYPE_INT32 => quote! { ::buffa::types::decode_int32 },
@@ -1924,11 +1966,7 @@ fn explicit_presence_merge_arm(
     match ty {
         Type::TYPE_STRING if string_repr.is_default() => quote! {
             #field_number => {
-                #wire_check
-                ::buffa::types::merge_string(
-                    self.#ident.get_or_insert_with(::buffa::alloc::string::String::new),
-                    buf,
-                )?;
+                ::buffa::types::merge_opt_string_field(tag, &mut self.#ident, buf)?;
             }
         },
         Type::TYPE_STRING => quote! {
@@ -1943,11 +1981,7 @@ fn explicit_presence_merge_arm(
             if bytes_repr.is_default() {
                 quote! {
                     #field_number => {
-                        #wire_check
-                        ::buffa::types::merge_bytes(
-                            self.#ident.get_or_insert_with(::buffa::alloc::vec::Vec::new),
-                            buf,
-                        )?;
+                        ::buffa::types::merge_opt_bytes_field(tag, &mut self.#ident, buf)?;
                     }
                 }
             } else {
@@ -1990,11 +2024,10 @@ fn explicit_presence_merge_arm(
             }
         }
         _ => {
-            let decode_fn = decode_fn_token(ty);
+            let merge_fn = merge_field_fn_token(ty, true);
             quote! {
                 #field_number => {
-                    #wire_check
-                    self.#ident = ::core::option::Option::Some(#decode_fn(buf)?);
+                    #merge_fn(tag, &mut self.#ident, buf)?;
                 }
             }
         }
@@ -2049,8 +2082,7 @@ fn scalar_merge_arm(
             return Ok(if string_repr.is_default() {
                 quote! {
                     #field_number => {
-                        #wire_check
-                        ::buffa::types::merge_string(&mut self.#ident, buf)?;
+                        ::buffa::types::merge_string_field(tag, &mut self.#ident, buf)?;
                     }
                 }
             } else {
@@ -2068,8 +2100,7 @@ fn scalar_merge_arm(
             return Ok(if bytes_repr.is_default() {
                 quote! {
                     #field_number => {
-                        #wire_check
-                        ::buffa::types::merge_bytes(&mut self.#ident, buf)?;
+                        ::buffa::types::merge_bytes_field(tag, &mut self.#ident, buf)?;
                     }
                 }
             } else {
@@ -2139,11 +2170,10 @@ fn scalar_merge_arm(
     }
 
     // Numeric scalars (proto3 last-wins: plain assignment overwrites any prior value).
-    let decode_fn = decode_fn_token(ty);
+    let merge_fn = merge_field_fn_token(ty, false);
     Ok(quote! {
         #field_number => {
-            #wire_check
-            self.#ident = #decode_fn(buf)?;
+            #merge_fn(tag, &mut self.#ident, buf)?;
         }
     })
 }

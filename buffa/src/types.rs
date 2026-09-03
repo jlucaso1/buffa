@@ -660,6 +660,260 @@ pub const FIXED32_ENCODED_LEN: usize = 4;
 pub const FIXED64_ENCODED_LEN: usize = 8;
 
 // ---------------------------------------------------------------------------
+// Fused singular-field readers
+// ---------------------------------------------------------------------------
+//
+// Generated `merge_field` arms for singular scalar, string and bytes fields
+// call one of these instead of spelling out the wire-type check, the decode
+// and the store. The three steps are the same in every arm; keeping them in
+// one function per field kind means a size-optimised build, where the
+// inliner takes almost nothing, emits one call per arm instead of an inline
+// check with its error tail plus a call plus a result copy. They are plain
+// `#[inline]`: a speed-optimised build inlines them, which reproduces the
+// spelled-out form exactly.
+
+/// Stamp a pair of fused singular readers over an existing `decode_<type>`:
+/// `$name` for an implicit-presence field (plain assignment) and `$opt` for
+/// an explicit-presence one (`Some(value)`).
+macro_rules! merge_field_fn {
+    ($(#[$doc:meta])* $name:ident, $opt:ident, $value:ty, $wire:expr, $decode:ident) => {
+        $(#[$doc])*
+        ///
+        #[doc = concat!(
+            "Checks the wire type, then stores [`", stringify!($decode),
+            "`]'s value into `dst`; generated `merge_field` arms call this ",
+            "for implicit-presence fields."
+        )]
+        ///
+        /// # Errors
+        ///
+        /// Returns [`DecodeError::WireTypeMismatch`] when `tag`'s wire type
+        /// is not the field's, or the decoder's error.
+        #[inline]
+        pub fn $name(tag: Tag, dst: &mut $value, buf: &mut impl Buf) -> Result<(), DecodeError> {
+            crate::encoding::check_wire_type(tag, $wire)?;
+            *dst = $decode(buf)?;
+            Ok(())
+        }
+
+        #[doc = concat!(
+            "Explicit-presence sibling of [`", stringify!($name),
+            "`]: stores `Some(value)`."
+        )]
+        ///
+        /// # Errors
+        ///
+        /// Returns [`DecodeError::WireTypeMismatch`] when `tag`'s wire type
+        /// is not the field's, or the decoder's error.
+        #[inline]
+        pub fn $opt(
+            tag: Tag,
+            dst: &mut Option<$value>,
+            buf: &mut impl Buf,
+        ) -> Result<(), DecodeError> {
+            crate::encoding::check_wire_type(tag, $wire)?;
+            *dst = Some($decode(buf)?);
+            Ok(())
+        }
+    };
+}
+
+merge_field_fn!(
+    /// Read one occurrence of a singular `int32` field.
+    merge_int32_field, merge_opt_int32_field, i32, WireType::Varint, decode_int32
+);
+merge_field_fn!(
+    /// Read one occurrence of a singular `int64` field.
+    merge_int64_field, merge_opt_int64_field, i64, WireType::Varint, decode_int64
+);
+merge_field_fn!(
+    /// Read one occurrence of a singular `uint32` field.
+    merge_uint32_field, merge_opt_uint32_field, u32, WireType::Varint, decode_uint32
+);
+merge_field_fn!(
+    /// Read one occurrence of a singular `uint64` field.
+    merge_uint64_field, merge_opt_uint64_field, u64, WireType::Varint, decode_uint64
+);
+merge_field_fn!(
+    /// Read one occurrence of a singular `sint32` field.
+    merge_sint32_field, merge_opt_sint32_field, i32, WireType::Varint, decode_sint32
+);
+merge_field_fn!(
+    /// Read one occurrence of a singular `sint64` field.
+    merge_sint64_field, merge_opt_sint64_field, i64, WireType::Varint, decode_sint64
+);
+merge_field_fn!(
+    /// Read one occurrence of a singular `bool` field.
+    merge_bool_field, merge_opt_bool_field, bool, WireType::Varint, decode_bool
+);
+merge_field_fn!(
+    /// Read one occurrence of a singular `fixed32` field.
+    merge_fixed32_field, merge_opt_fixed32_field, u32, WireType::Fixed32, decode_fixed32
+);
+merge_field_fn!(
+    /// Read one occurrence of a singular `fixed64` field.
+    merge_fixed64_field, merge_opt_fixed64_field, u64, WireType::Fixed64, decode_fixed64
+);
+merge_field_fn!(
+    /// Read one occurrence of a singular `sfixed32` field.
+    merge_sfixed32_field, merge_opt_sfixed32_field, i32, WireType::Fixed32, decode_sfixed32
+);
+merge_field_fn!(
+    /// Read one occurrence of a singular `sfixed64` field.
+    merge_sfixed64_field, merge_opt_sfixed64_field, i64, WireType::Fixed64, decode_sfixed64
+);
+merge_field_fn!(
+    /// Read one occurrence of a singular `float` field.
+    merge_float_field, merge_opt_float_field, f32, WireType::Fixed32, decode_float
+);
+merge_field_fn!(
+    /// Read one occurrence of a singular `double` field.
+    merge_double_field, merge_opt_double_field, f64, WireType::Fixed64, decode_double
+);
+
+/// Read one occurrence of a singular `string` field into `dst`, reusing its
+/// allocation (see [`merge_string`]); generated `merge_field` arms call this
+/// for implicit-presence fields.
+///
+/// # Errors
+///
+/// Returns [`DecodeError::WireTypeMismatch`] when `tag`'s wire type is not
+/// `LengthDelimited`, or [`merge_string`]'s error.
+#[inline]
+pub fn merge_string_field(
+    tag: Tag,
+    dst: &mut String,
+    buf: &mut impl Buf,
+) -> Result<(), DecodeError> {
+    crate::encoding::check_wire_type(tag, WireType::LengthDelimited)?;
+    merge_string(dst, buf)
+}
+
+/// Explicit-presence sibling of [`merge_string_field`]: an unset field is
+/// set to the decoded string, a set one is overwritten (last occurrence
+/// wins) reusing its allocation.
+///
+/// # Errors
+///
+/// Returns [`DecodeError::WireTypeMismatch`] when `tag`'s wire type is not
+/// `LengthDelimited`, or [`merge_string`]'s error.
+#[inline]
+pub fn merge_opt_string_field(
+    tag: Tag,
+    dst: &mut Option<String>,
+    buf: &mut impl Buf,
+) -> Result<(), DecodeError> {
+    crate::encoding::check_wire_type(tag, WireType::LengthDelimited)?;
+    merge_string(dst.get_or_insert_with(String::new), buf)
+}
+
+/// Read one occurrence of a singular `bytes` field into `dst`, reusing its
+/// allocation (see [`merge_bytes`]); generated `merge_field` arms call this
+/// for implicit-presence fields.
+///
+/// # Errors
+///
+/// Returns [`DecodeError::WireTypeMismatch`] when `tag`'s wire type is not
+/// `LengthDelimited`, or [`merge_bytes`]'s error.
+#[inline]
+pub fn merge_bytes_field(
+    tag: Tag,
+    dst: &mut Vec<u8>,
+    buf: &mut impl Buf,
+) -> Result<(), DecodeError> {
+    crate::encoding::check_wire_type(tag, WireType::LengthDelimited)?;
+    merge_bytes(dst, buf)
+}
+
+/// Explicit-presence sibling of [`merge_bytes_field`]: an unset field is
+/// set to the decoded bytes, a set one is overwritten (last occurrence
+/// wins) reusing its allocation.
+///
+/// # Errors
+///
+/// Returns [`DecodeError::WireTypeMismatch`] when `tag`'s wire type is not
+/// `LengthDelimited`, or [`merge_bytes`]'s error.
+#[inline]
+pub fn merge_opt_bytes_field(
+    tag: Tag,
+    dst: &mut Option<Vec<u8>>,
+    buf: &mut impl Buf,
+) -> Result<(), DecodeError> {
+    crate::encoding::check_wire_type(tag, WireType::LengthDelimited)?;
+    merge_bytes(dst.get_or_insert_with(Vec::new), buf)
+}
+
+/// Read one occurrence of a singular `string` field into a view's borrowed
+/// slot; the view-side sibling of [`merge_string_field`].
+///
+/// # Errors
+///
+/// Returns [`DecodeError::WireTypeMismatch`] when `tag`'s wire type is not
+/// `LengthDelimited`, or [`borrow_str`]'s error.
+#[inline]
+pub fn borrow_str_field<'a>(
+    tag: Tag,
+    dst: &mut &'a str,
+    cur: &mut &'a [u8],
+) -> Result<(), DecodeError> {
+    crate::encoding::check_wire_type(tag, WireType::LengthDelimited)?;
+    *dst = borrow_str(cur)?;
+    Ok(())
+}
+
+/// Explicit-presence sibling of [`borrow_str_field`]: stores `Some(value)`.
+///
+/// # Errors
+///
+/// Returns [`DecodeError::WireTypeMismatch`] when `tag`'s wire type is not
+/// `LengthDelimited`, or [`borrow_str`]'s error.
+#[inline]
+pub fn borrow_opt_str_field<'a>(
+    tag: Tag,
+    dst: &mut Option<&'a str>,
+    cur: &mut &'a [u8],
+) -> Result<(), DecodeError> {
+    crate::encoding::check_wire_type(tag, WireType::LengthDelimited)?;
+    *dst = Some(borrow_str(cur)?);
+    Ok(())
+}
+
+/// Read one occurrence of a singular `bytes` field into a view's borrowed
+/// slot; the view-side sibling of [`merge_bytes_field`].
+///
+/// # Errors
+///
+/// Returns [`DecodeError::WireTypeMismatch`] when `tag`'s wire type is not
+/// `LengthDelimited`, or [`borrow_bytes`]'s error.
+#[inline]
+pub fn borrow_bytes_field<'a>(
+    tag: Tag,
+    dst: &mut &'a [u8],
+    cur: &mut &'a [u8],
+) -> Result<(), DecodeError> {
+    crate::encoding::check_wire_type(tag, WireType::LengthDelimited)?;
+    *dst = borrow_bytes(cur)?;
+    Ok(())
+}
+
+/// Explicit-presence sibling of [`borrow_bytes_field`]: stores `Some(value)`.
+///
+/// # Errors
+///
+/// Returns [`DecodeError::WireTypeMismatch`] when `tag`'s wire type is not
+/// `LengthDelimited`, or [`borrow_bytes`]'s error.
+#[inline]
+pub fn borrow_opt_bytes_field<'a>(
+    tag: Tag,
+    dst: &mut Option<&'a [u8]>,
+    cur: &mut &'a [u8],
+) -> Result<(), DecodeError> {
+    crate::encoding::check_wire_type(tag, WireType::LengthDelimited)?;
+    *dst = Some(borrow_bytes(cur)?);
+    Ok(())
+}
+
+// ---------------------------------------------------------------------------
 // Fused tag + payload field writers
 // ---------------------------------------------------------------------------
 //
@@ -2116,6 +2370,80 @@ mod tests {
             }
             Ok(Tiny(s.into()))
         }
+    }
+
+    #[test]
+    fn fused_singular_readers_check_decode_and_store() {
+        let varint = Tag::new(1, WireType::Varint);
+        let fixed32 = Tag::new(1, WireType::Fixed32);
+        let ld = Tag::new(1, WireType::LengthDelimited);
+
+        let mut n = 0u32;
+        merge_uint32_field(varint, &mut n, &mut &[0x96, 0x01][..]).unwrap();
+        assert_eq!(n, 150);
+        let mut opt = None;
+        merge_opt_int32_field(varint, &mut opt, &mut &[0x07][..]).unwrap();
+        assert_eq!(opt, Some(7));
+        let mut f = None;
+        merge_opt_float_field(fixed32, &mut f, &mut &1.5f32.to_le_bytes()[..]).unwrap();
+        assert_eq!(f, Some(1.5));
+
+        let mut s = String::from("old");
+        merge_string_field(ld, &mut s, &mut &b"\x02hi"[..]).unwrap();
+        assert_eq!(s, "hi");
+        let mut os = Some(String::from("old"));
+        merge_opt_string_field(ld, &mut os, &mut &b"\x02hi"[..]).unwrap();
+        assert_eq!(os.as_deref(), Some("hi"));
+        let mut b = Vec::new();
+        merge_bytes_field(ld, &mut b, &mut &b"\x01\xff"[..]).unwrap();
+        assert_eq!(b, [0xff]);
+        let mut ob = None;
+        merge_opt_bytes_field(ld, &mut ob, &mut &b"\x01\xff"[..]).unwrap();
+        assert_eq!(ob.as_deref(), Some(&[0xffu8][..]));
+
+        // A wire-type mismatch names the field and leaves the slot alone.
+        let mut untouched = 42u32;
+        let err = merge_uint32_field(fixed32, &mut untouched, &mut &[0u8; 4][..]).unwrap_err();
+        assert!(matches!(
+            err,
+            DecodeError::WireTypeMismatch {
+                field_number: 1,
+                ..
+            }
+        ));
+        assert_eq!(untouched, 42);
+        // A decode error propagates.
+        let mut short = None;
+        assert_eq!(
+            merge_opt_string_field(ld, &mut short, &mut &b"\x05hi"[..]).unwrap_err(),
+            DecodeError::UnexpectedEof
+        );
+    }
+
+    #[test]
+    fn fused_view_readers_borrow_and_advance() {
+        let ld = Tag::new(3, WireType::LengthDelimited);
+        let mut cur: &[u8] = b"\x02hi\x01\xff\x00";
+        let mut s = "";
+        borrow_str_field(ld, &mut s, &mut cur).unwrap();
+        assert_eq!(s, "hi");
+        let mut ob = None;
+        borrow_opt_bytes_field(ld, &mut ob, &mut cur).unwrap();
+        assert_eq!(ob, Some(&[0xffu8][..]));
+        assert_eq!(cur, &[0u8][..]);
+        let mut os = None;
+        let mut rest: &[u8] = b"\x00";
+        borrow_opt_str_field(ld, &mut os, &mut rest).unwrap();
+        assert_eq!(os, Some(""));
+        let mut b: &[u8] = &[];
+        let err = borrow_bytes_field(Tag::new(3, WireType::Varint), &mut b, &mut cur).unwrap_err();
+        assert!(matches!(
+            err,
+            DecodeError::WireTypeMismatch {
+                field_number: 3,
+                ..
+            }
+        ));
     }
 
     #[test]

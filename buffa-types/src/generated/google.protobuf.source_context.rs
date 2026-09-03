@@ -173,11 +173,7 @@ impl ::buffa::Message for SourceContext {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(&mut self.file_name, buf)?;
+                ::buffa::types::merge_string_field(tag, &mut self.file_name, buf)?;
             }
             _ => {
                 self.__buffa_unknown_fields
