@@ -1507,13 +1507,20 @@ pub(crate) fn repeated_decode_arm(
             &quote! { ::buffa::encoding::WireType::LengthDelimited },
         );
         let vt = resolve_view_decode_tokens(scope, field)?;
+        // A fresh element merged through `merge_into_view` reaches the shared
+        // erased loop. `decode_view_ctx` would instantiate a monomorphic loop
+        // per element type and inline it into this arm, which is the
+        // duplication the erasure exists to remove; the group arm below
+        // follows the same shape.
         return Ok(quote! {
             #field_number => {
                 #ld_check
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_bytes(&mut cur)?;
                 ctx.register_element_memory(::core::mem::size_of::<#vt>())?;
-                view.#ident.push(<#vt as ::buffa::MessageView>::decode_view_ctx(sub, __sub_ctx)?);
+                let mut __elem = <#vt as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.#ident.push(__elem);
             }
         });
     }
@@ -1531,7 +1538,9 @@ pub(crate) fn repeated_decode_arm(
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_group(&mut cur, #field_number, __sub_ctx.depth())?;
                 ctx.register_element_memory(::core::mem::size_of::<#vt>())?;
-                view.#ident.push(<#vt as ::buffa::MessageView>::decode_view_ctx(sub, __sub_ctx)?);
+                let mut __elem = <#vt as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.#ident.push(__elem);
             }
         });
     }

@@ -246,11 +246,11 @@ pub trait MessageView<'a>: Sized {
     /// [`with_element_memory`](crate::DecodeContext::with_element_memory)
     /// turns every repeated-element charge in every field arm into a no-op.
     ///
-    /// Also called by generated decode arms for *repeated* message fields
-    /// with a descended context (singular and oneof message fields decode in
-    /// place through [`merge_into_view`](Self::merge_into_view) instead, so
-    /// an override of this method is not consulted for them). Not to be
-    /// confused with
+    /// Generated decode arms do not call this: singular, oneof and repeated
+    /// message fields all decode through
+    /// [`merge_into_view`](Self::merge_into_view) (into the existing slot or
+    /// a fresh default element), so an override of this method is not
+    /// consulted for nested messages. Not to be confused with
     /// [`decode_view_with_ctx`](Self::decode_view_with_ctx), the
     /// `DecodeOptions` override point whose *default* ignores the context.
     ///
@@ -266,7 +266,8 @@ pub trait MessageView<'a>: Sized {
         let mut view = Self::default();
         // Top-level entry: monomorphic loop with a direct `merge_view_field`
         // call, for the same reason as `Message::merge`; nested message
-        // fields go through the shared erased loop in `merge_into_view`.
+        // fields (singular, oneof and repeated) go through the shared erased
+        // loop in `merge_into_view`.
         crate::__private::merge_into_view_inline(&mut view, buf, ctx)?;
         Ok(view)
     }

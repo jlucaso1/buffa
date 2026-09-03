@@ -3003,7 +3003,7 @@ fn test_repeated_message_charges_budget_before_push() {
     // The element-memory budget must reject an element before the `Vec` can
     // grow for it, so the charge has to precede the push in the arm.
     let charge = content
-        .find("ctx.register_element_memory(")
+        .find("element_footprint(&elem)")
         .expect("charge against the element budget");
     let push = content.find("self.items.push(elem)").expect("push");
     assert!(

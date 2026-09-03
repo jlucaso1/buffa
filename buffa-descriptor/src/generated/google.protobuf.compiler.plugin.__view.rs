@@ -461,13 +461,9 @@ impl<'a> ::buffa::MessageView<'a> for CodeGeneratorRequestView<'a> {
                         super::super::super::__buffa::view::FileDescriptorProtoView,
                     >(),
                 )?;
-                view.proto_file
-                    .push(
-                        <super::super::super::__buffa::view::FileDescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::super::__buffa::view::FileDescriptorProtoView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.proto_file.push(__elem);
             }
             17u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -481,13 +477,9 @@ impl<'a> ::buffa::MessageView<'a> for CodeGeneratorRequestView<'a> {
                         super::super::super::__buffa::view::FileDescriptorProtoView,
                     >(),
                 )?;
-                view.source_file_descriptors
-                    .push(
-                        <super::super::super::__buffa::view::FileDescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::super::__buffa::view::FileDescriptorProtoView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.source_file_descriptors.push(__elem);
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -953,13 +945,9 @@ impl<'a> ::buffa::MessageView<'a> for CodeGeneratorResponseView<'a> {
                         super::super::__buffa::view::code_generator_response::FileView,
                     >(),
                 )?;
-                view.file
-                    .push(
-                        <super::super::__buffa::view::code_generator_response::FileView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::code_generator_response::FileView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.file.push(__elem);
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;

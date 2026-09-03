@@ -1073,13 +1073,9 @@ impl<'a> ::buffa::MessageView<'a> for ListValueView<'a> {
                 ctx.register_element_memory(
                     ::core::mem::size_of::<super::super::__buffa::view::ValueView>(),
                 )?;
-                view.values
-                    .push(
-                        <super::super::__buffa::view::ValueView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::ValueView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.values.push(__elem);
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;

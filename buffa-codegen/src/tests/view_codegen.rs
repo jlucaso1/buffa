@@ -757,6 +757,46 @@ fn test_view_singular_message_field_merges_through_one_slot() {
 }
 
 #[test]
+fn test_view_repeated_message_merges_fresh_element() {
+    let mut file = proto3_file("rep_elem.proto");
+    file.message_type.push(DescriptorProto {
+        name: Some("Item".to_string()),
+        field: vec![make_field("x", 1, Label::LABEL_OPTIONAL, Type::TYPE_INT32)],
+        ..Default::default()
+    });
+    file.message_type.push(DescriptorProto {
+        name: Some("List".to_string()),
+        field: vec![FieldDescriptorProto {
+            name: Some("items".to_string()),
+            number: Some(1),
+            label: Some(Label::LABEL_REPEATED),
+            r#type: Some(Type::TYPE_MESSAGE),
+            type_name: Some(".Item".to_string()),
+            ..Default::default()
+        }],
+        ..Default::default()
+    });
+    let files = generate(
+        &[file],
+        &["rep_elem.proto".to_string()],
+        &CodeGenConfig::default(),
+    )
+    .expect("should generate");
+    let content = &joined(&files);
+    // A repeated element is a default view merged through the shared loop,
+    // not a per-element `decode_view_ctx` instantiation inlined into the arm.
+    assert!(
+        content.contains("::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?")
+            && content.contains("view.items.push(__elem)"),
+        "repeated message view arm must merge a fresh element: {content}"
+    );
+    assert!(
+        !content.contains("decode_view_ctx(sub"),
+        "repeated message view arm must not instantiate decode_view_ctx per element: {content}"
+    );
+}
+
+#[test]
 fn test_tiny_view_gets_inline_loop_override() {
     let mut file = proto3_file("tiny_view.proto");
     file.message_type.push(DescriptorProto {
