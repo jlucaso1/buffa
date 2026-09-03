@@ -649,3 +649,97 @@ fn test_view_oneof_with_message_variant() {
         "message-type oneof variant must check recursion depth: {content}"
     );
 }
+
+#[test]
+fn test_view_single_variant_message_oneof_has_no_wildcard_match() {
+    // A oneof whose only member is a message field: the decode arm must not
+    // emit a wildcard arm against the (exhaustively matched) oneof enum, or
+    // `unreachable_patterns` fires in the consumer crate, nor an
+    // `unreachable!()` panic site.
+    let mut file = proto3_file("oneof_single.proto");
+    file.message_type.push(DescriptorProto {
+        name: Some("Body".to_string()),
+        field: vec![make_field(
+            "data",
+            1,
+            Label::LABEL_OPTIONAL,
+            Type::TYPE_INT32,
+        )],
+        ..Default::default()
+    });
+    file.message_type.push(DescriptorProto {
+        name: Some("Request".to_string()),
+        field: vec![FieldDescriptorProto {
+            name: Some("body".to_string()),
+            number: Some(1),
+            label: Some(Label::LABEL_OPTIONAL),
+            r#type: Some(Type::TYPE_MESSAGE),
+            type_name: Some(".Body".to_string()),
+            oneof_index: Some(0),
+            ..Default::default()
+        }],
+        oneof_decl: vec![OneofDescriptorProto {
+            name: Some("payload".to_string()),
+            ..Default::default()
+        }],
+        ..Default::default()
+    });
+    let files = generate(
+        &[file],
+        &["oneof_single.proto".to_string()],
+        &CodeGenConfig::default(),
+    )
+    .expect("should generate");
+    let content = &joined(&files);
+    assert!(
+        !content.contains("unreachable!"),
+        "oneof message arm must not emit an unreachable!() arm: {content}"
+    );
+    // Both the first occurrence and a merge go through one `merge_into_view`
+    // call on a box taken out of the oneof and put back before `?`.
+    assert!(
+        content.contains("view.payload.take()"),
+        "oneof message arm must take the existing box: {content}"
+    );
+    assert!(
+        !content.contains("decode_view_ctx(sub"),
+        "oneof message arm must not keep a separate first-occurrence decoder: {content}"
+    );
+}
+
+#[test]
+fn test_view_singular_message_field_merges_through_one_slot() {
+    let mut file = proto3_file("sub_slot.proto");
+    file.message_type.push(DescriptorProto {
+        name: Some("Inner".to_string()),
+        field: vec![make_field("x", 1, Label::LABEL_OPTIONAL, Type::TYPE_INT32)],
+        ..Default::default()
+    });
+    file.message_type.push(DescriptorProto {
+        name: Some("Outer".to_string()),
+        field: vec![FieldDescriptorProto {
+            name: Some("inner".to_string()),
+            number: Some(1),
+            label: Some(Label::LABEL_OPTIONAL),
+            r#type: Some(Type::TYPE_MESSAGE),
+            type_name: Some(".Inner".to_string()),
+            ..Default::default()
+        }],
+        ..Default::default()
+    });
+    let files = generate(
+        &[file],
+        &["sub_slot.proto".to_string()],
+        &CodeGenConfig::default(),
+    )
+    .expect("should generate");
+    let content = &joined(&files);
+    assert!(
+        content.contains("view.inner.get_or_insert_default()"),
+        "singular message view arm must merge through get_or_insert_default: {content}"
+    );
+    assert!(
+        !content.contains("decode_view_ctx(sub"),
+        "singular message view arm must not have a separate first-occurrence decoder: {content}"
+    );
+}

@@ -2920,3 +2920,92 @@ fn test_exclude_packages_filter_runs_before_context_build() {
         "no local path to the excluded package may be emitted: {content}"
     );
 }
+
+#[test]
+fn test_tiny_message_gets_inline_loop_overrides() {
+    // At most four singular fields: monomorphic `#[inline]` overrides of the
+    // shared decode loops are emitted. A message with a repeated field keeps
+    // the trait defaults.
+    let mut file = proto3_file("tiny.proto");
+    file.message_type.push(DescriptorProto {
+        name: Some("Vertex".to_string()),
+        field: vec![
+            make_field("x", 1, Label::LABEL_OPTIONAL, Type::TYPE_FLOAT),
+            make_field("y", 2, Label::LABEL_OPTIONAL, Type::TYPE_FLOAT),
+            make_field("z", 3, Label::LABEL_OPTIONAL, Type::TYPE_FLOAT),
+        ],
+        ..Default::default()
+    });
+    file.message_type.push(DescriptorProto {
+        name: Some("Mesh".to_string()),
+        field: vec![FieldDescriptorProto {
+            name: Some("vertices".to_string()),
+            number: Some(1),
+            label: Some(Label::LABEL_REPEATED),
+            r#type: Some(Type::TYPE_MESSAGE),
+            type_name: Some(".Vertex".to_string()),
+            ..Default::default()
+        }],
+        ..Default::default()
+    });
+    let files = generate(
+        &[file],
+        &["tiny.proto".to_string()],
+        &CodeGenConfig::default(),
+    )
+    .expect("should generate");
+    let content = &joined(&files);
+    assert_eq!(
+        content
+            .matches("::buffa::__private::merge_to_limit_inline(self")
+            .count(),
+        1,
+        "exactly the tiny Vertex should override merge_to_limit: {content}"
+    );
+    assert_eq!(
+        content
+            .matches("::buffa::__private::merge_length_delimited_inline(self")
+            .count(),
+        1,
+        "exactly the tiny Vertex should override merge_length_delimited: {content}"
+    );
+}
+
+#[test]
+fn test_encoder_binds_message_field_with_as_option() {
+    // `is_set()` + deref would instantiate `T::default_instance()` for every
+    // encodable message type; the encoder must bind the Option instead.
+    let mut file = proto3_file("enc_opt.proto");
+    file.message_type.push(DescriptorProto {
+        name: Some("Inner".to_string()),
+        field: vec![make_field("x", 1, Label::LABEL_OPTIONAL, Type::TYPE_INT32)],
+        ..Default::default()
+    });
+    file.message_type.push(DescriptorProto {
+        name: Some("Outer".to_string()),
+        field: vec![FieldDescriptorProto {
+            name: Some("inner".to_string()),
+            number: Some(1),
+            label: Some(Label::LABEL_OPTIONAL),
+            r#type: Some(Type::TYPE_MESSAGE),
+            type_name: Some(".Inner".to_string()),
+            ..Default::default()
+        }],
+        ..Default::default()
+    });
+    let files = generate(
+        &[file],
+        &["enc_opt.proto".to_string()],
+        &CodeGenConfig::default(),
+    )
+    .expect("should generate");
+    let content = &joined(&files);
+    assert!(
+        content.contains("= self.inner.as_option()"),
+        "owned encoder must bind the message field with as_option(): {content}"
+    );
+    assert!(
+        !content.contains("self.inner.is_set()"),
+        "owned encoder must not use is_set() + deref: {content}"
+    );
+}

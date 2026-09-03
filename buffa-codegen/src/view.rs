@@ -1841,16 +1841,21 @@ pub(crate) fn oneof_decode_arms(
                             #wire_check
                             let __sub_ctx = ctx.descend()?;
                             let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                            let __slot: &mut #vt = match view.#field_ident {
-                                Some(#view_enum::#variant(ref mut existing)) => existing,
-                                ref mut __other => match __other.insert(#view_enum::#variant(
-                                    ::buffa::alloc::boxed::Box::default(),
-                                )) {
-                                    #view_enum::#variant(__fresh) => __fresh,
-                                    _ => ::core::unreachable!(),
-                                },
-                            };
-                            ::buffa::MessageView::merge_into_view(__slot, sub, __sub_ctx)?;
+                            // Take the existing box out (any other variant is
+                            // replaced, per oneof semantics), merge, and put it
+                            // back before `?` so a failed merge leaves the field
+                            // set as before. No wildcard-vs-enum match, so a
+                            // single-variant oneof cannot trip
+                            // `unreachable_patterns` in the consumer crate.
+                            let mut __boxed: ::buffa::alloc::boxed::Box<#vt> =
+                                match view.#field_ident.take() {
+                                    Some(#view_enum::#variant(__existing)) => __existing,
+                                    _ => ::core::default::Default::default(),
+                                };
+                            let __merged =
+                                ::buffa::MessageView::merge_into_view(&mut *__boxed, sub, __sub_ctx);
+                            view.#field_ident = Some(#view_enum::#variant(__boxed));
+                            __merged?;
                         }
                     });
                 }
@@ -1861,16 +1866,21 @@ pub(crate) fn oneof_decode_arms(
                             #wire_check
                             let __sub_ctx = ctx.descend()?;
                             let sub = ::buffa::types::borrow_group(&mut cur, #field_number, __sub_ctx.depth())?;
-                            let __slot: &mut #vt = match view.#field_ident {
-                                Some(#view_enum::#variant(ref mut existing)) => existing,
-                                ref mut __other => match __other.insert(#view_enum::#variant(
-                                    ::buffa::alloc::boxed::Box::default(),
-                                )) {
-                                    #view_enum::#variant(__fresh) => __fresh,
-                                    _ => ::core::unreachable!(),
-                                },
-                            };
-                            ::buffa::MessageView::merge_into_view(__slot, sub, __sub_ctx)?;
+                            // Take the existing box out (any other variant is
+                            // replaced, per oneof semantics), merge, and put it
+                            // back before `?` so a failed merge leaves the field
+                            // set as before. No wildcard-vs-enum match, so a
+                            // single-variant oneof cannot trip
+                            // `unreachable_patterns` in the consumer crate.
+                            let mut __boxed: ::buffa::alloc::boxed::Box<#vt> =
+                                match view.#field_ident.take() {
+                                    Some(#view_enum::#variant(__existing)) => __existing,
+                                    _ => ::core::default::Default::default(),
+                                };
+                            let __merged =
+                                ::buffa::MessageView::merge_into_view(&mut *__boxed, sub, __sub_ctx);
+                            view.#field_ident = Some(#view_enum::#variant(__boxed));
+                            __merged?;
                         }
                     });
                 }

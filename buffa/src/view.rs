@@ -1141,10 +1141,10 @@ impl<V> MessageFieldView<V> {
     /// Get a mutable reference to the inner view, setting it to `V::default()`
     /// first if the field is unset.
     ///
-    /// Generated decode code merges every occurrence of a message field
-    /// through this one slot, so a field's sub-decoder is instantiated once
-    /// per arm rather than once for the first occurrence and again for the
-    /// merge path.
+    /// Setting an unset field allocates the `Box<V>` that backs it, exactly
+    /// as [`set`](Self::set) does; a field that is already set is returned
+    /// without allocating. Generated decode code merges every occurrence of
+    /// a message field through this one call.
     #[inline]
     pub fn get_or_insert_default(&mut self) -> &mut V
     where

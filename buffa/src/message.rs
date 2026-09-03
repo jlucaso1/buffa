@@ -861,13 +861,22 @@ pub trait Message: DefaultInstance + Clone + PartialEq + Send + Sync {
     ///
     /// This is the core decode loop.  [`merge`](Self::merge) delegates to this
     /// with `limit = 0` (read until exhausted).
-    /// [`merge_length_delimited`](Self::merge_length_delimited) computes
-    /// `limit` from the declared sub-message length and calls this directly.
     ///
     /// The caller must ensure `limit <= buf.remaining()`.  The default
     /// implementations of [`merge`](Self::merge) and
     /// [`merge_length_delimited`](Self::merge_length_delimited) uphold this
     /// invariant.
+    ///
+    /// # Overriding
+    ///
+    /// The default body is one loop shared by every message type (it
+    /// dispatches to [`merge_field`](Self::merge_field) through a private
+    /// object-safe trait), not a per-message instantiation.  The default
+    /// [`merge_length_delimited`](Self::merge_length_delimited) and
+    /// [`merge_group`](Self::merge_group) run that shared loop directly
+    /// rather than calling `self.merge_to_limit`, so overriding this method
+    /// alone changes top-level decoding only; an implementation that needs
+    /// its own loop on every path must override all three.
     ///
     /// `ctx` carries the remaining nesting depth and the shared allocation
     /// budget.  Each call to
@@ -947,20 +956,22 @@ pub trait Message: DefaultInstance + Clone + PartialEq + Send + Sync {
 
     /// Merge fields from a length-delimited sub-message payload into this message.
     ///
-    /// Reads a varint length prefix, then calls [`merge_to_limit`](Self::merge_to_limit)
-    /// with an arithmetic bound derived from the declared sub-message length.
+    /// Reads a varint length prefix, then runs the shared decode loop (the
+    /// same one behind [`merge_to_limit`](Self::merge_to_limit)) with an
+    /// arithmetic bound derived from the declared sub-message length.
     /// The buffer type `B` passes through unchanged at every recursion level,
     /// avoiding the `E0275` trait-solver recursion limit that occurs with
-    /// `Take<&mut Take<&mut T>>` type growth.
+    /// `Take<&mut Take<&mut T>>` type growth.  See the *Overriding* note on
+    /// [`merge_to_limit`](Self::merge_to_limit): the default body does not
+    /// dispatch through a `merge_to_limit` override.
     ///
     /// Used by generated code when decoding singular `MessageField<T>` fields
     /// — the sub-message is merged into the existing value rather than
     /// replaced, per protobuf merge semantics.
     ///
     /// `ctx` carries the remaining nesting depth and the shared allocation
-    /// budget passed down from the enclosing
-    /// [`merge_to_limit`](Self::merge_to_limit) call.  This method consumes
-    /// one depth level before calling the inner `merge_to_limit`; when the
+    /// budget passed down from the enclosing decode loop.  This method
+    /// consumes one depth level before decoding the sub-message; when the
     /// depth reaches zero it returns
     /// [`DecodeError::RecursionLimitExceeded`].
     ///
@@ -969,8 +980,8 @@ pub trait Message: DefaultInstance + Clone + PartialEq + Send + Sync {
     /// # Errors
     ///
     /// Returns an error if the buffer is too short, if the declared length
-    /// exceeds 2 GiB, if the recursion limit is reached, or if the inner
-    /// `merge_to_limit` call fails.
+    /// exceeds 2 GiB, if the recursion limit is reached, or if decoding a
+    /// field of the sub-message fails.
     fn merge_length_delimited(
         &mut self,
         buf: &mut impl Buf,
@@ -1000,9 +1011,11 @@ pub trait Message: DefaultInstance + Clone + PartialEq + Send + Sync {
 /// per-message `merge_field` body becomes the only monomorphised code.
 ///
 /// Measured on a 750-message schema (`whatsapp.proto`) at `opt-level = "z"`
-/// with fat LTO, this removed 13% of the binary's `.text` (215 KiB of
-/// 1.57 MiB). The cost is one indirect call per decoded field; the
-/// per-field work (tag decode, wire-type check, value decode) dwarfs it.
+/// with fat LTO, this removed 13% of the owned codec's `.text` (202 KiB of
+/// 1.57 MiB) and 15% once view decoders are included. The cost is one
+/// indirect call per decoded field, which is only visible on messages whose
+/// fields are trivial to decode; those get monomorphic loops instead, see
+/// [`crate::__private::merge_to_limit_inline`].
 trait FieldMerge<B: Buf> {
     fn merge_field_dyn(
         &mut self,
@@ -1088,61 +1101,6 @@ fn merge_length_delimited_erased<B: Buf>(
         let remaining = buf.remaining();
         if remaining > limit {
             // Sub-message consumed fewer bytes than declared; skip the rest.
-            buf.advance(remaining - limit);
-        } else {
-            return Err(DecodeError::UnexpectedEof);
-        }
-    }
-    Ok(())
-}
-
-/// Monomorphic decode loop for messages small enough that inlining pays for
-/// itself; see [`FieldMerge`] for the type-erased default.
-///
-/// Generated code overrides [`Message::merge_to_limit`] with this for
-/// "tiny" messages (at most four singular fields — a `Vertex { x, y, z }`, a
-/// `Timestamp`), where the per-field indirect call of the erased loop is
-/// comparable to the field's own decode work and where inlining the whole
-/// sub-decoder into the parent arm costs a few dozen bytes. Not part of the
-/// public API.
-#[doc(hidden)]
-#[inline]
-pub fn merge_to_limit_inline<M: Message, B: Buf>(
-    msg: &mut M,
-    buf: &mut B,
-    ctx: DecodeContext<'_>,
-    limit: usize,
-) -> Result<(), DecodeError> {
-    while buf.remaining() > limit {
-        let tag = crate::encoding::Tag::decode(buf)?;
-        msg.merge_field(tag, buf, ctx)?;
-    }
-    Ok(())
-}
-
-/// Monomorphic counterpart of [`Message::merge_length_delimited`] for tiny
-/// messages; see [`merge_to_limit_inline`]. Not part of the public API.
-#[doc(hidden)]
-#[inline]
-pub fn merge_length_delimited_inline<M: Message, B: Buf>(
-    msg: &mut M,
-    buf: &mut B,
-    ctx: DecodeContext<'_>,
-) -> Result<(), DecodeError> {
-    let ctx = ctx.descend()?;
-    let len_u64 = crate::encoding::decode_varint(buf)?;
-    if len_u64 > MAX_MESSAGE_BYTES as u64 {
-        return Err(DecodeError::MessageTooLarge);
-    }
-    let len = usize::try_from(len_u64).map_err(|_| DecodeError::MessageTooLarge)?;
-    if buf.remaining() < len {
-        return Err(DecodeError::UnexpectedEof);
-    }
-    let limit = buf.remaining() - len;
-    msg.merge_to_limit(buf, ctx, limit)?;
-    if buf.remaining() != limit {
-        let remaining = buf.remaining();
-        if remaining > limit {
             buf.advance(remaining - limit);
         } else {
             return Err(DecodeError::UnexpectedEof);

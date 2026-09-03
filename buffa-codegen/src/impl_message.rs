@@ -405,13 +405,14 @@ pub fn generate_message_impl(
 
     let fields = classify_fields_ordered(msg, oneof_idents)?;
     // Tiny messages (at most four singular fields) override the type-erased
-    // decode loops with monomorphic, inlinable ones: their per-field decode
-    // work is small enough that the erased loop's indirect call would be a
-    // measurable fraction of it (a 3-float vertex decoded through the erased
-    // loop was 45% slower), and inlining their whole sub-decoder into the
-    // parent arm costs only a few dozen bytes. Repeated, map and oneof fields
-    // carry element loops or many arms, so a message with any of those keeps
-    // the shared loops.
+    // decode loops with monomorphic, inlinable ones. Their `merge_field` is a
+    // handful of arms, so inlining the whole sub-decoder into the parent arm
+    // costs a few dozen bytes, while the erased loop's per-field indirect
+    // call is a measurable fraction of decoding a trivial field (a 3-float
+    // vertex decoded through the erased loop was 45% slower). Singular message
+    // fields count as tiny too: their arm is one call into the child's own
+    // loop. Repeated, map and oneof fields carry element loops or many arms,
+    // so a message with any of those keeps the shared loops.
     let tiny = fields.len() <= 4 && fields.iter().all(|k| matches!(k, FieldKind::Scalar(_)));
     let tiny_loop_overrides = if tiny {
         quote! {

@@ -502,30 +502,25 @@ impl<'a> ::buffa::MessageView<'a> for ValueView<'a> {
                 )?;
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                let __slot: &mut super::super::__buffa::view::StructView = match view
-                    .kind
-                {
+                let mut __boxed: ::buffa::alloc::boxed::Box<
+                    super::super::__buffa::view::StructView,
+                > = match view.kind.take() {
                     Some(
                         super::super::__buffa::view::oneof::value::Kind::StructValue(
-                            ref mut existing,
+                            __existing,
                         ),
-                    ) => existing,
-                    ref mut __other => {
-                        match __other
-                            .insert(
-                                super::super::__buffa::view::oneof::value::Kind::StructValue(
-                                    ::buffa::alloc::boxed::Box::default(),
-                                ),
-                            )
-                        {
-                            super::super::__buffa::view::oneof::value::Kind::StructValue(
-                                __fresh,
-                            ) => __fresh,
-                            _ => ::core::unreachable!(),
-                        }
-                    }
+                    ) => __existing,
+                    _ => ::core::default::Default::default(),
                 };
-                ::buffa::MessageView::merge_into_view(__slot, sub, __sub_ctx)?;
+                let __merged = ::buffa::MessageView::merge_into_view(
+                    &mut *__boxed,
+                    sub,
+                    __sub_ctx,
+                );
+                view.kind = Some(
+                    super::super::__buffa::view::oneof::value::Kind::StructValue(__boxed),
+                );
+                __merged?;
             }
             6u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -534,30 +529,25 @@ impl<'a> ::buffa::MessageView<'a> for ValueView<'a> {
                 )?;
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                let __slot: &mut super::super::__buffa::view::ListValueView = match view
-                    .kind
-                {
+                let mut __boxed: ::buffa::alloc::boxed::Box<
+                    super::super::__buffa::view::ListValueView,
+                > = match view.kind.take() {
                     Some(
                         super::super::__buffa::view::oneof::value::Kind::ListValue(
-                            ref mut existing,
+                            __existing,
                         ),
-                    ) => existing,
-                    ref mut __other => {
-                        match __other
-                            .insert(
-                                super::super::__buffa::view::oneof::value::Kind::ListValue(
-                                    ::buffa::alloc::boxed::Box::default(),
-                                ),
-                            )
-                        {
-                            super::super::__buffa::view::oneof::value::Kind::ListValue(
-                                __fresh,
-                            ) => __fresh,
-                            _ => ::core::unreachable!(),
-                        }
-                    }
+                    ) => __existing,
+                    _ => ::core::default::Default::default(),
                 };
-                ::buffa::MessageView::merge_into_view(__slot, sub, __sub_ctx)?;
+                let __merged = ::buffa::MessageView::merge_into_view(
+                    &mut *__boxed,
+                    sub,
+                    __sub_ctx,
+                );
+                view.kind = Some(
+                    super::super::__buffa::view::oneof::value::Kind::ListValue(__boxed),
+                );
+                __merged?;
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
