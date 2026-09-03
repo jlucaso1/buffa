@@ -148,8 +148,9 @@ impl Tag {
             return Self::from_raw_u32(b as u32);
         }
 
-        // Multi-byte tag (field number ≥ 16).
-        let value = decode_varint(buf)?;
+        // Multi-byte tag (field number ≥ 16). The one-byte case was just
+        // ruled out, so skip `decode_varint`'s inline check for it.
+        let value = decode_varint_multibyte(buf)?;
         // A tag value above u32::MAX implies a field number above 2^29 – 1
         // (the protobuf maximum), since the lower three bits carry the wire
         // type and the remaining bits carry the field number.
@@ -265,20 +266,36 @@ pub(crate) fn for_each_packed_varint(
 /// 2. Unrolled slice decode when the contiguous chunk is large enough.
 /// 3. Byte-at-a-time fallback for non-contiguous or fragmented buffers.
 ///
+/// Only the single-byte path is inlined at the call site (it is a load, a
+/// compare and a pointer bump); the rest lives in
+/// `decode_varint_multibyte`, out of line. A length prefix or a small
+/// scalar is one byte far more often than not, and taking the out-of-line
+/// path for it cost a call plus a `Result<u64, _>` returned through memory
+/// on every nested message: 12 of the ~150 instructions a three-float
+/// vertex needed to decode. Force-inlining the whole decoder instead was
+/// measured to regress large view decoders (see `decode_varint_packed`),
+/// so the multi-byte body stays a call. The hint is plain `#[inline]`: with
+/// the body this small a speed-optimised build inlines it into every field
+/// arm, while a size-optimised build keeps the one call per arm it had.
 #[inline]
 pub fn decode_varint(buf: &mut impl Buf) -> Result<u64, DecodeError> {
+    let chunk = buf.chunk();
+    if !chunk.is_empty() && chunk[0] < 0x80 {
+        let first = chunk[0];
+        buf.advance(1);
+        return Ok(first as u64);
+    }
+    decode_varint_multibyte(buf)
+}
+
+/// The out-of-line remainder of [`decode_varint`]: an empty chunk, or a
+/// first byte with the continuation bit set.
+#[inline(never)]
+pub(crate) fn decode_varint_multibyte(buf: &mut impl Buf) -> Result<u64, DecodeError> {
     let chunk = buf.chunk();
     let len = chunk.len();
     if len == 0 {
         return Err(DecodeError::UnexpectedEof);
-    }
-
-    // Fast path: single-byte varint (values 0–127). This covers field tags
-    // for field numbers 1–15 and many small integer values.
-    let first = chunk[0];
-    if first < 0x80 {
-        buf.advance(1);
-        return Ok(first as u64);
     }
 
     // Keep this branch condition in sync with `decode_varint_packed`; packed
