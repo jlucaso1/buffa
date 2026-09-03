@@ -433,15 +433,12 @@ impl<'a> ::buffa::MessageView<'a> for CodeGeneratorRequestView<'a> {
                 )?;
             }
             1u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::push_str_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut view.file_to_generate,
+                    &mut cur,
+                    ctx,
                 )?;
-                let __elem = ::buffa::types::borrow_str(&mut cur)?;
-                ctx.register_element_memory(
-                    ::buffa::__private::element_footprint(&__elem),
-                )?;
-                view.file_to_generate.push(__elem);
             }
             15u32 => {
                 ::buffa::encoding::check_wire_type(

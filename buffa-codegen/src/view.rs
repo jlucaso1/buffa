@@ -1598,7 +1598,21 @@ pub(crate) fn repeated_decode_arm(
     }
 
     // String and bytes: unpacked only (no packed encoding for LD types).
+    // They append through one fused reader (wire check, borrow, budget
+    // charge, push); see `push_str_field`.
     if !is_packed_type(ty) {
+        let fused = match ty {
+            Type::TYPE_STRING => Some(quote! { ::buffa::types::push_str_field }),
+            Type::TYPE_BYTES => Some(quote! { ::buffa::types::push_borrowed_bytes_field }),
+            _ => None,
+        };
+        if let Some(reader) = fused {
+            return Ok(quote! {
+                #field_number => {
+                    #reader(tag, &mut view.#ident, &mut cur, ctx)?;
+                }
+            });
+        }
         let ld_check = wire_type_check(
             &quote! { tag },
             &quote! { ::buffa::encoding::WireType::LengthDelimited },

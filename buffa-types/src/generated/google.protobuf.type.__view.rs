@@ -123,15 +123,7 @@ impl<'a> ::buffa::MessageView<'a> for TypeView<'a> {
                 view.fields.push(__elem);
             }
             3u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                let __elem = ::buffa::types::borrow_str(&mut cur)?;
-                ctx.register_element_memory(
-                    ::buffa::__private::element_footprint(&__elem),
-                )?;
-                view.oneofs.push(__elem);
+                ::buffa::types::push_str_field(tag, &mut view.oneofs, &mut cur, ctx)?;
             }
             4u32 => {
                 ::buffa::encoding::check_wire_type(

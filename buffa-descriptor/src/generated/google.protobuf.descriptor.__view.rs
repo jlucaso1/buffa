@@ -461,15 +461,12 @@ impl<'a> ::buffa::MessageView<'a> for FileDescriptorProtoView<'a> {
                 }
             }
             3u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::push_str_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut view.dependency,
+                    &mut cur,
+                    ctx,
                 )?;
-                let __elem = ::buffa::types::borrow_str(&mut cur)?;
-                ctx.register_element_memory(
-                    ::buffa::__private::element_footprint(&__elem),
-                )?;
-                view.dependency.push(__elem);
             }
             10u32 => {
                 if tag.wire_type() == ::buffa::encoding::WireType::LengthDelimited {
@@ -510,15 +507,12 @@ impl<'a> ::buffa::MessageView<'a> for FileDescriptorProtoView<'a> {
                 }
             }
             15u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::push_str_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut view.option_dependency,
+                    &mut cur,
+                    ctx,
                 )?;
-                let __elem = ::buffa::types::borrow_str(&mut cur)?;
-                ctx.register_element_memory(
-                    ::buffa::__private::element_footprint(&__elem),
-                )?;
-                view.option_dependency.push(__elem);
             }
             4u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -1360,15 +1354,12 @@ impl<'a> ::buffa::MessageView<'a> for DescriptorProtoView<'a> {
                 view.reserved_range.push(__elem);
             }
             10u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::push_str_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut view.reserved_name,
+                    &mut cur,
+                    ctx,
                 )?;
-                let __elem = ::buffa::types::borrow_str(&mut cur)?;
-                ctx.register_element_memory(
-                    ::buffa::__private::element_footprint(&__elem),
-                )?;
-                view.reserved_name.push(__elem);
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -4440,15 +4431,12 @@ impl<'a> ::buffa::MessageView<'a> for EnumDescriptorProtoView<'a> {
                 view.reserved_range.push(__elem);
             }
             5u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::push_str_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut view.reserved_name,
+                    &mut cur,
+                    ctx,
                 )?;
-                let __elem = ::buffa::types::borrow_str(&mut cur)?;
-                ctx.register_element_memory(
-                    ::buffa::__private::element_footprint(&__elem),
-                )?;
-                view.reserved_name.push(__elem);
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -14456,15 +14444,12 @@ pub mod source_code_info {
                     }
                 }
                 6u32 => {
-                    ::buffa::encoding::check_wire_type(
+                    ::buffa::types::push_str_field(
                         tag,
-                        ::buffa::encoding::WireType::LengthDelimited,
+                        &mut view.leading_detached_comments,
+                        &mut cur,
+                        ctx,
                     )?;
-                    let __elem = ::buffa::types::borrow_str(&mut cur)?;
-                    ctx.register_element_memory(
-                        ::buffa::__private::element_footprint(&__elem),
-                    )?;
-                    view.leading_detached_comments.push(__elem);
                 }
                 _ => {
                     ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;

@@ -959,6 +959,52 @@ pub fn push_bytes_field(
     Ok(())
 }
 
+/// Borrow one element of a repeated `string` field and append it to a
+/// view's list; the view-side sibling of [`push_string_field`]. The
+/// element's footprint (the borrowed pointer's width) is charged against
+/// `ctx`'s budget before the push.
+///
+/// # Errors
+///
+/// Returns [`DecodeError::WireTypeMismatch`] when `tag`'s wire type is not
+/// `LengthDelimited`, [`DecodeError::ElementMemoryLimitExceeded`] when the
+/// budget is exhausted, or [`borrow_str`]'s error.
+#[inline]
+pub fn push_str_field<'a>(
+    tag: Tag,
+    dst: &mut crate::RepeatedView<'a, &'a str>,
+    cur: &mut &'a [u8],
+    ctx: crate::DecodeContext<'_>,
+) -> Result<(), DecodeError> {
+    crate::encoding::check_wire_type(tag, WireType::LengthDelimited)?;
+    let elem = borrow_str(cur)?;
+    ctx.register_element_memory(core::mem::size_of::<&str>())?;
+    dst.push(elem);
+    Ok(())
+}
+
+/// Borrow one element of a repeated `bytes` field and append it to a
+/// view's list; the view-side sibling of [`push_bytes_field`].
+///
+/// # Errors
+///
+/// Returns [`DecodeError::WireTypeMismatch`] when `tag`'s wire type is not
+/// `LengthDelimited`, [`DecodeError::ElementMemoryLimitExceeded`] when the
+/// budget is exhausted, or [`borrow_bytes`]'s error.
+#[inline]
+pub fn push_borrowed_bytes_field<'a>(
+    tag: Tag,
+    dst: &mut crate::RepeatedView<'a, &'a [u8]>,
+    cur: &mut &'a [u8],
+    ctx: crate::DecodeContext<'_>,
+) -> Result<(), DecodeError> {
+    crate::encoding::check_wire_type(tag, WireType::LengthDelimited)?;
+    let elem = borrow_bytes(cur)?;
+    ctx.register_element_memory(core::mem::size_of::<&[u8]>())?;
+    dst.push(elem);
+    Ok(())
+}
+
 // ---------------------------------------------------------------------------
 // Fused tag + payload field writers
 // ---------------------------------------------------------------------------
@@ -2574,6 +2620,43 @@ mod tests {
             ctx,
         )
         .unwrap_err();
+        assert!(matches!(
+            err,
+            DecodeError::WireTypeMismatch {
+                field_number: 1,
+                ..
+            }
+        ));
+    }
+
+    #[test]
+    fn fused_view_push_readers_charge_the_budget_before_pushing() {
+        let ld = Tag::new(1, WireType::LengthDelimited);
+        let unknown = core::cell::Cell::new(crate::DEFAULT_UNKNOWN_FIELD_LIMIT);
+        // Room for exactly one borrowed element.
+        let budget = core::cell::Cell::new(core::mem::size_of::<&str>());
+        let ctx = crate::DecodeContext::new(8, &unknown).with_element_memory(&budget);
+        let mut list = crate::RepeatedView::default();
+        let mut two: &[u8] = b"\x01a\x01b";
+        push_str_field(ld, &mut list, &mut two, ctx).unwrap();
+        assert_eq!(
+            push_str_field(ld, &mut list, &mut two, ctx).unwrap_err(),
+            DecodeError::ElementMemoryLimitExceeded
+        );
+        assert_eq!(list.len(), 1, "an over-budget element must not be pushed");
+        // The reader borrows before it charges, so the failed element has
+        // been consumed; the bytes checks start from their own buffers.
+        let mut blist = crate::RepeatedView::default();
+        let mut one: &[u8] = b"\x01c";
+        assert_eq!(
+            push_borrowed_bytes_field(ld, &mut blist, &mut one, ctx).unwrap_err(),
+            DecodeError::ElementMemoryLimitExceeded
+        );
+        assert!(blist.is_empty());
+        let mut raw: &[u8] = b"\x00";
+        let err =
+            push_borrowed_bytes_field(Tag::new(1, WireType::Varint), &mut blist, &mut raw, ctx)
+                .unwrap_err();
         assert!(matches!(
             err,
             DecodeError::WireTypeMismatch {
