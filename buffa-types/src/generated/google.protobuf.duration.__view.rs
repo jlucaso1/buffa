@@ -87,6 +87,15 @@ pub struct DurationView<'a> {
 impl<'a> ::buffa::MessageView<'a> for DurationView<'a> {
     type Owned = super::super::Duration;
     #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
+    #[inline]
     fn merge_into_view(
         &mut self,
         buf: &'a [u8],

@@ -203,6 +203,21 @@ pub(crate) fn generate_view_with_nesting(
         && repeated_arms.is_empty()
         && oneof_arms.is_empty()
         && !msg.field.iter().any(is_string_or_bytes);
+    // Every view overrides the top-level entry `decode_view_ctx` with the
+    // monomorphic loop (the trait default dispatches through
+    // `merge_into_view`, so a hand-written override applies there); nested
+    // views enter the erased loop, which tiny views alone override.
+    let top_level_loop_override = quote! {
+        #[inline]
+        fn decode_view_ctx(
+            buf: &'a [u8],
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+            let mut view = <Self as ::core::default::Default>::default();
+            ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+            ::core::result::Result::Ok(view)
+        }
+    };
     let tiny_loop_override = if tiny {
         quote! {
             #[inline]
@@ -446,6 +461,7 @@ pub(crate) fn generate_view_with_nesting(
         impl<'a> ::buffa::MessageView<'a> for #view_ident<'a> {
             type Owned = #owned_path;
 
+            #top_level_loop_override
             #tiny_loop_override
 
             fn decode_view(

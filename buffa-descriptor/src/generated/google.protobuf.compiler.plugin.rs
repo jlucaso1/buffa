@@ -193,6 +193,15 @@ impl ::buffa::Message for Version {
         self.suffix = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+    }
 }
 impl ::buffa::ExtensionSet for Version {
     const PROTO_FQN: &'static str = "google.protobuf.compiler.Version";
@@ -550,6 +559,15 @@ impl ::buffa::Message for CodeGeneratorRequest {
         self.proto_file.clear();
         self.source_file_descriptors.clear();
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for CodeGeneratorRequest {
@@ -927,6 +945,15 @@ impl ::buffa::Message for CodeGeneratorResponse {
         self.maximum_edition = ::core::option::Option::None;
         self.file.clear();
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for CodeGeneratorResponse {
@@ -1468,6 +1495,15 @@ pub mod code_generator_response {
             self.content = ::core::option::Option::None;
             self.generated_code_info = ::buffa::MessageField::none();
             self.__buffa_unknown_fields.clear();
+        }
+        #[inline]
+        fn merge_to_limit(
+            &mut self,
+            buf: &mut impl ::buffa::bytes::Buf,
+            ctx: ::buffa::DecodeContext<'_>,
+            limit: usize,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
         }
     }
     impl ::buffa::ExtensionSet for File {

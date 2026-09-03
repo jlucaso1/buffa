@@ -410,6 +410,15 @@ impl ::buffa::Message for Api {
         self.edition.clear();
         self.__buffa_unknown_fields.clear();
     }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+    }
 }
 impl ::buffa::ExtensionSet for Api {
     const PROTO_FQN: &'static str = "google.protobuf.Api";
@@ -895,6 +904,15 @@ impl ::buffa::Message for Method {
         self.edition.clear();
         self.__buffa_unknown_fields.clear();
     }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+    }
 }
 impl ::buffa::ExtensionSet for Method {
     const PROTO_FQN: &'static str = "google.protobuf.Method";
@@ -1284,6 +1302,15 @@ impl ::buffa::Message for Mixin {
         self.name.clear();
         self.root.clear();
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for Mixin {

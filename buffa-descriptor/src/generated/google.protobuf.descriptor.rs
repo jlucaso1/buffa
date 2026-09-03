@@ -518,6 +518,15 @@ impl ::buffa::Message for FileDescriptorSet {
         self.file.clear();
         self.__buffa_unknown_fields.clear();
     }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+    }
 }
 impl ::buffa::ExtensionSet for FileDescriptorSet {
     const PROTO_FQN: &'static str = "google.protobuf.FileDescriptorSet";
@@ -1355,6 +1364,15 @@ impl ::buffa::Message for FileDescriptorProto {
         self.option_dependency.clear();
         self.__buffa_unknown_fields.clear();
     }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+    }
 }
 impl ::buffa::ExtensionSet for FileDescriptorProto {
     const PROTO_FQN: &'static str = "google.protobuf.FileDescriptorProto";
@@ -2013,6 +2031,15 @@ impl ::buffa::Message for DescriptorProto {
         self.reserved_name.clear();
         self.visibility = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for DescriptorProto {
@@ -2975,6 +3002,15 @@ impl ::buffa::Message for ExtensionRangeOptions {
         self.uninterpreted_option.clear();
         self.__buffa_unknown_fields.clear();
     }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+    }
 }
 impl ::buffa::ExtensionSet for ExtensionRangeOptions {
     const PROTO_FQN: &'static str = "google.protobuf.ExtensionRangeOptions";
@@ -3687,6 +3723,15 @@ pub mod extension_range_options {
             self.repeated = ::core::option::Option::None;
             self.__buffa_unknown_fields.clear();
         }
+        #[inline]
+        fn merge_to_limit(
+            &mut self,
+            buf: &mut impl ::buffa::bytes::Buf,
+            ctx: ::buffa::DecodeContext<'_>,
+            limit: usize,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+        }
     }
     impl ::buffa::ExtensionSet for Declaration {
         const PROTO_FQN: &'static str = "google.protobuf.ExtensionRangeOptions.Declaration";
@@ -4286,6 +4331,15 @@ impl ::buffa::Message for FieldDescriptorProto {
         self.json_name = ::core::option::Option::None;
         self.proto3_optional = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for FieldDescriptorProto {
@@ -5015,6 +5069,15 @@ impl ::buffa::Message for OneofDescriptorProto {
         self.options = ::buffa::MessageField::none();
         self.__buffa_unknown_fields.clear();
     }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+    }
 }
 impl ::buffa::ExtensionSet for OneofDescriptorProto {
     const PROTO_FQN: &'static str = "google.protobuf.OneofDescriptorProto";
@@ -5380,6 +5443,15 @@ impl ::buffa::Message for EnumDescriptorProto {
         self.reserved_name.clear();
         self.visibility = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for EnumDescriptorProto {
@@ -5926,6 +5998,15 @@ impl ::buffa::Message for EnumValueDescriptorProto {
         self.options = ::buffa::MessageField::none();
         self.__buffa_unknown_fields.clear();
     }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+    }
 }
 impl ::buffa::ExtensionSet for EnumValueDescriptorProto {
     const PROTO_FQN: &'static str = "google.protobuf.EnumValueDescriptorProto";
@@ -6177,6 +6258,15 @@ impl ::buffa::Message for ServiceDescriptorProto {
         self.method.clear();
         self.options = ::buffa::MessageField::none();
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for ServiceDescriptorProto {
@@ -6538,6 +6628,15 @@ impl ::buffa::Message for MethodDescriptorProto {
         self.client_streaming = ::core::option::Option::None;
         self.server_streaming = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for MethodDescriptorProto {
@@ -7559,6 +7658,15 @@ impl ::buffa::Message for FileOptions {
         self.features = ::buffa::MessageField::none();
         self.uninterpreted_option.clear();
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for FileOptions {
@@ -8758,6 +8866,15 @@ impl ::buffa::Message for MessageOptions {
         self.uninterpreted_option.clear();
         self.__buffa_unknown_fields.clear();
     }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+    }
 }
 impl ::buffa::ExtensionSet for MessageOptions {
     const PROTO_FQN: &'static str = "google.protobuf.MessageOptions";
@@ -9751,6 +9868,15 @@ impl ::buffa::Message for FieldOptions {
         self.feature_support = ::buffa::MessageField::none();
         self.uninterpreted_option.clear();
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for FieldOptions {
@@ -11153,6 +11279,15 @@ pub mod field_options {
             self.edition = ::core::option::Option::None;
             self.__buffa_unknown_fields.clear();
         }
+        #[inline]
+        fn merge_to_limit(
+            &mut self,
+            buf: &mut impl ::buffa::bytes::Buf,
+            ctx: ::buffa::DecodeContext<'_>,
+            limit: usize,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+        }
     }
     impl ::buffa::ExtensionSet for EditionDefault {
         const PROTO_FQN: &'static str = "google.protobuf.FieldOptions.EditionDefault";
@@ -11503,6 +11638,15 @@ pub mod field_options {
             self.edition_removed = ::core::option::Option::None;
             self.__buffa_unknown_fields.clear();
         }
+        #[inline]
+        fn merge_to_limit(
+            &mut self,
+            buf: &mut impl ::buffa::bytes::Buf,
+            ctx: ::buffa::DecodeContext<'_>,
+            limit: usize,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+        }
     }
     impl ::buffa::ExtensionSet for FeatureSupport {
         const PROTO_FQN: &'static str = "google.protobuf.FieldOptions.FeatureSupport";
@@ -11762,6 +11906,15 @@ impl ::buffa::Message for OneofOptions {
         self.features = ::buffa::MessageField::none();
         self.uninterpreted_option.clear();
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for OneofOptions {
@@ -12258,6 +12411,15 @@ impl ::buffa::Message for EnumOptions {
         self.features = ::buffa::MessageField::none();
         self.uninterpreted_option.clear();
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for EnumOptions {
@@ -12809,6 +12971,15 @@ impl ::buffa::Message for EnumValueOptions {
         self.uninterpreted_option.clear();
         self.__buffa_unknown_fields.clear();
     }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+    }
 }
 impl ::buffa::ExtensionSet for EnumValueOptions {
     const PROTO_FQN: &'static str = "google.protobuf.EnumValueOptions";
@@ -13299,6 +13470,15 @@ impl ::buffa::Message for ServiceOptions {
         self.features = ::buffa::MessageField::none();
         self.uninterpreted_option.clear();
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for ServiceOptions {
@@ -13793,6 +13973,15 @@ impl ::buffa::Message for MethodOptions {
         self.features = ::buffa::MessageField::none();
         self.uninterpreted_option.clear();
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for MethodOptions {
@@ -14573,6 +14762,15 @@ impl ::buffa::Message for UninterpretedOption {
         self.aggregate_value = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+    }
 }
 impl ::buffa::ExtensionSet for UninterpretedOption {
     const PROTO_FQN: &'static str = "google.protobuf.UninterpretedOption";
@@ -14817,6 +15015,15 @@ pub mod uninterpreted_option {
             self.name_part.clear();
             self.is_extension = false;
             self.__buffa_unknown_fields.clear();
+        }
+        #[inline]
+        fn merge_to_limit(
+            &mut self,
+            buf: &mut impl ::buffa::bytes::Buf,
+            ctx: ::buffa::DecodeContext<'_>,
+            limit: usize,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
         }
     }
     impl ::buffa::ExtensionSet for NamePart {
@@ -15365,6 +15572,15 @@ impl ::buffa::Message for FeatureSet {
         self.enforce_naming_style = ::core::option::Option::None;
         self.default_symbol_visibility = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for FeatureSet {
@@ -16996,6 +17212,15 @@ pub mod feature_set {
         fn clear(&mut self) {
             self.__buffa_unknown_fields.clear();
         }
+        #[inline]
+        fn merge_to_limit(
+            &mut self,
+            buf: &mut impl ::buffa::bytes::Buf,
+            ctx: ::buffa::DecodeContext<'_>,
+            limit: usize,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+        }
     }
     impl ::buffa::ExtensionSet for VisibilityFeature {
         const PROTO_FQN: &'static str = "google.protobuf.FeatureSet.VisibilityFeature";
@@ -17478,6 +17703,15 @@ impl ::buffa::Message for FeatureSetDefaults {
         self.minimum_edition = ::core::option::Option::None;
         self.maximum_edition = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for FeatureSetDefaults {
@@ -18061,6 +18295,15 @@ impl ::buffa::Message for SourceCodeInfo {
     fn clear(&mut self) {
         self.location.clear();
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for SourceCodeInfo {
@@ -18692,6 +18935,15 @@ pub mod source_code_info {
             self.leading_detached_comments.clear();
             self.__buffa_unknown_fields.clear();
         }
+        #[inline]
+        fn merge_to_limit(
+            &mut self,
+            buf: &mut impl ::buffa::bytes::Buf,
+            ctx: ::buffa::DecodeContext<'_>,
+            limit: usize,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+        }
     }
     impl ::buffa::ExtensionSet for Location {
         const PROTO_FQN: &'static str = "google.protobuf.SourceCodeInfo.Location";
@@ -18920,6 +19172,15 @@ impl ::buffa::Message for GeneratedCodeInfo {
     fn clear(&mut self) {
         self.annotation.clear();
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for GeneratedCodeInfo {
@@ -19301,6 +19562,15 @@ pub mod generated_code_info {
             self.end = ::core::option::Option::None;
             self.semantic = ::core::option::Option::None;
             self.__buffa_unknown_fields.clear();
+        }
+        #[inline]
+        fn merge_to_limit(
+            &mut self,
+            buf: &mut impl ::buffa::bytes::Buf,
+            ctx: ::buffa::DecodeContext<'_>,
+            limit: usize,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
         }
     }
     impl ::buffa::ExtensionSet for Annotation {

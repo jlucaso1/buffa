@@ -264,11 +264,14 @@ pub trait MessageView<'a>: Sized {
         Self: Default,
     {
         let mut view = Self::default();
-        // Top-level entry: monomorphic loop with a direct `merge_view_field`
-        // call, for the same reason as `Message::merge`; nested message
-        // fields (singular, oneof and repeated) go through the shared erased
-        // loop in `merge_into_view`.
-        crate::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        // Dispatches through `merge_into_view` so an override of the loop
+        // applies at top level too. Generated views override this method
+        // with a monomorphic loop instead (see
+        // `crate::__private::merge_into_view_inline`), for the same reason
+        // `Message::merge` has one; nested message fields (singular, oneof
+        // and repeated) go through the shared erased loop in
+        // `merge_into_view` either way.
+        view.merge_into_view(buf, ctx)?;
         Ok(view)
     }
 

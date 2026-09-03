@@ -2986,8 +2986,14 @@ fn test_tiny_message_gets_inline_loop_overrides() {
     for not_tiny in ["KeyValue", "NamedVertex", "Mesh"] {
         let block = message_impl_block(content, not_tiny);
         assert!(
-            !block.contains("_inline(self"),
-            "{not_tiny} must keep the shared decode loops: {block}"
+            !block.contains("merge_length_delimited_inline(self")
+                && !block.contains("merge_group_inline(self"),
+            "{not_tiny} must keep the shared nested decode loops: {block}"
+        );
+        // The top-level entry is monomorphic for every message.
+        assert!(
+            block.contains("merge_to_limit_inline(self"),
+            "{not_tiny} must override merge_to_limit for top-level decoding: {block}"
         );
     }
 }

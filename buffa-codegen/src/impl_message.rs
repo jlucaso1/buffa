@@ -451,18 +451,26 @@ pub fn generate_message_impl(
             FieldKind::Scalar(f) => !is_string_or_bytes(f),
             _ => false,
         });
+    // Every message overrides `merge_to_limit` with the monomorphic loop: the
+    // trait's top-level entry points (`merge`, `decode_length_delimited`,
+    // `DecodeOptions`) dispatch through it, so this is what keeps top-level
+    // decoding free of the erased loop's shared indirect call, and only the
+    // types an application decodes directly instantiate it. Nested messages
+    // enter the erased loop directly through `merge_length_delimited` /
+    // `merge_group`, which tiny messages alone override.
+    let top_level_loop_override = quote! {
+        #[inline]
+        fn merge_to_limit(
+            &mut self,
+            buf: &mut impl ::buffa::bytes::Buf,
+            ctx: ::buffa::DecodeContext<'_>,
+            limit: usize,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+        }
+    };
     let tiny_loop_overrides = if tiny {
         quote! {
-            #[inline]
-            fn merge_to_limit(
-                &mut self,
-                buf: &mut impl ::buffa::bytes::Buf,
-                ctx: ::buffa::DecodeContext<'_>,
-                limit: usize,
-            ) -> ::core::result::Result<(), ::buffa::DecodeError> {
-                ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
-            }
-
             #[inline]
             fn merge_length_delimited(
                 &mut self,
@@ -795,6 +803,7 @@ pub fn generate_message_impl(
                 #unknown_fields_clear_stmt
             }
 
+            #top_level_loop_override
             #tiny_loop_overrides
         }
 

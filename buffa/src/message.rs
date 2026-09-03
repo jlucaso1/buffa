@@ -817,9 +817,9 @@ pub trait Message: DefaultInstance + Clone + PartialEq + Send + Sync {
         let field_limit = core::cell::Cell::new(DEFAULT_UNKNOWN_FIELD_LIMIT);
         let elem_budget = core::cell::Cell::new(DEFAULT_ELEMENT_MEMORY_LIMIT);
         let mut msg = Self::default();
-        // Monomorphic top-level loop; see `merge`.
-        crate::__private::merge_to_limit_inline(
-            &mut msg,
+        // Top-level loop; see `merge` for why this goes through the
+        // overridable `merge_to_limit`.
+        msg.merge_to_limit(
             buf,
             DecodeContext::new(RECURSION_LIMIT, &field_limit).with_element_memory(&elem_budget),
             limit,
@@ -873,9 +873,14 @@ pub trait Message: DefaultInstance + Clone + PartialEq + Send + Sync {
     ///
     /// The default body is one loop shared by every message type (it
     /// dispatches to [`merge_field`](Self::merge_field) through a private
-    /// object-safe trait), not a per-message instantiation.  The default
+    /// object-safe trait), not a per-message instantiation.  The top-level
+    /// entry points ([`merge`](Self::merge),
+    /// [`decode_length_delimited`](Self::decode_length_delimited),
+    /// [`DecodeOptions`](crate::DecodeOptions)) call this method, so an
+    /// override applies to them; generated code overrides it with a
+    /// monomorphic loop for that reason.  The default
     /// [`merge_length_delimited`](Self::merge_length_delimited) and
-    /// [`merge_group`](Self::merge_group) run that shared loop directly
+    /// [`merge_group`](Self::merge_group) run the shared loop directly
     /// rather than calling `self.merge_to_limit`, so overriding this method
     /// alone changes top-level decoding only; an implementation that needs
     /// its own loop on every path must override all three.
@@ -940,14 +945,16 @@ pub trait Message: DefaultInstance + Clone + PartialEq + Send + Sync {
     /// [`merge_from_slice`](Self::merge_from_slice)) which do this
     /// automatically.
     fn merge(&mut self, buf: &mut impl Buf, ctx: DecodeContext<'_>) -> Result<(), DecodeError> {
-        // Top-level entry: a monomorphic loop with a direct `merge_field`
-        // call. The type-erased loop behind `merge_to_limit` shares one
-        // indirect call site across every message type, which mispredicts
-        // as parent and child decoders alternate; measured +11–13% on flat
-        // top-level decodes. Only the types an application decodes directly
-        // instantiate this, so the size cost is bounded by that set, while
-        // every nested sub-message still goes through the shared loop.
-        crate::__private::merge_to_limit_inline(self, buf, ctx, 0)
+        // Dispatches through `merge_to_limit` so an override of the loop
+        // applies to top-level decoding as well as to nested messages.
+        // Generated code overrides `merge_to_limit` with a monomorphic loop
+        // (see `crate::__private::merge_to_limit_inline`): the type-erased
+        // default shares one indirect call site across every message type,
+        // which mispredicts as parent and child decoders alternate (measured
+        // +11–13% on flat top-level decodes), and only the types an
+        // application decodes directly instantiate the override, so the size
+        // cost is bounded by that set.
+        self.merge_to_limit(buf, ctx, 0)
     }
 
     /// Merge fields from a byte slice into this message.
@@ -1502,9 +1509,9 @@ impl DecodeOptions {
         let field_limit = core::cell::Cell::new(self.unknown_field_limit);
         let elem_budget = core::cell::Cell::new(self.element_memory_limit);
         let mut msg = M::default();
-        // Monomorphic top-level loop; see `Message::merge`.
-        crate::__private::merge_to_limit_inline(
-            &mut msg,
+        // Top-level loop; see `Message::merge` for why this goes through the
+        // overridable `merge_to_limit`.
+        msg.merge_to_limit(
             buf,
             DecodeContext::new(self.recursion_limit, &field_limit)
                 .with_element_memory(&elem_budget),

@@ -309,16 +309,21 @@ pub mod __private {
     /// that downstream crates do not need a direct `once_cell` dependency.
     pub use once_cell::race::OnceBox;
 
-    /// Monomorphic decode loop for messages small enough that inlining pays
-    /// for itself; the trait's default is type-erased (see `FieldMerge` in
-    /// `message.rs`).
+    /// Monomorphic decode loop; the trait's default is type-erased (see
+    /// `FieldMerge` in `message.rs`).
     ///
     /// Generated code overrides [`Message::merge_to_limit`](crate::Message::merge_to_limit)
-    /// with this for "tiny" messages (at most four singular fields, none string or bytes — a
-    /// `Vertex { x, y, z }`, a `Timestamp`), where the erased loop's per-field
-    /// indirect call is comparable to the field's own decode work and where
-    /// inlining the whole sub-decoder into the parent arm costs a few dozen
-    /// bytes.
+    /// with this for every message, which keeps the top-level entry points
+    /// (`merge`, `decode_length_delimited`, `DecodeOptions`) on a direct
+    /// call: the erased loop's single indirect call site mispredicts as
+    /// parent and child decoders alternate. Only types decoded at top level
+    /// instantiate it. "Tiny" messages (at most four singular fields, none
+    /// string or bytes — a `Vertex { x, y, z }`, a `Timestamp`) also route
+    /// [`merge_length_delimited`](crate::Message::merge_length_delimited)
+    /// and [`merge_group`](crate::Message::merge_group) through it, because
+    /// there the per-field indirect call is comparable to the field's own
+    /// decode work and inlining the whole sub-decoder into the parent arm
+    /// costs a few dozen bytes.
     #[inline]
     pub fn merge_to_limit_inline<M: crate::Message, B: bytes::Buf>(
         msg: &mut M,
