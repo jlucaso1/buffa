@@ -1024,9 +1024,9 @@ pub trait Message: DefaultInstance + Clone + PartialEq + Send + Sync {
 /// per-message `merge_field` body becomes the only monomorphised code.
 ///
 /// Measured on a 750-message schema (`whatsapp.proto`) at `opt-level = "z"`
-/// with fat LTO, the erasure and the decoder changes built on it removed
-/// 21% of the owned codec's `.text` (317 KiB of 1.51 MiB) and 25% once view
-/// decoders are included. The cost is one
+/// with fat LTO, the erasure and the decoder and encoder changes built on
+/// it removed 25% of the owned codec's `.text` (382 KiB of 1.51 MiB) and 28%
+/// once view decoders are included. The cost is one
 /// indirect call per decoded field, which is only visible on messages whose
 /// fields are trivial to decode; those get monomorphic loops instead, see
 /// [`crate::__private::merge_to_limit_inline`].
