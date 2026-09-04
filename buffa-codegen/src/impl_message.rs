@@ -678,6 +678,13 @@ pub fn generate_message_impl(
     } else {
         quote! { _buf: &mut impl ::buffa::EncodeSink }
     };
+    // Same suppression for the single-pass method: one stmt per field kind
+    // plus the shared unknown-fields tail.
+    let sp_buf_param = if !single_pass_stmts.is_empty() || !unknown_fields_write_stmt.is_empty() {
+        quote! { buf: &mut ::buffa::alloc::vec::Vec<u8> }
+    } else {
+        quote! { _buf: &mut ::buffa::alloc::vec::Vec<u8> }
+    };
 
     let extension_set_impl = if preserve_unknown_fields {
         let proto_fqn_lit = proto_fqn;
@@ -792,7 +799,7 @@ pub fn generate_message_impl(
             /// are reserved and backpatched: the field set is walked once.
             /// Falls back to the two passes only for hand-written impls that
             /// do not override it.
-            fn encode_single_pass(&self, buf: &mut ::buffa::alloc::vec::Vec<u8>) {
+            fn encode_single_pass(&self, #sp_buf_param) {
                 #[allow(unused_imports)]
                 use ::buffa::EncodeSink as _;
                 #[allow(unused_imports)]

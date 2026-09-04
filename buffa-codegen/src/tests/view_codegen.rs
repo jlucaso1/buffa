@@ -957,8 +957,12 @@ fn test_view_inline_override_forces_inline_despite_box_rule() {
     boxed_cfg
         .pointer_fields
         .push((".".to_string(), crate::PointerRepr::Box));
-    let files = generate(&[file.clone()], &["override_view.proto".to_string()], &boxed_cfg)
-        .expect("should generate");
+    let files = generate(
+        &[file.clone()],
+        &["override_view.proto".to_string()],
+        &boxed_cfg,
+    )
+    .expect("should generate");
     assert!(
         joined(&files).contains("pub leaf: ::buffa::MessageFieldView<"),
         "Box rule must keep the view boxed by default"
@@ -979,5 +983,27 @@ fn test_view_inline_override_forces_inline_despite_box_rule() {
     assert!(
         content.contains("pub leaf: ::buffa::MessageField<"),
         "owned field must stay boxed under the override"
+    );
+}
+
+#[test]
+fn test_single_pass_empty_message_without_unknowns_underscores_buf() {
+    // Messages with no fields and no unknown-field preservation emit an
+    // empty `encode_single_pass` body: the sink parameter must be `_buf`
+    // or `-D warnings` builds (like waproto's) fail on unused_variables.
+    let mut file = proto3_file("empty_msg.proto");
+    file.message_type.push(DescriptorProto {
+        name: Some("Empty".to_string()),
+        ..Default::default()
+    });
+    let mut config = CodeGenConfig::default();
+    config.generate_views = false;
+    config.preserve_unknown_fields = false;
+    let files =
+        generate(&[file], &["empty_msg.proto".to_string()], &config).expect("should generate");
+    let content = &joined(&files);
+    assert!(
+        content.contains("fn encode_single_pass(&self, _buf:"),
+        "empty message without unknowns must underscore the single-pass sink: {content}"
     );
 }

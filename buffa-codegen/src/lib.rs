@@ -3137,11 +3137,8 @@ impl SharedCorpusContext {
         // Cycle-safe inline candidates under default rules, for the
         // `view_inline_fields = Some(true)` override: a blanket `Box` rule
         // would otherwise empty `inlined_message_fields`.
-        let acyclic_message_fields = oneof::resolve_inlined_fields(
-            &msg_index,
-            &config.unboxed_oneof_fields,
-            &[],
-        );
+        let acyclic_message_fields =
+            oneof::resolve_inlined_fields(&msg_index, &config.unboxed_oneof_fields, &[]);
         let comment_map = files.iter().flat_map(comments::fqn_comments).collect();
         Self {
             files: std::sync::Arc::new(files.to_vec()),
