@@ -660,107 +660,528 @@ pub const FIXED32_ENCODED_LEN: usize = 4;
 pub const FIXED64_ENCODED_LEN: usize = 8;
 
 // ---------------------------------------------------------------------------
+// Fused singular-field readers
+// ---------------------------------------------------------------------------
+//
+// Generated `merge_field` arms for singular scalar, string and bytes fields
+// call one of these instead of spelling out the wire-type check, the decode
+// and the store. The three steps are the same in every arm; keeping them in
+// one function per field kind means a size-optimised build, where the
+// inliner takes almost nothing, emits one call per arm instead of an inline
+// check with its error tail plus a call plus a result copy. They are plain
+// `#[inline]`: a speed-optimised build inlines them, which reproduces the
+// spelled-out form exactly.
+
+/// Stamp a pair of fused singular readers over an existing `decode_<type>`:
+/// `$name` for an implicit-presence field (plain assignment) and `$opt` for
+/// an explicit-presence one (`Some(value)`).
+macro_rules! merge_field_fn {
+    ($(#[$doc:meta])* $name:ident, $opt:ident, $value:ty, $wire:expr, $decode:ident) => {
+        $(#[$doc])*
+        ///
+        #[doc = concat!(
+            "Checks the wire type, then stores [`", stringify!($decode),
+            "`]'s value into `dst`; generated `merge_field` arms call this ",
+            "for implicit-presence fields."
+        )]
+        ///
+        /// # Errors
+        ///
+        /// Returns [`DecodeError::WireTypeMismatch`] when `tag`'s wire type
+        /// is not the field's, or the decoder's error.
+        #[inline]
+        pub fn $name(tag: Tag, dst: &mut $value, buf: &mut impl Buf) -> Result<(), DecodeError> {
+            crate::encoding::check_wire_type(tag, $wire)?;
+            *dst = $decode(buf)?;
+            Ok(())
+        }
+
+        #[doc = concat!(
+            "Explicit-presence sibling of [`", stringify!($name),
+            "`]: stores `Some(value)`."
+        )]
+        ///
+        /// # Errors
+        ///
+        /// Returns [`DecodeError::WireTypeMismatch`] when `tag`'s wire type
+        /// is not the field's, or the decoder's error.
+        #[inline]
+        pub fn $opt(
+            tag: Tag,
+            dst: &mut Option<$value>,
+            buf: &mut impl Buf,
+        ) -> Result<(), DecodeError> {
+            crate::encoding::check_wire_type(tag, $wire)?;
+            *dst = Some($decode(buf)?);
+            Ok(())
+        }
+    };
+}
+
+merge_field_fn!(
+    /// Read one occurrence of a singular `int32` field.
+    merge_int32_field, merge_opt_int32_field, i32, WireType::Varint, decode_int32
+);
+merge_field_fn!(
+    /// Read one occurrence of a singular `int64` field.
+    merge_int64_field, merge_opt_int64_field, i64, WireType::Varint, decode_int64
+);
+merge_field_fn!(
+    /// Read one occurrence of a singular `uint32` field.
+    merge_uint32_field, merge_opt_uint32_field, u32, WireType::Varint, decode_uint32
+);
+merge_field_fn!(
+    /// Read one occurrence of a singular `uint64` field.
+    merge_uint64_field, merge_opt_uint64_field, u64, WireType::Varint, decode_uint64
+);
+merge_field_fn!(
+    /// Read one occurrence of a singular `sint32` field.
+    merge_sint32_field, merge_opt_sint32_field, i32, WireType::Varint, decode_sint32
+);
+merge_field_fn!(
+    /// Read one occurrence of a singular `sint64` field.
+    merge_sint64_field, merge_opt_sint64_field, i64, WireType::Varint, decode_sint64
+);
+merge_field_fn!(
+    /// Read one occurrence of a singular `bool` field.
+    merge_bool_field, merge_opt_bool_field, bool, WireType::Varint, decode_bool
+);
+merge_field_fn!(
+    /// Read one occurrence of a singular `fixed32` field.
+    merge_fixed32_field, merge_opt_fixed32_field, u32, WireType::Fixed32, decode_fixed32
+);
+merge_field_fn!(
+    /// Read one occurrence of a singular `fixed64` field.
+    merge_fixed64_field, merge_opt_fixed64_field, u64, WireType::Fixed64, decode_fixed64
+);
+merge_field_fn!(
+    /// Read one occurrence of a singular `sfixed32` field.
+    merge_sfixed32_field, merge_opt_sfixed32_field, i32, WireType::Fixed32, decode_sfixed32
+);
+merge_field_fn!(
+    /// Read one occurrence of a singular `sfixed64` field.
+    merge_sfixed64_field, merge_opt_sfixed64_field, i64, WireType::Fixed64, decode_sfixed64
+);
+merge_field_fn!(
+    /// Read one occurrence of a singular `float` field.
+    merge_float_field, merge_opt_float_field, f32, WireType::Fixed32, decode_float
+);
+merge_field_fn!(
+    /// Read one occurrence of a singular `double` field.
+    merge_double_field, merge_opt_double_field, f64, WireType::Fixed64, decode_double
+);
+
+/// Read one occurrence of a singular `string` field into `dst`, reusing its
+/// allocation (see [`merge_string`]); generated `merge_field` arms call this
+/// for implicit-presence fields.
+///
+/// # Errors
+///
+/// Returns [`DecodeError::WireTypeMismatch`] when `tag`'s wire type is not
+/// `LengthDelimited`, or [`merge_string`]'s error.
+#[inline]
+pub fn merge_string_field(
+    tag: Tag,
+    dst: &mut String,
+    buf: &mut impl Buf,
+) -> Result<(), DecodeError> {
+    crate::encoding::check_wire_type(tag, WireType::LengthDelimited)?;
+    merge_string(dst, buf)
+}
+
+/// Explicit-presence sibling of [`merge_string_field`]: an unset field is
+/// set to the decoded string, a set one is overwritten (last occurrence
+/// wins) reusing its allocation.
+///
+/// # Errors
+///
+/// Returns [`DecodeError::WireTypeMismatch`] when `tag`'s wire type is not
+/// `LengthDelimited`, or [`merge_string`]'s error.
+#[inline]
+pub fn merge_opt_string_field(
+    tag: Tag,
+    dst: &mut Option<String>,
+    buf: &mut impl Buf,
+) -> Result<(), DecodeError> {
+    crate::encoding::check_wire_type(tag, WireType::LengthDelimited)?;
+    merge_string(dst.get_or_insert_with(String::new), buf)
+}
+
+/// Read one occurrence of a singular `bytes` field into `dst`, reusing its
+/// allocation (see [`merge_bytes`]); generated `merge_field` arms call this
+/// for implicit-presence fields.
+///
+/// # Errors
+///
+/// Returns [`DecodeError::WireTypeMismatch`] when `tag`'s wire type is not
+/// `LengthDelimited`, or [`merge_bytes`]'s error.
+#[inline]
+pub fn merge_bytes_field(
+    tag: Tag,
+    dst: &mut Vec<u8>,
+    buf: &mut impl Buf,
+) -> Result<(), DecodeError> {
+    crate::encoding::check_wire_type(tag, WireType::LengthDelimited)?;
+    merge_bytes(dst, buf)
+}
+
+/// Explicit-presence sibling of [`merge_bytes_field`]: an unset field is
+/// set to the decoded bytes, a set one is overwritten (last occurrence
+/// wins) reusing its allocation.
+///
+/// # Errors
+///
+/// Returns [`DecodeError::WireTypeMismatch`] when `tag`'s wire type is not
+/// `LengthDelimited`, or [`merge_bytes`]'s error.
+#[inline]
+pub fn merge_opt_bytes_field(
+    tag: Tag,
+    dst: &mut Option<Vec<u8>>,
+    buf: &mut impl Buf,
+) -> Result<(), DecodeError> {
+    crate::encoding::check_wire_type(tag, WireType::LengthDelimited)?;
+    merge_bytes(dst.get_or_insert_with(Vec::new), buf)
+}
+
+/// Read one occurrence of a singular `string` field into a view's borrowed
+/// slot; the view-side sibling of [`merge_string_field`].
+///
+/// # Errors
+///
+/// Returns [`DecodeError::WireTypeMismatch`] when `tag`'s wire type is not
+/// `LengthDelimited`, or [`borrow_str`]'s error.
+#[inline]
+pub fn borrow_str_field<'a>(
+    tag: Tag,
+    dst: &mut &'a str,
+    cur: &mut &'a [u8],
+) -> Result<(), DecodeError> {
+    crate::encoding::check_wire_type(tag, WireType::LengthDelimited)?;
+    *dst = borrow_str(cur)?;
+    Ok(())
+}
+
+/// Explicit-presence sibling of [`borrow_str_field`]: stores `Some(value)`.
+///
+/// # Errors
+///
+/// Returns [`DecodeError::WireTypeMismatch`] when `tag`'s wire type is not
+/// `LengthDelimited`, or [`borrow_str`]'s error.
+#[inline]
+pub fn borrow_opt_str_field<'a>(
+    tag: Tag,
+    dst: &mut Option<&'a str>,
+    cur: &mut &'a [u8],
+) -> Result<(), DecodeError> {
+    crate::encoding::check_wire_type(tag, WireType::LengthDelimited)?;
+    *dst = Some(borrow_str(cur)?);
+    Ok(())
+}
+
+/// Read one occurrence of a singular `bytes` field into a view's borrowed
+/// slot; the view-side sibling of [`merge_bytes_field`].
+///
+/// # Errors
+///
+/// Returns [`DecodeError::WireTypeMismatch`] when `tag`'s wire type is not
+/// `LengthDelimited`, or [`borrow_bytes`]'s error.
+#[inline]
+pub fn borrow_bytes_field<'a>(
+    tag: Tag,
+    dst: &mut &'a [u8],
+    cur: &mut &'a [u8],
+) -> Result<(), DecodeError> {
+    crate::encoding::check_wire_type(tag, WireType::LengthDelimited)?;
+    *dst = borrow_bytes(cur)?;
+    Ok(())
+}
+
+/// Explicit-presence sibling of [`borrow_bytes_field`]: stores `Some(value)`.
+///
+/// # Errors
+///
+/// Returns [`DecodeError::WireTypeMismatch`] when `tag`'s wire type is not
+/// `LengthDelimited`, or [`borrow_bytes`]'s error.
+#[inline]
+pub fn borrow_opt_bytes_field<'a>(
+    tag: Tag,
+    dst: &mut Option<&'a [u8]>,
+    cur: &mut &'a [u8],
+) -> Result<(), DecodeError> {
+    crate::encoding::check_wire_type(tag, WireType::LengthDelimited)?;
+    *dst = Some(borrow_bytes(cur)?);
+    Ok(())
+}
+
+/// Read one element of a repeated `string` field and append it; the fused
+/// reader for the default `Vec<String>` representation. The element's
+/// footprint is charged against `ctx`'s budget before the push.
+///
+/// # Errors
+///
+/// Returns [`DecodeError::WireTypeMismatch`] when `tag`'s wire type is not
+/// `LengthDelimited`, [`DecodeError::ElementMemoryLimitExceeded`] when the
+/// budget is exhausted, or [`decode_string`]'s error.
+#[inline]
+pub fn push_string_field(
+    tag: Tag,
+    dst: &mut Vec<String>,
+    buf: &mut impl Buf,
+    ctx: crate::DecodeContext<'_>,
+) -> Result<(), DecodeError> {
+    crate::encoding::check_wire_type(tag, WireType::LengthDelimited)?;
+    let elem = decode_string(buf)?;
+    ctx.register_element_memory(core::mem::size_of::<String>())?;
+    dst.push(elem);
+    Ok(())
+}
+
+/// Read one element of a repeated `bytes` field and append it; the fused
+/// reader for the default `Vec<Vec<u8>>` representation. The element's
+/// footprint is charged against `ctx`'s budget before the push.
+///
+/// # Errors
+///
+/// Returns [`DecodeError::WireTypeMismatch`] when `tag`'s wire type is not
+/// `LengthDelimited`, [`DecodeError::ElementMemoryLimitExceeded`] when the
+/// budget is exhausted, or [`decode_bytes`]'s error.
+#[inline]
+pub fn push_bytes_field(
+    tag: Tag,
+    dst: &mut Vec<Vec<u8>>,
+    buf: &mut impl Buf,
+    ctx: crate::DecodeContext<'_>,
+) -> Result<(), DecodeError> {
+    crate::encoding::check_wire_type(tag, WireType::LengthDelimited)?;
+    let elem = decode_bytes(buf)?;
+    ctx.register_element_memory(core::mem::size_of::<Vec<u8>>())?;
+    dst.push(elem);
+    Ok(())
+}
+
+/// Borrow one element of a repeated `string` field and append it to a
+/// view's list; the view-side sibling of [`push_string_field`]. The
+/// element's footprint (the borrowed pointer's width) is charged against
+/// `ctx`'s budget before the push.
+///
+/// # Errors
+///
+/// Returns [`DecodeError::WireTypeMismatch`] when `tag`'s wire type is not
+/// `LengthDelimited`, [`DecodeError::ElementMemoryLimitExceeded`] when the
+/// budget is exhausted, or [`borrow_str`]'s error.
+#[inline]
+pub fn push_str_field<'a>(
+    tag: Tag,
+    dst: &mut crate::RepeatedView<'a, &'a str>,
+    cur: &mut &'a [u8],
+    ctx: crate::DecodeContext<'_>,
+) -> Result<(), DecodeError> {
+    crate::encoding::check_wire_type(tag, WireType::LengthDelimited)?;
+    let elem = borrow_str(cur)?;
+    ctx.register_element_memory(core::mem::size_of::<&str>())?;
+    dst.push(elem);
+    Ok(())
+}
+
+/// Borrow one element of a repeated `bytes` field and append it to a
+/// view's list; the view-side sibling of [`push_bytes_field`].
+///
+/// # Errors
+///
+/// Returns [`DecodeError::WireTypeMismatch`] when `tag`'s wire type is not
+/// `LengthDelimited`, [`DecodeError::ElementMemoryLimitExceeded`] when the
+/// budget is exhausted, or [`borrow_bytes`]'s error.
+#[inline]
+pub fn push_borrowed_bytes_field<'a>(
+    tag: Tag,
+    dst: &mut crate::RepeatedView<'a, &'a [u8]>,
+    cur: &mut &'a [u8],
+    ctx: crate::DecodeContext<'_>,
+) -> Result<(), DecodeError> {
+    crate::encoding::check_wire_type(tag, WireType::LengthDelimited)?;
+    let elem = borrow_bytes(cur)?;
+    ctx.register_element_memory(core::mem::size_of::<&[u8]>())?;
+    dst.push(elem);
+    Ok(())
+}
+
+// ---------------------------------------------------------------------------
 // Fused tag + payload field writers
 // ---------------------------------------------------------------------------
 //
 // Generated `write_to` bodies pair every payload write with a tag write.
 // These helpers fuse the two so each field arm is one call; the presence
 // check (`if !x.is_empty()`, `if let Some(v)`, …) stays in generated code
-// where the per-field semantics are visible. They are `#[inline(always)]`
-// shims over the `Tag::encode` + `encode_*` primitives: with the field number a
-// literal at every call site, forced inlining lets the optimizer const-fold the
-// tag to constant byte store(s) — recovering the codegen the pre-fusion
-// two-statement expansion produced. The fold relies on `Tag::encode` /
-// `encode_varint` continuing to inline at constant input. Plain `#[inline]` was
-// not sufficient: the inliner declined it for the larger string/bytes variants,
-// silently reintroducing a per-call runtime tag varint (~6-9% on encode-heavy
-// paths). They are shared by owned and view `write_to` impls (duck-typed:
-// `&String` / `&str` and `&Vec<u8>` / `&[u8]` both coerce to the borrowed
-// parameter).
+// where the per-field semantics are visible. Each `put_<type>_field` is an
+// `#[inline(always)]` shim that folds its literal field number into a
+// constant tag and hands it to one of four primitives (`put_tagged_varint`
+// / `_fixed32` / `_fixed64` / `_len_delimited`). The tag store inlines and
+// folds to constant byte(s) at any opt level; the loop-y payload halves
+// (`put_varint_payload`, `put_len_prefixed`) are `#[inline(never)]` so a
+// speed-optimised build shares one copy instead of duplicating the varint
+// loop and sink-grow stubs into every arm of wide messages, while a
+// size-optimised build emits one call per field instead of one for the tag
+// and one for the payload (−4.8% on a 750-message schema). An earlier layout
+// that made the whole primitive plain `#[inline]` lost the fold on the
+// string/bytes variants (~6-9% on encode-heavy paths); splitting the constant
+// tag off from the shared body keeps it. They are shared by owned and view
+// `write_to` impls (duck-typed: `&String` / `&str` and `&Vec<u8>` / `&[u8]`
+// both coerce to the borrowed parameter).
 
-/// Stamp a fused `put_<type>_field` writer over an existing `encode_<type>`.
+/// The wire form of a field's tag, for the fused writers below.
+#[inline(always)]
+fn tag_u32(field_number: u32, wire: WireType) -> u32 {
+    let tag = Tag::new(field_number, wire);
+    (tag.field_number() << 3) | tag.wire_type() as u32
+}
+
+/// Write a tag and a varint payload; the out-of-line half of every
+/// varint-family `put_<type>_field` writer.
+///
+/// Generated code calls those writers with a literal field number. They
+/// are `#[inline(always)]` shims that fold the tag to a constant and hand
+/// it here. The tag store stays inline (a constant tag folds to one or two
+/// byte stores at any opt level) while the value varint loop is an
+/// out-of-line `#[inline(never)]` body shared by every field: a
+/// speed-optimised build used to inline the whole primitive into
+/// every arm, duplicating the generic varint loop and the sink-grow stubs
+/// once per field (`write_to` of a 90-field message grew ~30%), while a
+/// size-optimised build keeps one call per field either way.
+#[inline]
+pub fn put_tagged_varint(tag: u32, value: u64, buf: &mut impl EncodeSink) {
+    encode_varint(u64::from(tag), buf);
+    put_varint_payload(value, buf);
+}
+
+/// The value half of [`put_tagged_varint`]: one varint loop per `EncodeSink`
+/// instead of one per field arm.
+///
+/// `#[inline(never)]` on purpose — this is the boundary that keeps wide
+/// `write_to` bodies small at `-O3` (see above) at the cost of one call per
+/// varint field on speed builds. The tag half stays inline so the constant
+/// tag still folds.
+#[inline(never)]
+fn put_varint_payload(value: u64, buf: &mut impl EncodeSink) {
+    encode_varint(value, buf);
+}
+
+/// Write a tag and a 4-byte little-endian payload; see
+/// [`put_tagged_varint`].
+#[inline]
+pub fn put_tagged_fixed32(tag: u32, value: u32, buf: &mut impl EncodeSink) {
+    encode_varint(u64::from(tag), buf);
+    buf.put_u32_le(value);
+}
+
+/// Write a tag and an 8-byte little-endian payload; see
+/// [`put_tagged_varint`].
+#[inline]
+pub fn put_tagged_fixed64(tag: u32, value: u64, buf: &mut impl EncodeSink) {
+    encode_varint(u64::from(tag), buf);
+    buf.put_u64_le(value);
+}
+
+/// Write a tag, a varint length prefix and the payload bytes; see
+/// [`put_tagged_varint`]. As there, the tag folds inline while the
+/// length-prefix loop and the slice copy live in a shared out-of-line
+/// `#[inline(never)]` body.
+#[inline]
+pub fn put_tagged_len_delimited(tag: u32, payload: &[u8], buf: &mut impl EncodeSink) {
+    encode_varint(u64::from(tag), buf);
+    put_len_prefixed(payload, buf);
+}
+
+/// The length-prefix + payload half of [`put_tagged_len_delimited`]: one copy
+/// per `EncodeSink` instead of one per string/bytes/submessage arm.
+///
+/// `#[inline(never)]` on purpose — the length varint loop and the sink-grow
+/// stubs are the bulk of what a speed-optimised build duplicated into every
+/// arm (see [`put_tagged_varint`]).
+#[inline(never)]
+fn put_len_prefixed(payload: &[u8], buf: &mut impl EncodeSink) {
+    encode_varint(payload.len() as u64, buf);
+    buf.put_slice(payload);
+}
+
+/// Stamp a fused `put_<type>_field` writer: `$tagged` is the out-of-line
+/// tag+payload primitive and `$conv` turns the value into its argument.
 macro_rules! put_field_fn {
-    ($(#[$doc:meta])* $name:ident, $value:ty, $wire:expr, $encode:ident) => {
+    ($(#[$doc:meta])* $name:ident, $value:ty, $wire:expr, $encode:ident, $tagged:ident, $conv:expr) => {
         $(#[$doc])*
         ///
         #[doc = concat!(
             "Fused tag+payload sibling of [`", stringify!($encode), "`]; ",
             "exists so generated `write_to` bodies are one call per field."
         )]
-        // `#[inline(always)]`, applied uniformly by the macro. It is load-bearing
-        // for the larger string/bytes variants — the inliner declined the plain
-        // `#[inline]` hint there, leaving `field_number` a runtime arg that
-        // re-encodes the tag varint per call — and harmless for the small scalar
-        // variants (already inlined). With the field number a literal at the call
-        // site, inlining const-folds the tag to constant byte store(s): one byte
-        // for field numbers 1-15, a few for larger numbers.
+        // `#[inline(always)]`, applied uniformly by the macro, so that the
+        // literal field number at every call site folds into a constant tag
+        // before it reaches the shared primitive.
         #[inline(always)]
         pub fn $name(field_number: u32, value: $value, buf: &mut impl EncodeSink) {
-            Tag::new(field_number, $wire).encode(buf);
-            $encode(value, buf);
+            $tagged(tag_u32(field_number, $wire), ($conv)(value), buf);
         }
     };
 }
 
 put_field_fn!(
     /// Write a tagged `int32` field (tag + varint payload).
-    put_int32_field, i32, WireType::Varint, encode_int32
+    put_int32_field, i32, WireType::Varint, encode_int32, put_tagged_varint, |v| v as i64 as u64
 );
 put_field_fn!(
     /// Write a tagged `int64` field (tag + varint payload).
-    put_int64_field, i64, WireType::Varint, encode_int64
+    put_int64_field, i64, WireType::Varint, encode_int64, put_tagged_varint, |v| v as u64
 );
 put_field_fn!(
     /// Write a tagged `uint32` field (tag + varint payload).
-    put_uint32_field, u32, WireType::Varint, encode_uint32
+    put_uint32_field, u32, WireType::Varint, encode_uint32, put_tagged_varint, u64::from
 );
 put_field_fn!(
     /// Write a tagged `uint64` field (tag + varint payload).
-    put_uint64_field, u64, WireType::Varint, encode_uint64
+    put_uint64_field, u64, WireType::Varint, encode_uint64, put_tagged_varint, |v| v
 );
 put_field_fn!(
     /// Write a tagged `sint32` field (tag + zigzag varint payload).
-    put_sint32_field, i32, WireType::Varint, encode_sint32
+    put_sint32_field, i32, WireType::Varint, encode_sint32, put_tagged_varint, |v| u64::from(zigzag_encode_i32(v))
 );
 put_field_fn!(
     /// Write a tagged `sint64` field (tag + zigzag varint payload).
-    put_sint64_field, i64, WireType::Varint, encode_sint64
+    put_sint64_field, i64, WireType::Varint, encode_sint64, put_tagged_varint, zigzag_encode_i64
 );
 put_field_fn!(
     /// Write a tagged `bool` field (tag + one-byte payload).
-    put_bool_field, bool, WireType::Varint, encode_bool
+    put_bool_field, bool, WireType::Varint, encode_bool, put_tagged_varint, u64::from
 );
 put_field_fn!(
     /// Write a tagged `fixed32` field (tag + 4-byte payload).
-    put_fixed32_field, u32, WireType::Fixed32, encode_fixed32
+    put_fixed32_field, u32, WireType::Fixed32, encode_fixed32, put_tagged_fixed32, |v| v
 );
 put_field_fn!(
     /// Write a tagged `fixed64` field (tag + 8-byte payload).
-    put_fixed64_field, u64, WireType::Fixed64, encode_fixed64
+    put_fixed64_field, u64, WireType::Fixed64, encode_fixed64, put_tagged_fixed64, |v| v
 );
 put_field_fn!(
     /// Write a tagged `sfixed32` field (tag + 4-byte payload).
-    put_sfixed32_field, i32, WireType::Fixed32, encode_sfixed32
+    put_sfixed32_field, i32, WireType::Fixed32, encode_sfixed32, put_tagged_fixed32, |v| v as u32
 );
 put_field_fn!(
     /// Write a tagged `sfixed64` field (tag + 8-byte payload).
-    put_sfixed64_field, i64, WireType::Fixed64, encode_sfixed64
+    put_sfixed64_field, i64, WireType::Fixed64, encode_sfixed64, put_tagged_fixed64, |v| v as u64
 );
 put_field_fn!(
     /// Write a tagged `float` field (tag + 4-byte payload).
-    put_float_field, f32, WireType::Fixed32, encode_float
+    put_float_field, f32, WireType::Fixed32, encode_float, put_tagged_fixed32, f32::to_bits
 );
 put_field_fn!(
     /// Write a tagged `double` field (tag + 8-byte payload).
-    put_double_field, f64, WireType::Fixed64, encode_double
+    put_double_field, f64, WireType::Fixed64, encode_double, put_tagged_fixed64, f64::to_bits
 );
 put_field_fn!(
     /// Write a tagged `string` field (tag + length-prefixed UTF-8 payload).
-    put_string_field, &str, WireType::LengthDelimited, encode_string
+    put_string_field, &str, WireType::LengthDelimited, encode_string, put_tagged_len_delimited, str::as_bytes
 );
 put_field_fn!(
     /// Write a tagged `bytes` field (tag + length-prefixed payload).
-    put_bytes_field, &[u8], WireType::LengthDelimited, encode_bytes
+    put_bytes_field, &[u8], WireType::LengthDelimited, encode_bytes, put_tagged_len_delimited, |v| v
 );
 
 /// A value a `bytes` field can encode from: every [`ProtoBytes`]
@@ -827,8 +1248,16 @@ pub fn put_shared_bytes_field<B: AsSharedBytes, S: EncodeSink>(
     value: &B,
     buf: &mut S,
 ) {
-    Tag::new(field_number, WireType::LengthDelimited).encode(buf);
-    encode_shared_bytes(value, buf);
+    if S::IS_SEGMENTED {
+        Tag::new(field_number, WireType::LengthDelimited).encode(buf);
+        encode_shared_bytes(value, buf);
+    } else {
+        put_tagged_len_delimited(
+            tag_u32(field_number, WireType::LengthDelimited),
+            value.as_bytes_slice(),
+            buf,
+        );
+    }
 }
 
 /// Encode a length-delimited `bytes` value (varint length prefix + payload,
@@ -872,8 +1301,26 @@ pub fn encode_shared_bytes<B: AsSharedBytes, S: EncodeSink>(value: &B, buf: &mut
 /// `u64::from`.
 #[inline(always)]
 pub fn put_len_delimited_header(field_number: u32, len: u64, buf: &mut impl EncodeSink) {
-    Tag::new(field_number, WireType::LengthDelimited).encode(buf);
-    encode_varint(len, buf);
+    put_tagged_varint(tag_u32(field_number, WireType::LengthDelimited), len, buf);
+}
+
+/// Write a message field's tag and the length prefix recorded for it by the
+/// preceding `compute_size` pass (the next `SizeCache` slot).
+///
+/// One call for what generated code used to spell as `consume_next` +
+/// [`put_len_delimited_header`]: every message-typed field arm in every
+/// `write_to` repeats that sequence. `inline(always)` like
+/// [`put_len_delimited_header`]: left to the heuristic, speed-optimised
+/// builds declined to inline it and lost 4% on dense encodes; the callees
+/// keep their own `#[inline]` hints, so size-optimised builds still make
+/// out-of-line calls for the varint work.
+#[inline(always)]
+pub fn put_submessage_header(
+    field_number: u32,
+    cache: &mut crate::SizeCache,
+    buf: &mut impl EncodeSink,
+) {
+    put_len_delimited_header(field_number, u64::from(cache.consume_next()), buf);
 }
 
 /// Write a group field's `StartGroup` tag.
@@ -886,6 +1333,70 @@ pub fn put_group_start(field_number: u32, buf: &mut impl EncodeSink) {
 #[inline(always)]
 pub fn put_group_end(field_number: u32, buf: &mut impl EncodeSink) {
     Tag::new(field_number, WireType::EndGroup).encode(buf);
+}
+
+// ---------------------------------------------------------------------------
+// Single-pass length-prefix reservation (experiment)
+// ---------------------------------------------------------------------------
+//
+// `compute_size` + `write_to` walk the field set twice. On a contiguous
+// `Vec<u8>` the size pass can be skipped: reserve the worst-case prefix,
+// write the payload, then patch the actual length in. A sub-message length
+// is `u32`, so its varint is at most this many bytes.
+
+/// Maximum varint length in bytes of a `u32` length prefix.
+pub const MAX_LEN_PREFIX_LEN: usize = 5;
+
+/// Reserve a length-prefix slot in `buf`, returning its position.
+///
+/// Writes [`MAX_LEN_PREFIX_LEN`] zero bytes; the caller writes the payload
+/// immediately after, then finalises with [`patch_len_prefix`]. `Vec`-only:
+/// the reservation + patch protocol needs random access, which the
+/// append-only [`EncodeSink`](crate::EncodeSink) contract does not provide.
+#[inline]
+pub fn reserve_len_prefix(buf: &mut Vec<u8>) -> usize {
+    let pos = buf.len();
+    buf.extend_from_slice(&[0u8; MAX_LEN_PREFIX_LEN]);
+    pos
+}
+
+/// Write the actual length prefix into a slot from [`reserve_len_prefix`].
+///
+/// `len` is the payload length in bytes (already written after the slot).
+/// Encodes `len` as a varint at `len_pos`, shifts the payload down when the
+/// encoding is shorter than the reservation, and truncates the tail.
+/// Panics (never corrupts) if the slot/payload layout is inconsistent.
+#[inline]
+pub fn patch_len_prefix(buf: &mut Vec<u8>, len_pos: usize, len: u32) {
+    let mut tmp = [0u8; MAX_LEN_PREFIX_LEN];
+    let mut v = len as u64;
+    let mut vlen = 0;
+    loop {
+        let mut byte = (v & 0x7F) as u8;
+        v >>= 7;
+        if v != 0 {
+            byte |= 0x80;
+        }
+        tmp[vlen] = byte;
+        vlen += 1;
+        if v == 0 {
+            break;
+        }
+    }
+    let payload_start = len_pos + MAX_LEN_PREFIX_LEN;
+    let len_usize = len as usize;
+    assert!(
+        payload_start
+            .checked_add(len_usize)
+            .is_some_and(|end| end <= buf.len()),
+        "patch_len_prefix: payload out of bounds"
+    );
+    let shift = MAX_LEN_PREFIX_LEN - vlen;
+    if shift != 0 {
+        buf.copy_within(payload_start..payload_start + len_usize, len_pos + vlen);
+    }
+    buf[len_pos..len_pos + vlen].copy_from_slice(&tmp[..vlen]);
+    buf.truncate(len_pos + vlen + len_usize);
 }
 
 // ---------------------------------------------------------------------------
@@ -2097,6 +2608,154 @@ mod tests {
             }
             Ok(Tiny(s.into()))
         }
+    }
+
+    #[test]
+    fn fused_singular_readers_check_decode_and_store() {
+        let varint = Tag::new(1, WireType::Varint);
+        let fixed32 = Tag::new(1, WireType::Fixed32);
+        let ld = Tag::new(1, WireType::LengthDelimited);
+
+        let mut n = 0u32;
+        merge_uint32_field(varint, &mut n, &mut &[0x96, 0x01][..]).unwrap();
+        assert_eq!(n, 150);
+        let mut opt = None;
+        merge_opt_int32_field(varint, &mut opt, &mut &[0x07][..]).unwrap();
+        assert_eq!(opt, Some(7));
+        let mut f = None;
+        merge_opt_float_field(fixed32, &mut f, &mut &1.5f32.to_le_bytes()[..]).unwrap();
+        assert_eq!(f, Some(1.5));
+
+        let mut s = String::from("old");
+        merge_string_field(ld, &mut s, &mut &b"\x02hi"[..]).unwrap();
+        assert_eq!(s, "hi");
+        let mut os = Some(String::from("old"));
+        merge_opt_string_field(ld, &mut os, &mut &b"\x02hi"[..]).unwrap();
+        assert_eq!(os.as_deref(), Some("hi"));
+        let mut b = Vec::new();
+        merge_bytes_field(ld, &mut b, &mut &b"\x01\xff"[..]).unwrap();
+        assert_eq!(b, [0xff]);
+        let mut ob = None;
+        merge_opt_bytes_field(ld, &mut ob, &mut &b"\x01\xff"[..]).unwrap();
+        assert_eq!(ob.as_deref(), Some(&[0xffu8][..]));
+
+        // A wire-type mismatch names the field and leaves the slot alone.
+        let mut untouched = 42u32;
+        let err = merge_uint32_field(fixed32, &mut untouched, &mut &[0u8; 4][..]).unwrap_err();
+        assert!(matches!(
+            err,
+            DecodeError::WireTypeMismatch {
+                field_number: 1,
+                ..
+            }
+        ));
+        assert_eq!(untouched, 42);
+        // A decode error propagates.
+        let mut short = None;
+        assert_eq!(
+            merge_opt_string_field(ld, &mut short, &mut &b"\x05hi"[..]).unwrap_err(),
+            DecodeError::UnexpectedEof
+        );
+    }
+
+    #[test]
+    fn fused_view_readers_borrow_and_advance() {
+        let ld = Tag::new(3, WireType::LengthDelimited);
+        let mut cur: &[u8] = b"\x02hi\x01\xff\x00";
+        let mut s = "";
+        borrow_str_field(ld, &mut s, &mut cur).unwrap();
+        assert_eq!(s, "hi");
+        let mut ob = None;
+        borrow_opt_bytes_field(ld, &mut ob, &mut cur).unwrap();
+        assert_eq!(ob, Some(&[0xffu8][..]));
+        assert_eq!(cur, &[0u8][..]);
+        let mut os = None;
+        let mut rest: &[u8] = b"\x00";
+        borrow_opt_str_field(ld, &mut os, &mut rest).unwrap();
+        assert_eq!(os, Some(""));
+        let mut b: &[u8] = &[];
+        let err = borrow_bytes_field(Tag::new(3, WireType::Varint), &mut b, &mut cur).unwrap_err();
+        assert!(matches!(
+            err,
+            DecodeError::WireTypeMismatch {
+                field_number: 3,
+                ..
+            }
+        ));
+    }
+
+    #[test]
+    fn fused_repeated_readers_charge_the_budget_before_pushing() {
+        let ld = Tag::new(1, WireType::LengthDelimited);
+        let unknown = core::cell::Cell::new(crate::DEFAULT_UNKNOWN_FIELD_LIMIT);
+        // Room for exactly one String element.
+        let budget = core::cell::Cell::new(core::mem::size_of::<String>());
+        let ctx = crate::DecodeContext::new(8, &unknown).with_element_memory(&budget);
+        let mut strings = Vec::new();
+        push_string_field(ld, &mut strings, &mut &b"\x02hi"[..], ctx).unwrap();
+        assert_eq!(strings, ["hi"]);
+        let err = push_string_field(ld, &mut strings, &mut &b"\x02yo"[..], ctx).unwrap_err();
+        assert_eq!(err, DecodeError::ElementMemoryLimitExceeded);
+        assert_eq!(
+            strings.len(),
+            1,
+            "an over-budget element must not be pushed"
+        );
+        let mut bytes = Vec::new();
+        let err = push_bytes_field(ld, &mut bytes, &mut &b"\x01\xff"[..], ctx).unwrap_err();
+        assert_eq!(err, DecodeError::ElementMemoryLimitExceeded);
+        assert!(bytes.is_empty());
+        let err = push_bytes_field(
+            Tag::new(1, WireType::Varint),
+            &mut bytes,
+            &mut &[0u8][..],
+            ctx,
+        )
+        .unwrap_err();
+        assert!(matches!(
+            err,
+            DecodeError::WireTypeMismatch {
+                field_number: 1,
+                ..
+            }
+        ));
+    }
+
+    #[test]
+    fn fused_view_push_readers_charge_the_budget_before_pushing() {
+        let ld = Tag::new(1, WireType::LengthDelimited);
+        let unknown = core::cell::Cell::new(crate::DEFAULT_UNKNOWN_FIELD_LIMIT);
+        // Room for exactly one borrowed element.
+        let budget = core::cell::Cell::new(core::mem::size_of::<&str>());
+        let ctx = crate::DecodeContext::new(8, &unknown).with_element_memory(&budget);
+        let mut list = crate::RepeatedView::default();
+        let mut two: &[u8] = b"\x01a\x01b";
+        push_str_field(ld, &mut list, &mut two, ctx).unwrap();
+        assert_eq!(
+            push_str_field(ld, &mut list, &mut two, ctx).unwrap_err(),
+            DecodeError::ElementMemoryLimitExceeded
+        );
+        assert_eq!(list.len(), 1, "an over-budget element must not be pushed");
+        // The reader borrows before it charges, so the failed element has
+        // been consumed; the bytes checks start from their own buffers.
+        let mut blist = crate::RepeatedView::default();
+        let mut one: &[u8] = b"\x01c";
+        assert_eq!(
+            push_borrowed_bytes_field(ld, &mut blist, &mut one, ctx).unwrap_err(),
+            DecodeError::ElementMemoryLimitExceeded
+        );
+        assert!(blist.is_empty());
+        let mut raw: &[u8] = b"\x00";
+        let err =
+            push_borrowed_bytes_field(Tag::new(1, WireType::Varint), &mut blist, &mut raw, ctx)
+                .unwrap_err();
+        assert!(matches!(
+            err,
+            DecodeError::WireTypeMismatch {
+                field_number: 1,
+                ..
+            }
+        ));
     }
 
     #[test]

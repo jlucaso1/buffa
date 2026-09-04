@@ -1,0 +1,10 @@
+kind: Breaking changes
+body: |-
+    **Single-pass encode experiment.** New `Message::encode_single_pass` (per-message generated override; the provided fallback runs the regular two passes, so hand-written impls compile unchanged) plus `Message::encode_to_vec_single_pass` and `map_codec::write_message_field_single_pass`, backed by `types::reserve_len_prefix` / `patch_len_prefix` on `Vec<u8>`. Length prefixes are reserved (5 bytes max for `u32`) and backpatched with a memmove instead of precomputed by `compute_size`, so the field set is walked once. Measured on a 90-field message with 2 fields set: −34% retired instructions vs two-pass; single nested submessage: −19%. Cost: a second write-shaped method per message (+2.5% `.text` on a views-enabled `-Oz` test binary) and a 128-byte capacity heuristic (`SINGLE_PASS_HINT`) — without it, growing from zero reallocates several times per encode and costs more than the saved traversal (+69% measured). Byte output is identical (asserted across nested, oneof, scalar/message maps, groups, deep nesting). Generic sinks (`Rope`, streaming) and views keep
+    the two-pass path. Routing guidance from downstream measurement:
+    backpatch memmove is O(payload) per nesting level while the skipped size
+    walk is O(fields), so single-pass wins on small/sparse messages and loses
+    on large nested ones (+56% at 6 KB nested, +64% at 3 levels — memmove plus
+    buffer growth without exact capacity). Route small fixed-shape entries at
+    single-pass and keep two-pass for arbitrary-size ones.
+time: 2026-09-04T18:00:00.000000-03:00

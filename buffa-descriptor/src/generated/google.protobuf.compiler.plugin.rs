@@ -156,6 +156,31 @@ impl ::buffa::Message for Version {
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
+    /// Single-pass encode into a contiguous buffer (experiment).
+    ///
+    /// Same bytes as `compute_size` + `write_to`, but length prefixes
+    /// are reserved and backpatched: the field set is walked once.
+    /// Falls back to the two passes only for hand-written impls that
+    /// do not override it.
+    fn encode_single_pass(&self, buf: &mut ::buffa::alloc::vec::Vec<u8>) {
+        #[allow(unused_imports)]
+        use ::buffa::EncodeSink as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if let Some(v) = self.major {
+            ::buffa::types::put_int32_field(1u32, v, buf);
+        }
+        if let Some(v) = self.minor {
+            ::buffa::types::put_int32_field(2u32, v, buf);
+        }
+        if let Some(v) = self.patch {
+            ::buffa::types::put_int32_field(3u32, v, buf);
+        }
+        if let Some(ref v) = self.suffix {
+            ::buffa::types::put_string_field(4u32, v, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
     fn merge_field(
         &mut self,
         tag: ::buffa::encoding::Tag,
@@ -168,41 +193,16 @@ impl ::buffa::Message for Version {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.major = ::core::option::Option::Some(
-                    ::buffa::types::decode_int32(buf)?,
-                );
+                ::buffa::types::merge_opt_int32_field(tag, &mut self.major, buf)?;
             }
             2u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.minor = ::core::option::Option::Some(
-                    ::buffa::types::decode_int32(buf)?,
-                );
+                ::buffa::types::merge_opt_int32_field(tag, &mut self.minor, buf)?;
             }
             3u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.patch = ::core::option::Option::Some(
-                    ::buffa::types::decode_int32(buf)?,
-                );
+                ::buffa::types::merge_opt_int32_field(tag, &mut self.patch, buf)?;
             }
             4u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(
-                    self.suffix.get_or_insert_with(::buffa::alloc::string::String::new),
-                    buf,
-                )?;
+                ::buffa::types::merge_opt_string_field(tag, &mut self.suffix, buf)?;
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -217,6 +217,15 @@ impl ::buffa::Message for Version {
         self.patch = ::core::option::Option::None;
         self.suffix = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for Version {
@@ -456,29 +465,20 @@ impl ::buffa::Message for CodeGeneratorRequest {
         if let Some(ref v) = self.parameter {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
-        if self.compiler_version.is_set() {
+        if let ::core::option::Option::Some(__v) = self.compiler_version.as_option() {
             let __slot = __cache.reserve();
-            let inner_size = self.compiler_version.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            let inner_size = __v.compute_size(__cache);
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.proto_file {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.source_file_descriptors {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -496,29 +496,75 @@ impl ::buffa::Message for CodeGeneratorRequest {
         if let Some(ref v) = self.parameter {
             ::buffa::types::put_string_field(2u32, v, buf);
         }
-        if self.compiler_version.is_set() {
-            ::buffa::types::put_len_delimited_header(
-                3u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            self.compiler_version.write_to(__cache, buf);
+        if let ::core::option::Option::Some(__v) = self.compiler_version.as_option() {
+            ::buffa::types::put_submessage_header(3u32, __cache, buf);
+            __v.write_to(__cache, buf);
         }
         for v in &self.proto_file {
-            ::buffa::types::put_len_delimited_header(
-                15u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(15u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         for v in &self.source_file_descriptors {
-            ::buffa::types::put_len_delimited_header(
-                17u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(17u32, __cache, buf);
             v.write_to(__cache, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    /// Single-pass encode into a contiguous buffer (experiment).
+    ///
+    /// Same bytes as `compute_size` + `write_to`, but length prefixes
+    /// are reserved and backpatched: the field set is walked once.
+    /// Falls back to the two passes only for hand-written impls that
+    /// do not override it.
+    fn encode_single_pass(&self, buf: &mut ::buffa::alloc::vec::Vec<u8>) {
+        #[allow(unused_imports)]
+        use ::buffa::EncodeSink as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        for v in &self.file_to_generate {
+            ::buffa::types::put_string_field(1u32, v, buf);
+        }
+        if let Some(ref v) = self.parameter {
+            ::buffa::types::put_string_field(2u32, v, buf);
+        }
+        if let ::core::option::Option::Some(__v) = self.compiler_version.as_option() {
+            ::buffa::encoding::Tag::new(
+                    3u32,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )
+                .encode(buf);
+            let __len_pos = ::buffa::types::reserve_len_prefix(buf);
+            let __payload_start = buf.len();
+            __v.encode_single_pass(buf);
+            let __len = ::core::primitive::u32::try_from(buf.len() - __payload_start)
+                .unwrap_or(::core::primitive::u32::MAX);
+            ::buffa::types::patch_len_prefix(buf, __len_pos, __len);
+        }
+        for v in &self.proto_file {
+            ::buffa::encoding::Tag::new(
+                    15u32,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )
+                .encode(buf);
+            let __len_pos = ::buffa::types::reserve_len_prefix(buf);
+            let __payload_start = buf.len();
+            v.encode_single_pass(buf);
+            let __len = ::core::primitive::u32::try_from(buf.len() - __payload_start)
+                .unwrap_or(::core::primitive::u32::MAX);
+            ::buffa::types::patch_len_prefix(buf, __len_pos, __len);
+        }
+        for v in &self.source_file_descriptors {
+            ::buffa::encoding::Tag::new(
+                    17u32,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )
+                .encode(buf);
+            let __len_pos = ::buffa::types::reserve_len_prefix(buf);
+            let __payload_start = buf.len();
+            v.encode_single_pass(buf);
+            let __len = ::core::primitive::u32::try_from(buf.len() - __payload_start)
+                .unwrap_or(::core::primitive::u32::MAX);
+            ::buffa::types::patch_len_prefix(buf, __len_pos, __len);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -534,27 +580,15 @@ impl ::buffa::Message for CodeGeneratorRequest {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::push_string_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut self.file_to_generate,
+                    buf,
+                    ctx,
                 )?;
-                let __elem = ::buffa::types::decode_string(buf)?;
-                ctx.register_element_memory(
-                    ::buffa::__private::element_footprint(&__elem),
-                )?;
-                self.file_to_generate.push(__elem);
             }
             2u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(
-                    self
-                        .parameter
-                        .get_or_insert_with(::buffa::alloc::string::String::new),
-                    buf,
-                )?;
+                ::buffa::types::merge_opt_string_field(tag, &mut self.parameter, buf)?;
             }
             3u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -605,6 +639,15 @@ impl ::buffa::Message for CodeGeneratorRequest {
         self.proto_file.clear();
         self.source_file_descriptors.clear();
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for CodeGeneratorRequest {
@@ -891,10 +934,7 @@ impl ::buffa::Message for CodeGeneratorResponse {
         for v in &self.file {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -919,12 +959,46 @@ impl ::buffa::Message for CodeGeneratorResponse {
             ::buffa::types::put_int32_field(4u32, v, buf);
         }
         for v in &self.file {
-            ::buffa::types::put_len_delimited_header(
-                15u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(15u32, __cache, buf);
             v.write_to(__cache, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    /// Single-pass encode into a contiguous buffer (experiment).
+    ///
+    /// Same bytes as `compute_size` + `write_to`, but length prefixes
+    /// are reserved and backpatched: the field set is walked once.
+    /// Falls back to the two passes only for hand-written impls that
+    /// do not override it.
+    fn encode_single_pass(&self, buf: &mut ::buffa::alloc::vec::Vec<u8>) {
+        #[allow(unused_imports)]
+        use ::buffa::EncodeSink as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if let Some(ref v) = self.error {
+            ::buffa::types::put_string_field(1u32, v, buf);
+        }
+        if let Some(v) = self.supported_features {
+            ::buffa::types::put_uint64_field(2u32, v, buf);
+        }
+        if let Some(v) = self.minimum_edition {
+            ::buffa::types::put_int32_field(3u32, v, buf);
+        }
+        if let Some(v) = self.maximum_edition {
+            ::buffa::types::put_int32_field(4u32, v, buf);
+        }
+        for v in &self.file {
+            ::buffa::encoding::Tag::new(
+                    15u32,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )
+                .encode(buf);
+            let __len_pos = ::buffa::types::reserve_len_prefix(buf);
+            let __payload_start = buf.len();
+            v.encode_single_pass(buf);
+            let __len = ::core::primitive::u32::try_from(buf.len() - __payload_start)
+                .unwrap_or(::core::primitive::u32::MAX);
+            ::buffa::types::patch_len_prefix(buf, __len_pos, __len);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -940,41 +1014,28 @@ impl ::buffa::Message for CodeGeneratorResponse {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_string_field(tag, &mut self.error, buf)?;
+            }
+            2u32 => {
+                ::buffa::types::merge_opt_uint64_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(
-                    self.error.get_or_insert_with(::buffa::alloc::string::String::new),
+                    &mut self.supported_features,
                     buf,
                 )?;
             }
-            2u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.supported_features = ::core::option::Option::Some(
-                    ::buffa::types::decode_uint64(buf)?,
-                );
-            }
             3u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_int32_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut self.minimum_edition,
+                    buf,
                 )?;
-                self.minimum_edition = ::core::option::Option::Some(
-                    ::buffa::types::decode_int32(buf)?,
-                );
             }
             4u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_int32_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut self.maximum_edition,
+                    buf,
                 )?;
-                self.maximum_edition = ::core::option::Option::Some(
-                    ::buffa::types::decode_int32(buf)?,
-                );
             }
             15u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -1002,6 +1063,15 @@ impl ::buffa::Message for CodeGeneratorResponse {
         self.maximum_edition = ::core::option::Option::None;
         self.file.clear();
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for CodeGeneratorResponse {
@@ -1459,13 +1529,13 @@ pub mod code_generator_response {
             if let Some(ref v) = self.content {
                 size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
             }
-            if self.generated_code_info.is_set() {
+            if let ::core::option::Option::Some(__v) = self
+                .generated_code_info
+                .as_option()
+            {
                 let __slot = __cache.reserve();
-                let inner_size = self.generated_code_info.compute_size(__cache);
-                __cache.set(__slot, inner_size);
-                size
-                    += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                        + inner_size as u64;
+                let inner_size = __v.compute_size(__cache);
+                size += 2u64 + __cache.record_submessage(__slot, inner_size);
             }
             size += self.__buffa_unknown_fields.encoded_len() as u64;
             ::buffa::saturate_size(size)
@@ -1486,13 +1556,50 @@ pub mod code_generator_response {
             if let Some(ref v) = self.content {
                 ::buffa::types::put_string_field(15u32, v, buf);
             }
-            if self.generated_code_info.is_set() {
-                ::buffa::types::put_len_delimited_header(
-                    16u32,
-                    u64::from(__cache.consume_next()),
-                    buf,
-                );
-                self.generated_code_info.write_to(__cache, buf);
+            if let ::core::option::Option::Some(__v) = self
+                .generated_code_info
+                .as_option()
+            {
+                ::buffa::types::put_submessage_header(16u32, __cache, buf);
+                __v.write_to(__cache, buf);
+            }
+            self.__buffa_unknown_fields.write_to(buf);
+        }
+        /// Single-pass encode into a contiguous buffer (experiment).
+        ///
+        /// Same bytes as `compute_size` + `write_to`, but length prefixes
+        /// are reserved and backpatched: the field set is walked once.
+        /// Falls back to the two passes only for hand-written impls that
+        /// do not override it.
+        fn encode_single_pass(&self, buf: &mut ::buffa::alloc::vec::Vec<u8>) {
+            #[allow(unused_imports)]
+            use ::buffa::EncodeSink as _;
+            #[allow(unused_imports)]
+            use ::buffa::Enumeration as _;
+            if let Some(ref v) = self.name {
+                ::buffa::types::put_string_field(1u32, v, buf);
+            }
+            if let Some(ref v) = self.insertion_point {
+                ::buffa::types::put_string_field(2u32, v, buf);
+            }
+            if let Some(ref v) = self.content {
+                ::buffa::types::put_string_field(15u32, v, buf);
+            }
+            if let ::core::option::Option::Some(__v) = self
+                .generated_code_info
+                .as_option()
+            {
+                ::buffa::encoding::Tag::new(
+                        16u32,
+                        ::buffa::encoding::WireType::LengthDelimited,
+                    )
+                    .encode(buf);
+                let __len_pos = ::buffa::types::reserve_len_prefix(buf);
+                let __payload_start = buf.len();
+                __v.encode_single_pass(buf);
+                let __len = ::core::primitive::u32::try_from(buf.len() - __payload_start)
+                    .unwrap_or(::core::primitive::u32::MAX);
+                ::buffa::types::patch_len_prefix(buf, __len_pos, __len);
             }
             self.__buffa_unknown_fields.write_to(buf);
         }
@@ -1508,40 +1615,17 @@ pub mod code_generator_response {
             use ::buffa::Enumeration as _;
             match tag.field_number() {
                 1u32 => {
-                    ::buffa::encoding::check_wire_type(
-                        tag,
-                        ::buffa::encoding::WireType::LengthDelimited,
-                    )?;
-                    ::buffa::types::merge_string(
-                        self
-                            .name
-                            .get_or_insert_with(::buffa::alloc::string::String::new),
-                        buf,
-                    )?;
+                    ::buffa::types::merge_opt_string_field(tag, &mut self.name, buf)?;
                 }
                 2u32 => {
-                    ::buffa::encoding::check_wire_type(
+                    ::buffa::types::merge_opt_string_field(
                         tag,
-                        ::buffa::encoding::WireType::LengthDelimited,
-                    )?;
-                    ::buffa::types::merge_string(
-                        self
-                            .insertion_point
-                            .get_or_insert_with(::buffa::alloc::string::String::new),
+                        &mut self.insertion_point,
                         buf,
                     )?;
                 }
                 15u32 => {
-                    ::buffa::encoding::check_wire_type(
-                        tag,
-                        ::buffa::encoding::WireType::LengthDelimited,
-                    )?;
-                    ::buffa::types::merge_string(
-                        self
-                            .content
-                            .get_or_insert_with(::buffa::alloc::string::String::new),
-                        buf,
-                    )?;
+                    ::buffa::types::merge_opt_string_field(tag, &mut self.content, buf)?;
                 }
                 16u32 => {
                     ::buffa::encoding::check_wire_type(
@@ -1567,6 +1651,15 @@ pub mod code_generator_response {
             self.content = ::core::option::Option::None;
             self.generated_code_info = ::buffa::MessageField::none();
             self.__buffa_unknown_fields.clear();
+        }
+        #[inline]
+        fn merge_to_limit(
+            &mut self,
+            buf: &mut impl ::buffa::bytes::Buf,
+            ctx: ::buffa::DecodeContext<'_>,
+            limit: usize,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
         }
     }
     impl ::buffa::ExtensionSet for File {

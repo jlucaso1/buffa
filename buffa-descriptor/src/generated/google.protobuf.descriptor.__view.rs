@@ -14,6 +14,15 @@ pub struct FileDescriptorSetView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for FileDescriptorSetView<'a> {
     type Owned = super::super::FileDescriptorSet;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -54,13 +63,9 @@ impl<'a> ::buffa::MessageView<'a> for FileDescriptorSetView<'a> {
                         super::super::__buffa::view::FileDescriptorProtoView,
                     >(),
                 )?;
-                view.file
-                    .push(
-                        <super::super::__buffa::view::FileDescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::FileDescriptorProtoView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.file.push(__elem);
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -103,10 +108,7 @@ impl<'a> ::buffa::ViewEncode<'a> for FileDescriptorSetView<'a> {
         for v in &self.file {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -120,11 +122,7 @@ impl<'a> ::buffa::ViewEncode<'a> for FileDescriptorSetView<'a> {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
         for v in &self.file {
-            ::buffa::types::put_len_delimited_header(
-                1u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(1u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -341,7 +339,7 @@ pub struct FileDescriptorProtoView<'a> {
         super::super::__buffa::view::FieldDescriptorProtoView<'a>,
     >,
     /// Field 8: `options`
-    pub options: ::buffa::MessageFieldView<
+    pub options: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::FileOptionsView<'a>,
     >,
     /// This field contains optional information about the original source code.
@@ -350,7 +348,7 @@ pub struct FileDescriptorProtoView<'a> {
     /// development tools.
     ///
     /// Field 9: `source_code_info`
-    pub source_code_info: ::buffa::MessageFieldView<
+    pub source_code_info: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::SourceCodeInfoView<'a>,
     >,
     /// The syntax of the proto file.
@@ -374,6 +372,15 @@ pub struct FileDescriptorProtoView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for FileDescriptorProtoView<'a> {
     type Owned = super::super::FileDescriptorProto;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -403,18 +410,10 @@ impl<'a> ::buffa::MessageView<'a> for FileDescriptorProtoView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.name = Some(::buffa::types::borrow_str(&mut cur)?);
+                ::buffa::types::borrow_opt_str_field(tag, &mut view.name, &mut cur)?;
             }
             2u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.package = Some(::buffa::types::borrow_str(&mut cur)?);
+                ::buffa::types::borrow_opt_str_field(tag, &mut view.package, &mut cur)?;
             }
             8u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -423,19 +422,11 @@ impl<'a> ::buffa::MessageView<'a> for FileDescriptorProtoView<'a> {
                 )?;
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                match view.options.as_mut() {
-                    Some(existing) => {
-                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
-                    }
-                    None => {
-                        view.options = ::buffa::MessageFieldView::set(
-                            <super::super::__buffa::view::FileOptionsView as ::buffa::MessageView>::decode_view_ctx(
-                                sub,
-                                __sub_ctx,
-                            )?,
-                        );
-                    }
-                }
+                ::buffa::MessageView::merge_into_view(
+                    view.options.get_or_insert_default(),
+                    sub,
+                    __sub_ctx,
+                )?;
             }
             9u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -444,26 +435,14 @@ impl<'a> ::buffa::MessageView<'a> for FileDescriptorProtoView<'a> {
                 )?;
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                match view.source_code_info.as_mut() {
-                    Some(existing) => {
-                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
-                    }
-                    None => {
-                        view.source_code_info = ::buffa::MessageFieldView::set(
-                            <super::super::__buffa::view::SourceCodeInfoView as ::buffa::MessageView>::decode_view_ctx(
-                                sub,
-                                __sub_ctx,
-                            )?,
-                        );
-                    }
-                }
+                ::buffa::MessageView::merge_into_view(
+                    view.source_code_info.get_or_insert_default(),
+                    sub,
+                    __sub_ctx,
+                )?;
             }
             12u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.syntax = Some(::buffa::types::borrow_str(&mut cur)?);
+                ::buffa::types::borrow_opt_str_field(tag, &mut view.syntax, &mut cur)?;
             }
             14u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -482,15 +461,12 @@ impl<'a> ::buffa::MessageView<'a> for FileDescriptorProtoView<'a> {
                 }
             }
             3u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::push_str_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut view.dependency,
+                    &mut cur,
+                    ctx,
                 )?;
-                let __elem = ::buffa::types::borrow_str(&mut cur)?;
-                ctx.register_element_memory(
-                    ::buffa::__private::element_footprint(&__elem),
-                )?;
-                view.dependency.push(__elem);
             }
             10u32 => {
                 if tag.wire_type() == ::buffa::encoding::WireType::LengthDelimited {
@@ -531,15 +507,12 @@ impl<'a> ::buffa::MessageView<'a> for FileDescriptorProtoView<'a> {
                 }
             }
             15u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::push_str_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut view.option_dependency,
+                    &mut cur,
+                    ctx,
                 )?;
-                let __elem = ::buffa::types::borrow_str(&mut cur)?;
-                ctx.register_element_memory(
-                    ::buffa::__private::element_footprint(&__elem),
-                )?;
-                view.option_dependency.push(__elem);
             }
             4u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -553,13 +526,9 @@ impl<'a> ::buffa::MessageView<'a> for FileDescriptorProtoView<'a> {
                         super::super::__buffa::view::DescriptorProtoView,
                     >(),
                 )?;
-                view.message_type
-                    .push(
-                        <super::super::__buffa::view::DescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::DescriptorProtoView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.message_type.push(__elem);
             }
             5u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -573,13 +542,9 @@ impl<'a> ::buffa::MessageView<'a> for FileDescriptorProtoView<'a> {
                         super::super::__buffa::view::EnumDescriptorProtoView,
                     >(),
                 )?;
-                view.enum_type
-                    .push(
-                        <super::super::__buffa::view::EnumDescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::EnumDescriptorProtoView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.enum_type.push(__elem);
             }
             6u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -593,13 +558,9 @@ impl<'a> ::buffa::MessageView<'a> for FileDescriptorProtoView<'a> {
                         super::super::__buffa::view::ServiceDescriptorProtoView,
                     >(),
                 )?;
-                view.service
-                    .push(
-                        <super::super::__buffa::view::ServiceDescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::ServiceDescriptorProtoView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.service.push(__elem);
             }
             7u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -613,13 +574,9 @@ impl<'a> ::buffa::MessageView<'a> for FileDescriptorProtoView<'a> {
                         super::super::__buffa::view::FieldDescriptorProtoView,
                     >(),
                 )?;
-                view.extension
-                    .push(
-                        <super::super::__buffa::view::FieldDescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::FieldDescriptorProtoView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.extension.push(__elem);
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -722,50 +679,32 @@ impl<'a> ::buffa::ViewEncode<'a> for FileDescriptorProtoView<'a> {
         for v in &self.message_type {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.enum_type {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.service {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.extension {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
-        if self.options.is_set() {
+        if let ::core::option::Option::Some(__v) = self.options.as_option() {
             let __slot = __cache.reserve();
-            let inner_size = self.options.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            let inner_size = __v.compute_size(__cache);
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
-        if self.source_code_info.is_set() {
+        if let ::core::option::Option::Some(__v) = self.source_code_info.as_option() {
             let __slot = __cache.reserve();
-            let inner_size = self.source_code_info.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            let inner_size = __v.compute_size(__cache);
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.public_dependency {
             size += 1u64 + ::buffa::types::int32_encoded_len(*v) as u64;
@@ -803,52 +742,28 @@ impl<'a> ::buffa::ViewEncode<'a> for FileDescriptorProtoView<'a> {
             ::buffa::types::put_string_field(3u32, v, buf);
         }
         for v in &self.message_type {
-            ::buffa::types::put_len_delimited_header(
-                4u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(4u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         for v in &self.enum_type {
-            ::buffa::types::put_len_delimited_header(
-                5u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(5u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         for v in &self.service {
-            ::buffa::types::put_len_delimited_header(
-                6u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(6u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         for v in &self.extension {
-            ::buffa::types::put_len_delimited_header(
-                7u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(7u32, __cache, buf);
             v.write_to(__cache, buf);
         }
-        if self.options.is_set() {
-            ::buffa::types::put_len_delimited_header(
-                8u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            self.options.write_to(__cache, buf);
+        if let ::core::option::Option::Some(__v) = self.options.as_option() {
+            ::buffa::types::put_submessage_header(8u32, __cache, buf);
+            __v.write_to(__cache, buf);
         }
-        if self.source_code_info.is_set() {
-            ::buffa::types::put_len_delimited_header(
-                9u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            self.source_code_info.write_to(__cache, buf);
+        if let ::core::option::Option::Some(__v) = self.source_code_info.as_option() {
+            ::buffa::types::put_submessage_header(9u32, __cache, buf);
+            __v.write_to(__cache, buf);
         }
         for v in &self.public_dependency {
             ::buffa::types::put_int32_field(10u32, *v, buf);
@@ -1131,7 +1046,9 @@ impl FileDescriptorProtoOwnedView {
     #[must_use]
     pub fn options(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::FileOptionsView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<
+        super::super::__buffa::view::FileOptionsView<'_>,
+    > {
         &self.0.reborrow().options
     }
     /// This field contains optional information about the original source code.
@@ -1143,7 +1060,7 @@ impl FileDescriptorProtoOwnedView {
     #[must_use]
     pub fn source_code_info(
         &self,
-    ) -> &::buffa::MessageFieldView<
+    ) -> &::buffa::InlineMessageFieldView<
         super::super::__buffa::view::SourceCodeInfoView<'_>,
     > {
         &self.0.reborrow().source_code_info
@@ -1236,7 +1153,7 @@ pub struct DescriptorProtoView<'a> {
         super::super::__buffa::view::OneofDescriptorProtoView<'a>,
     >,
     /// Field 7: `options`
-    pub options: ::buffa::MessageFieldView<
+    pub options: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::MessageOptionsView<'a>,
     >,
     /// Field 9: `reserved_range`
@@ -1257,6 +1174,15 @@ pub struct DescriptorProtoView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for DescriptorProtoView<'a> {
     type Owned = super::super::DescriptorProto;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -1286,11 +1212,7 @@ impl<'a> ::buffa::MessageView<'a> for DescriptorProtoView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.name = Some(::buffa::types::borrow_str(&mut cur)?);
+                ::buffa::types::borrow_opt_str_field(tag, &mut view.name, &mut cur)?;
             }
             7u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -1299,19 +1221,11 @@ impl<'a> ::buffa::MessageView<'a> for DescriptorProtoView<'a> {
                 )?;
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                match view.options.as_mut() {
-                    Some(existing) => {
-                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
-                    }
-                    None => {
-                        view.options = ::buffa::MessageFieldView::set(
-                            <super::super::__buffa::view::MessageOptionsView as ::buffa::MessageView>::decode_view_ctx(
-                                sub,
-                                __sub_ctx,
-                            )?,
-                        );
-                    }
-                }
+                ::buffa::MessageView::merge_into_view(
+                    view.options.get_or_insert_default(),
+                    sub,
+                    __sub_ctx,
+                )?;
             }
             11u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -1341,13 +1255,9 @@ impl<'a> ::buffa::MessageView<'a> for DescriptorProtoView<'a> {
                         super::super::__buffa::view::FieldDescriptorProtoView,
                     >(),
                 )?;
-                view.field
-                    .push(
-                        <super::super::__buffa::view::FieldDescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::FieldDescriptorProtoView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.field.push(__elem);
             }
             6u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -1361,13 +1271,9 @@ impl<'a> ::buffa::MessageView<'a> for DescriptorProtoView<'a> {
                         super::super::__buffa::view::FieldDescriptorProtoView,
                     >(),
                 )?;
-                view.extension
-                    .push(
-                        <super::super::__buffa::view::FieldDescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::FieldDescriptorProtoView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.extension.push(__elem);
             }
             3u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -1381,13 +1287,9 @@ impl<'a> ::buffa::MessageView<'a> for DescriptorProtoView<'a> {
                         super::super::__buffa::view::DescriptorProtoView,
                     >(),
                 )?;
-                view.nested_type
-                    .push(
-                        <super::super::__buffa::view::DescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::DescriptorProtoView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.nested_type.push(__elem);
             }
             4u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -1401,13 +1303,9 @@ impl<'a> ::buffa::MessageView<'a> for DescriptorProtoView<'a> {
                         super::super::__buffa::view::EnumDescriptorProtoView,
                     >(),
                 )?;
-                view.enum_type
-                    .push(
-                        <super::super::__buffa::view::EnumDescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::EnumDescriptorProtoView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.enum_type.push(__elem);
             }
             5u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -1421,13 +1319,9 @@ impl<'a> ::buffa::MessageView<'a> for DescriptorProtoView<'a> {
                         super::super::__buffa::view::descriptor_proto::ExtensionRangeView,
                     >(),
                 )?;
-                view.extension_range
-                    .push(
-                        <super::super::__buffa::view::descriptor_proto::ExtensionRangeView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::descriptor_proto::ExtensionRangeView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.extension_range.push(__elem);
             }
             8u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -1441,13 +1335,9 @@ impl<'a> ::buffa::MessageView<'a> for DescriptorProtoView<'a> {
                         super::super::__buffa::view::OneofDescriptorProtoView,
                     >(),
                 )?;
-                view.oneof_decl
-                    .push(
-                        <super::super::__buffa::view::OneofDescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::OneofDescriptorProtoView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.oneof_decl.push(__elem);
             }
             9u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -1461,24 +1351,17 @@ impl<'a> ::buffa::MessageView<'a> for DescriptorProtoView<'a> {
                         super::super::__buffa::view::descriptor_proto::ReservedRangeView,
                     >(),
                 )?;
-                view.reserved_range
-                    .push(
-                        <super::super::__buffa::view::descriptor_proto::ReservedRangeView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::descriptor_proto::ReservedRangeView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.reserved_range.push(__elem);
             }
             10u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::push_str_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut view.reserved_name,
+                    &mut cur,
+                    ctx,
                 )?;
-                let __elem = ::buffa::types::borrow_str(&mut cur)?;
-                ctx.register_element_memory(
-                    ::buffa::__private::element_footprint(&__elem),
-                )?;
-                view.reserved_name.push(__elem);
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -1566,66 +1449,42 @@ impl<'a> ::buffa::ViewEncode<'a> for DescriptorProtoView<'a> {
         for v in &self.field {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.nested_type {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.enum_type {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.extension_range {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.extension {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
-        if self.options.is_set() {
+        if let ::core::option::Option::Some(__v) = self.options.as_option() {
             let __slot = __cache.reserve();
-            let inner_size = self.options.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            let inner_size = __v.compute_size(__cache);
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.oneof_decl {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.reserved_range {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.reserved_name {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
@@ -1648,67 +1507,35 @@ impl<'a> ::buffa::ViewEncode<'a> for DescriptorProtoView<'a> {
             ::buffa::types::put_string_field(1u32, v, buf);
         }
         for v in &self.field {
-            ::buffa::types::put_len_delimited_header(
-                2u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(2u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         for v in &self.nested_type {
-            ::buffa::types::put_len_delimited_header(
-                3u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(3u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         for v in &self.enum_type {
-            ::buffa::types::put_len_delimited_header(
-                4u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(4u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         for v in &self.extension_range {
-            ::buffa::types::put_len_delimited_header(
-                5u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(5u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         for v in &self.extension {
-            ::buffa::types::put_len_delimited_header(
-                6u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(6u32, __cache, buf);
             v.write_to(__cache, buf);
         }
-        if self.options.is_set() {
-            ::buffa::types::put_len_delimited_header(
-                7u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            self.options.write_to(__cache, buf);
+        if let ::core::option::Option::Some(__v) = self.options.as_option() {
+            ::buffa::types::put_submessage_header(7u32, __cache, buf);
+            __v.write_to(__cache, buf);
         }
         for v in &self.oneof_decl {
-            ::buffa::types::put_len_delimited_header(
-                8u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(8u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         for v in &self.reserved_range {
-            ::buffa::types::put_len_delimited_header(
-                9u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(9u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         for v in &self.reserved_name {
@@ -1940,7 +1767,7 @@ impl DescriptorProtoOwnedView {
     #[must_use]
     pub fn options(
         &self,
-    ) -> &::buffa::MessageFieldView<
+    ) -> &::buffa::InlineMessageFieldView<
         super::super::__buffa::view::MessageOptionsView<'_>,
     > {
         &self.0.reborrow().options
@@ -2016,13 +1843,30 @@ pub mod descriptor_proto {
         /// Field 2: `end`
         pub end: ::core::option::Option<i32>,
         /// Field 3: `options`
-        pub options: ::buffa::MessageFieldView<
+        pub options: ::buffa::InlineMessageFieldView<
             super::super::super::__buffa::view::ExtensionRangeOptionsView<'a>,
         >,
         pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
     }
     impl<'a> ::buffa::MessageView<'a> for ExtensionRangeView<'a> {
         type Owned = super::super::super::descriptor_proto::ExtensionRange;
+        #[inline]
+        fn decode_view_ctx(
+            buf: &'a [u8],
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+            let mut view = <Self as ::core::default::Default>::default();
+            ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+            ::core::result::Result::Ok(view)
+        }
+        #[inline]
+        fn merge_into_view(
+            &mut self,
+            buf: &'a [u8],
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            ::buffa::__private::merge_into_view_inline(self, buf, ctx)
+        }
         fn decode_view(
             buf: &'a [u8],
         ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
@@ -2054,18 +1898,14 @@ pub mod descriptor_proto {
             let mut cur = cur;
             match tag.field_number() {
                 1u32 => {
-                    ::buffa::encoding::check_wire_type(
+                    ::buffa::types::merge_opt_int32_field(
                         tag,
-                        ::buffa::encoding::WireType::Varint,
+                        &mut view.start,
+                        &mut cur,
                     )?;
-                    view.start = Some(::buffa::types::decode_int32(&mut cur)?);
                 }
                 2u32 => {
-                    ::buffa::encoding::check_wire_type(
-                        tag,
-                        ::buffa::encoding::WireType::Varint,
-                    )?;
-                    view.end = Some(::buffa::types::decode_int32(&mut cur)?);
+                    ::buffa::types::merge_opt_int32_field(tag, &mut view.end, &mut cur)?;
                 }
                 3u32 => {
                     ::buffa::encoding::check_wire_type(
@@ -2074,23 +1914,11 @@ pub mod descriptor_proto {
                     )?;
                     let __sub_ctx = ctx.descend()?;
                     let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                    match view.options.as_mut() {
-                        Some(existing) => {
-                            ::buffa::MessageView::merge_into_view(
-                                existing,
-                                sub,
-                                __sub_ctx,
-                            )?
-                        }
-                        None => {
-                            view.options = ::buffa::MessageFieldView::set(
-                                <super::super::super::__buffa::view::ExtensionRangeOptionsView as ::buffa::MessageView>::decode_view_ctx(
-                                    sub,
-                                    __sub_ctx,
-                                )?,
-                            );
-                        }
-                    }
+                    ::buffa::MessageView::merge_into_view(
+                        view.options.get_or_insert_default(),
+                        sub,
+                        __sub_ctx,
+                    )?;
                 }
                 _ => {
                     ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -2148,13 +1976,10 @@ pub mod descriptor_proto {
             if let Some(v) = self.end {
                 size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
             }
-            if self.options.is_set() {
+            if let ::core::option::Option::Some(__v) = self.options.as_option() {
                 let __slot = __cache.reserve();
-                let inner_size = self.options.compute_size(__cache);
-                __cache.set(__slot, inner_size);
-                size
-                    += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                        + inner_size as u64;
+                let inner_size = __v.compute_size(__cache);
+                size += 1u64 + __cache.record_submessage(__slot, inner_size);
             }
             size += self.__buffa_unknown_fields.encoded_len() as u64;
             ::buffa::saturate_size(size)
@@ -2173,13 +1998,9 @@ pub mod descriptor_proto {
             if let Some(v) = self.end {
                 ::buffa::types::put_int32_field(2u32, v, buf);
             }
-            if self.options.is_set() {
-                ::buffa::types::put_len_delimited_header(
-                    3u32,
-                    u64::from(__cache.consume_next()),
-                    buf,
-                );
-                self.options.write_to(__cache, buf);
+            if let ::core::option::Option::Some(__v) = self.options.as_option() {
+                ::buffa::types::put_submessage_header(3u32, __cache, buf);
+                __v.write_to(__cache, buf);
             }
             self.__buffa_unknown_fields.write_to(buf);
         }
@@ -2327,7 +2148,7 @@ pub mod descriptor_proto {
         #[must_use]
         pub fn options(
             &self,
-        ) -> &::buffa::MessageFieldView<
+        ) -> &::buffa::InlineMessageFieldView<
             super::super::super::__buffa::view::ExtensionRangeOptionsView<'_>,
         > {
             &self.0.reborrow().options
@@ -2382,6 +2203,23 @@ pub mod descriptor_proto {
     }
     impl<'a> ::buffa::MessageView<'a> for ReservedRangeView<'a> {
         type Owned = super::super::super::descriptor_proto::ReservedRange;
+        #[inline]
+        fn decode_view_ctx(
+            buf: &'a [u8],
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+            let mut view = <Self as ::core::default::Default>::default();
+            ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+            ::core::result::Result::Ok(view)
+        }
+        #[inline]
+        fn merge_into_view(
+            &mut self,
+            buf: &'a [u8],
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            ::buffa::__private::merge_into_view_inline(self, buf, ctx)
+        }
         fn decode_view(
             buf: &'a [u8],
         ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
@@ -2413,18 +2251,14 @@ pub mod descriptor_proto {
             let mut cur = cur;
             match tag.field_number() {
                 1u32 => {
-                    ::buffa::encoding::check_wire_type(
+                    ::buffa::types::merge_opt_int32_field(
                         tag,
-                        ::buffa::encoding::WireType::Varint,
+                        &mut view.start,
+                        &mut cur,
                     )?;
-                    view.start = Some(::buffa::types::decode_int32(&mut cur)?);
                 }
                 2u32 => {
-                    ::buffa::encoding::check_wire_type(
-                        tag,
-                        ::buffa::encoding::WireType::Varint,
-                    )?;
-                    view.end = Some(::buffa::types::decode_int32(&mut cur)?);
+                    ::buffa::types::merge_opt_int32_field(tag, &mut view.end, &mut cur)?;
                 }
                 _ => {
                     ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -2682,7 +2516,7 @@ pub struct ExtensionRangeOptionsView<'a> {
     /// Any features defined in the specific edition.
     ///
     /// Field 50: `features`
-    pub features: ::buffa::MessageFieldView<
+    pub features: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::FeatureSetView<'a>,
     >,
     /// The verification state of the range.
@@ -2697,6 +2531,15 @@ pub struct ExtensionRangeOptionsView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for ExtensionRangeOptionsView<'a> {
     type Owned = super::super::ExtensionRangeOptions;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -2732,19 +2575,11 @@ impl<'a> ::buffa::MessageView<'a> for ExtensionRangeOptionsView<'a> {
                 )?;
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                match view.features.as_mut() {
-                    Some(existing) => {
-                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
-                    }
-                    None => {
-                        view.features = ::buffa::MessageFieldView::set(
-                            <super::super::__buffa::view::FeatureSetView as ::buffa::MessageView>::decode_view_ctx(
-                                sub,
-                                __sub_ctx,
-                            )?,
-                        );
-                    }
-                }
+                ::buffa::MessageView::merge_into_view(
+                    view.features.get_or_insert_default(),
+                    sub,
+                    __sub_ctx,
+                )?;
             }
             3u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -2774,13 +2609,9 @@ impl<'a> ::buffa::MessageView<'a> for ExtensionRangeOptionsView<'a> {
                         super::super::__buffa::view::UninterpretedOptionView,
                     >(),
                 )?;
-                view.uninterpreted_option
-                    .push(
-                        <super::super::__buffa::view::UninterpretedOptionView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::UninterpretedOptionView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.uninterpreted_option.push(__elem);
             }
             2u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -2794,13 +2625,9 @@ impl<'a> ::buffa::MessageView<'a> for ExtensionRangeOptionsView<'a> {
                         super::super::__buffa::view::extension_range_options::DeclarationView,
                     >(),
                 )?;
-                view.declaration
-                    .push(
-                        <super::super::__buffa::view::extension_range_options::DeclarationView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::extension_range_options::DeclarationView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.declaration.push(__elem);
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -2864,29 +2691,20 @@ impl<'a> ::buffa::ViewEncode<'a> for ExtensionRangeOptionsView<'a> {
         for v in &self.declaration {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         if let Some(ref v) = self.verification {
             size += 1u64 + ::buffa::types::int32_encoded_len(v.to_i32()) as u64;
         }
-        if self.features.is_set() {
+        if let ::core::option::Option::Some(__v) = self.features.as_option() {
             let __slot = __cache.reserve();
-            let inner_size = self.features.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            let inner_size = __v.compute_size(__cache);
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.uninterpreted_option {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -2900,30 +2718,18 @@ impl<'a> ::buffa::ViewEncode<'a> for ExtensionRangeOptionsView<'a> {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
         for v in &self.declaration {
-            ::buffa::types::put_len_delimited_header(
-                2u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(2u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         if let Some(ref v) = self.verification {
             ::buffa::types::put_int32_field(3u32, v.to_i32(), buf);
         }
-        if self.features.is_set() {
-            ::buffa::types::put_len_delimited_header(
-                50u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            self.features.write_to(__cache, buf);
+        if let ::core::option::Option::Some(__v) = self.features.as_option() {
+            ::buffa::types::put_submessage_header(50u32, __cache, buf);
+            __v.write_to(__cache, buf);
         }
         for v in &self.uninterpreted_option {
-            ::buffa::types::put_len_delimited_header(
-                999u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(999u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -3093,7 +2899,9 @@ impl ExtensionRangeOptionsOwnedView {
     #[must_use]
     pub fn features(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::FeatureSetView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<
+        super::super::__buffa::view::FeatureSetView<'_>,
+    > {
         &self.0.reborrow().features
     }
     /// The verification state of the range.
@@ -3176,6 +2984,15 @@ pub mod extension_range_options {
     }
     impl<'a> ::buffa::MessageView<'a> for DeclarationView<'a> {
         type Owned = super::super::super::extension_range_options::Declaration;
+        #[inline]
+        fn decode_view_ctx(
+            buf: &'a [u8],
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+            let mut view = <Self as ::core::default::Default>::default();
+            ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+            ::core::result::Result::Ok(view)
+        }
         fn decode_view(
             buf: &'a [u8],
         ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
@@ -3207,39 +3024,39 @@ pub mod extension_range_options {
             let mut cur = cur;
             match tag.field_number() {
                 1u32 => {
-                    ::buffa::encoding::check_wire_type(
+                    ::buffa::types::merge_opt_int32_field(
                         tag,
-                        ::buffa::encoding::WireType::Varint,
+                        &mut view.number,
+                        &mut cur,
                     )?;
-                    view.number = Some(::buffa::types::decode_int32(&mut cur)?);
                 }
                 2u32 => {
-                    ::buffa::encoding::check_wire_type(
+                    ::buffa::types::borrow_opt_str_field(
                         tag,
-                        ::buffa::encoding::WireType::LengthDelimited,
+                        &mut view.full_name,
+                        &mut cur,
                     )?;
-                    view.full_name = Some(::buffa::types::borrow_str(&mut cur)?);
                 }
                 3u32 => {
-                    ::buffa::encoding::check_wire_type(
+                    ::buffa::types::borrow_opt_str_field(
                         tag,
-                        ::buffa::encoding::WireType::LengthDelimited,
+                        &mut view.r#type,
+                        &mut cur,
                     )?;
-                    view.r#type = Some(::buffa::types::borrow_str(&mut cur)?);
                 }
                 5u32 => {
-                    ::buffa::encoding::check_wire_type(
+                    ::buffa::types::merge_opt_bool_field(
                         tag,
-                        ::buffa::encoding::WireType::Varint,
+                        &mut view.reserved,
+                        &mut cur,
                     )?;
-                    view.reserved = Some(::buffa::types::decode_bool(&mut cur)?);
                 }
                 6u32 => {
-                    ::buffa::encoding::check_wire_type(
+                    ::buffa::types::merge_opt_bool_field(
                         tag,
-                        ::buffa::encoding::WireType::Varint,
+                        &mut view.repeated,
+                        &mut cur,
                     )?;
-                    view.repeated = Some(::buffa::types::decode_bool(&mut cur)?);
                 }
                 _ => {
                     ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -3581,7 +3398,7 @@ pub struct FieldDescriptorProtoView<'a> {
     /// Field 10: `json_name`
     pub json_name: ::core::option::Option<&'a str>,
     /// Field 8: `options`
-    pub options: ::buffa::MessageFieldView<
+    pub options: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::FieldOptionsView<'a>,
     >,
     /// If true, this is a proto3 "optional". When a proto3 field is optional, it
@@ -3612,6 +3429,15 @@ pub struct FieldDescriptorProtoView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for FieldDescriptorProtoView<'a> {
     type Owned = super::super::FieldDescriptorProto;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -3641,18 +3467,10 @@ impl<'a> ::buffa::MessageView<'a> for FieldDescriptorProtoView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.name = Some(::buffa::types::borrow_str(&mut cur)?);
+                ::buffa::types::borrow_opt_str_field(tag, &mut view.name, &mut cur)?;
             }
             3u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.number = Some(::buffa::types::decode_int32(&mut cur)?);
+                ::buffa::types::merge_opt_int32_field(tag, &mut view.number, &mut cur)?;
             }
             4u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -3687,39 +3505,35 @@ impl<'a> ::buffa::MessageView<'a> for FieldDescriptorProtoView<'a> {
                 }
             }
             6u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::borrow_opt_str_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut view.type_name,
+                    &mut cur,
                 )?;
-                view.type_name = Some(::buffa::types::borrow_str(&mut cur)?);
             }
             2u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.extendee = Some(::buffa::types::borrow_str(&mut cur)?);
+                ::buffa::types::borrow_opt_str_field(tag, &mut view.extendee, &mut cur)?;
             }
             7u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::borrow_opt_str_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut view.default_value,
+                    &mut cur,
                 )?;
-                view.default_value = Some(::buffa::types::borrow_str(&mut cur)?);
             }
             9u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_int32_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.oneof_index,
+                    &mut cur,
                 )?;
-                view.oneof_index = Some(::buffa::types::decode_int32(&mut cur)?);
             }
             10u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::borrow_opt_str_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut view.json_name,
+                    &mut cur,
                 )?;
-                view.json_name = Some(::buffa::types::borrow_str(&mut cur)?);
             }
             8u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -3728,26 +3542,18 @@ impl<'a> ::buffa::MessageView<'a> for FieldDescriptorProtoView<'a> {
                 )?;
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                match view.options.as_mut() {
-                    Some(existing) => {
-                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
-                    }
-                    None => {
-                        view.options = ::buffa::MessageFieldView::set(
-                            <super::super::__buffa::view::FieldOptionsView as ::buffa::MessageView>::decode_view_ctx(
-                                sub,
-                                __sub_ctx,
-                            )?,
-                        );
-                    }
-                }
+                ::buffa::MessageView::merge_into_view(
+                    view.options.get_or_insert_default(),
+                    sub,
+                    __sub_ctx,
+                )?;
             }
             17u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_bool_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.proto3_optional,
+                    &mut cur,
                 )?;
-                view.proto3_optional = Some(::buffa::types::decode_bool(&mut cur)?);
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -3828,13 +3634,10 @@ impl<'a> ::buffa::ViewEncode<'a> for FieldDescriptorProtoView<'a> {
         if let Some(ref v) = self.default_value {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
-        if self.options.is_set() {
+        if let ::core::option::Option::Some(__v) = self.options.as_option() {
             let __slot = __cache.reserve();
-            let inner_size = self.options.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            let inner_size = __v.compute_size(__cache);
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         if let Some(v) = self.oneof_index {
             size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
@@ -3877,13 +3680,9 @@ impl<'a> ::buffa::ViewEncode<'a> for FieldDescriptorProtoView<'a> {
         if let Some(ref v) = self.default_value {
             ::buffa::types::put_string_field(7u32, v, buf);
         }
-        if self.options.is_set() {
-            ::buffa::types::put_len_delimited_header(
-                8u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            self.options.write_to(__cache, buf);
+        if let ::core::option::Option::Some(__v) = self.options.as_option() {
+            ::buffa::types::put_submessage_header(8u32, __cache, buf);
+            __v.write_to(__cache, buf);
         }
         if let Some(v) = self.oneof_index {
             ::buffa::types::put_int32_field(9u32, v, buf);
@@ -4126,7 +3925,9 @@ impl FieldDescriptorProtoOwnedView {
     #[must_use]
     pub fn options(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::FieldOptionsView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<
+        super::super::__buffa::view::FieldOptionsView<'_>,
+    > {
         &self.0.reborrow().options
     }
     /// If true, this is a proto3 "optional". When a proto3 field is optional, it
@@ -4194,13 +3995,22 @@ pub struct OneofDescriptorProtoView<'a> {
     /// Field 1: `name`
     pub name: ::core::option::Option<&'a str>,
     /// Field 2: `options`
-    pub options: ::buffa::MessageFieldView<
+    pub options: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::OneofOptionsView<'a>,
     >,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
 }
 impl<'a> ::buffa::MessageView<'a> for OneofDescriptorProtoView<'a> {
     type Owned = super::super::OneofDescriptorProto;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -4230,11 +4040,7 @@ impl<'a> ::buffa::MessageView<'a> for OneofDescriptorProtoView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.name = Some(::buffa::types::borrow_str(&mut cur)?);
+                ::buffa::types::borrow_opt_str_field(tag, &mut view.name, &mut cur)?;
             }
             2u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -4243,19 +4049,11 @@ impl<'a> ::buffa::MessageView<'a> for OneofDescriptorProtoView<'a> {
                 )?;
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                match view.options.as_mut() {
-                    Some(existing) => {
-                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
-                    }
-                    None => {
-                        view.options = ::buffa::MessageFieldView::set(
-                            <super::super::__buffa::view::OneofOptionsView as ::buffa::MessageView>::decode_view_ctx(
-                                sub,
-                                __sub_ctx,
-                            )?,
-                        );
-                    }
-                }
+                ::buffa::MessageView::merge_into_view(
+                    view.options.get_or_insert_default(),
+                    sub,
+                    __sub_ctx,
+                )?;
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -4309,13 +4107,10 @@ impl<'a> ::buffa::ViewEncode<'a> for OneofDescriptorProtoView<'a> {
         if let Some(ref v) = self.name {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
-        if self.options.is_set() {
+        if let ::core::option::Option::Some(__v) = self.options.as_option() {
             let __slot = __cache.reserve();
-            let inner_size = self.options.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            let inner_size = __v.compute_size(__cache);
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -4331,13 +4126,9 @@ impl<'a> ::buffa::ViewEncode<'a> for OneofDescriptorProtoView<'a> {
         if let Some(ref v) = self.name {
             ::buffa::types::put_string_field(1u32, v, buf);
         }
-        if self.options.is_set() {
-            ::buffa::types::put_len_delimited_header(
-                2u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            self.options.write_to(__cache, buf);
+        if let ::core::option::Option::Some(__v) = self.options.as_option() {
+            ::buffa::types::put_submessage_header(2u32, __cache, buf);
+            __v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -4473,7 +4264,9 @@ impl OneofDescriptorProtoOwnedView {
     #[must_use]
     pub fn options(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::OneofOptionsView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<
+        super::super::__buffa::view::OneofOptionsView<'_>,
+    > {
         &self.0.reborrow().options
     }
 }
@@ -4519,7 +4312,7 @@ pub struct EnumDescriptorProtoView<'a> {
         super::super::__buffa::view::EnumValueDescriptorProtoView<'a>,
     >,
     /// Field 3: `options`
-    pub options: ::buffa::MessageFieldView<
+    pub options: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::EnumOptionsView<'a>,
     >,
     /// Range of reserved numeric values. Reserved numeric values may not be used
@@ -4544,6 +4337,15 @@ pub struct EnumDescriptorProtoView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for EnumDescriptorProtoView<'a> {
     type Owned = super::super::EnumDescriptorProto;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -4573,11 +4375,7 @@ impl<'a> ::buffa::MessageView<'a> for EnumDescriptorProtoView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.name = Some(::buffa::types::borrow_str(&mut cur)?);
+                ::buffa::types::borrow_opt_str_field(tag, &mut view.name, &mut cur)?;
             }
             3u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -4586,19 +4384,11 @@ impl<'a> ::buffa::MessageView<'a> for EnumDescriptorProtoView<'a> {
                 )?;
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                match view.options.as_mut() {
-                    Some(existing) => {
-                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
-                    }
-                    None => {
-                        view.options = ::buffa::MessageFieldView::set(
-                            <super::super::__buffa::view::EnumOptionsView as ::buffa::MessageView>::decode_view_ctx(
-                                sub,
-                                __sub_ctx,
-                            )?,
-                        );
-                    }
-                }
+                ::buffa::MessageView::merge_into_view(
+                    view.options.get_or_insert_default(),
+                    sub,
+                    __sub_ctx,
+                )?;
             }
             6u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -4628,13 +4418,9 @@ impl<'a> ::buffa::MessageView<'a> for EnumDescriptorProtoView<'a> {
                         super::super::__buffa::view::EnumValueDescriptorProtoView,
                     >(),
                 )?;
-                view.value
-                    .push(
-                        <super::super::__buffa::view::EnumValueDescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::EnumValueDescriptorProtoView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.value.push(__elem);
             }
             4u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -4648,24 +4434,17 @@ impl<'a> ::buffa::MessageView<'a> for EnumDescriptorProtoView<'a> {
                         super::super::__buffa::view::enum_descriptor_proto::EnumReservedRangeView,
                     >(),
                 )?;
-                view.reserved_range
-                    .push(
-                        <super::super::__buffa::view::enum_descriptor_proto::EnumReservedRangeView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::enum_descriptor_proto::EnumReservedRangeView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.reserved_range.push(__elem);
             }
             5u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::push_str_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut view.reserved_name,
+                    &mut cur,
+                    ctx,
                 )?;
-                let __elem = ::buffa::types::borrow_str(&mut cur)?;
-                ctx.register_element_memory(
-                    ::buffa::__private::element_footprint(&__elem),
-                )?;
-                view.reserved_name.push(__elem);
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -4734,26 +4513,17 @@ impl<'a> ::buffa::ViewEncode<'a> for EnumDescriptorProtoView<'a> {
         for v in &self.value {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
-        if self.options.is_set() {
+        if let ::core::option::Option::Some(__v) = self.options.as_option() {
             let __slot = __cache.reserve();
-            let inner_size = self.options.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            let inner_size = __v.compute_size(__cache);
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.reserved_range {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.reserved_name {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
@@ -4776,27 +4546,15 @@ impl<'a> ::buffa::ViewEncode<'a> for EnumDescriptorProtoView<'a> {
             ::buffa::types::put_string_field(1u32, v, buf);
         }
         for v in &self.value {
-            ::buffa::types::put_len_delimited_header(
-                2u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(2u32, __cache, buf);
             v.write_to(__cache, buf);
         }
-        if self.options.is_set() {
-            ::buffa::types::put_len_delimited_header(
-                3u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            self.options.write_to(__cache, buf);
+        if let ::core::option::Option::Some(__v) = self.options.as_option() {
+            ::buffa::types::put_submessage_header(3u32, __cache, buf);
+            __v.write_to(__cache, buf);
         }
         for v in &self.reserved_range {
-            ::buffa::types::put_len_delimited_header(
-                4u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(4u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         for v in &self.reserved_name {
@@ -4965,7 +4723,9 @@ impl EnumDescriptorProtoOwnedView {
     #[must_use]
     pub fn options(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::EnumOptionsView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<
+        super::super::__buffa::view::EnumOptionsView<'_>,
+    > {
         &self.0.reborrow().options
     }
     /// Range of reserved numeric values. Reserved numeric values may not be used
@@ -5052,6 +4812,23 @@ pub mod enum_descriptor_proto {
     }
     impl<'a> ::buffa::MessageView<'a> for EnumReservedRangeView<'a> {
         type Owned = super::super::super::enum_descriptor_proto::EnumReservedRange;
+        #[inline]
+        fn decode_view_ctx(
+            buf: &'a [u8],
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+            let mut view = <Self as ::core::default::Default>::default();
+            ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+            ::core::result::Result::Ok(view)
+        }
+        #[inline]
+        fn merge_into_view(
+            &mut self,
+            buf: &'a [u8],
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            ::buffa::__private::merge_into_view_inline(self, buf, ctx)
+        }
         fn decode_view(
             buf: &'a [u8],
         ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
@@ -5083,18 +4860,14 @@ pub mod enum_descriptor_proto {
             let mut cur = cur;
             match tag.field_number() {
                 1u32 => {
-                    ::buffa::encoding::check_wire_type(
+                    ::buffa::types::merge_opt_int32_field(
                         tag,
-                        ::buffa::encoding::WireType::Varint,
+                        &mut view.start,
+                        &mut cur,
                     )?;
-                    view.start = Some(::buffa::types::decode_int32(&mut cur)?);
                 }
                 2u32 => {
-                    ::buffa::encoding::check_wire_type(
-                        tag,
-                        ::buffa::encoding::WireType::Varint,
-                    )?;
-                    view.end = Some(::buffa::types::decode_int32(&mut cur)?);
+                    ::buffa::types::merge_opt_int32_field(tag, &mut view.end, &mut cur)?;
                 }
                 _ => {
                     ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -5341,13 +5114,22 @@ pub struct EnumValueDescriptorProtoView<'a> {
     /// Field 2: `number`
     pub number: ::core::option::Option<i32>,
     /// Field 3: `options`
-    pub options: ::buffa::MessageFieldView<
+    pub options: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::EnumValueOptionsView<'a>,
     >,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
 }
 impl<'a> ::buffa::MessageView<'a> for EnumValueDescriptorProtoView<'a> {
     type Owned = super::super::EnumValueDescriptorProto;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -5377,18 +5159,10 @@ impl<'a> ::buffa::MessageView<'a> for EnumValueDescriptorProtoView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.name = Some(::buffa::types::borrow_str(&mut cur)?);
+                ::buffa::types::borrow_opt_str_field(tag, &mut view.name, &mut cur)?;
             }
             2u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.number = Some(::buffa::types::decode_int32(&mut cur)?);
+                ::buffa::types::merge_opt_int32_field(tag, &mut view.number, &mut cur)?;
             }
             3u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -5397,19 +5171,11 @@ impl<'a> ::buffa::MessageView<'a> for EnumValueDescriptorProtoView<'a> {
                 )?;
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                match view.options.as_mut() {
-                    Some(existing) => {
-                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
-                    }
-                    None => {
-                        view.options = ::buffa::MessageFieldView::set(
-                            <super::super::__buffa::view::EnumValueOptionsView as ::buffa::MessageView>::decode_view_ctx(
-                                sub,
-                                __sub_ctx,
-                            )?,
-                        );
-                    }
-                }
+                ::buffa::MessageView::merge_into_view(
+                    view.options.get_or_insert_default(),
+                    sub,
+                    __sub_ctx,
+                )?;
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -5467,13 +5233,10 @@ impl<'a> ::buffa::ViewEncode<'a> for EnumValueDescriptorProtoView<'a> {
         if let Some(v) = self.number {
             size += 1u64 + ::buffa::types::int32_encoded_len(v) as u64;
         }
-        if self.options.is_set() {
+        if let ::core::option::Option::Some(__v) = self.options.as_option() {
             let __slot = __cache.reserve();
-            let inner_size = self.options.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            let inner_size = __v.compute_size(__cache);
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -5492,13 +5255,9 @@ impl<'a> ::buffa::ViewEncode<'a> for EnumValueDescriptorProtoView<'a> {
         if let Some(v) = self.number {
             ::buffa::types::put_int32_field(2u32, v, buf);
         }
-        if self.options.is_set() {
-            ::buffa::types::put_len_delimited_header(
-                3u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            self.options.write_to(__cache, buf);
+        if let ::core::option::Option::Some(__v) = self.options.as_option() {
+            ::buffa::types::put_submessage_header(3u32, __cache, buf);
+            __v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -5642,7 +5401,7 @@ impl EnumValueDescriptorProtoOwnedView {
     #[must_use]
     pub fn options(
         &self,
-    ) -> &::buffa::MessageFieldView<
+    ) -> &::buffa::InlineMessageFieldView<
         super::super::__buffa::view::EnumValueOptionsView<'_>,
     > {
         &self.0.reborrow().options
@@ -5690,13 +5449,22 @@ pub struct ServiceDescriptorProtoView<'a> {
         super::super::__buffa::view::MethodDescriptorProtoView<'a>,
     >,
     /// Field 3: `options`
-    pub options: ::buffa::MessageFieldView<
+    pub options: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::ServiceOptionsView<'a>,
     >,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
 }
 impl<'a> ::buffa::MessageView<'a> for ServiceDescriptorProtoView<'a> {
     type Owned = super::super::ServiceDescriptorProto;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -5726,11 +5494,7 @@ impl<'a> ::buffa::MessageView<'a> for ServiceDescriptorProtoView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.name = Some(::buffa::types::borrow_str(&mut cur)?);
+                ::buffa::types::borrow_opt_str_field(tag, &mut view.name, &mut cur)?;
             }
             3u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -5739,19 +5503,11 @@ impl<'a> ::buffa::MessageView<'a> for ServiceDescriptorProtoView<'a> {
                 )?;
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                match view.options.as_mut() {
-                    Some(existing) => {
-                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
-                    }
-                    None => {
-                        view.options = ::buffa::MessageFieldView::set(
-                            <super::super::__buffa::view::ServiceOptionsView as ::buffa::MessageView>::decode_view_ctx(
-                                sub,
-                                __sub_ctx,
-                            )?,
-                        );
-                    }
-                }
+                ::buffa::MessageView::merge_into_view(
+                    view.options.get_or_insert_default(),
+                    sub,
+                    __sub_ctx,
+                )?;
             }
             2u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -5765,13 +5521,9 @@ impl<'a> ::buffa::MessageView<'a> for ServiceDescriptorProtoView<'a> {
                         super::super::__buffa::view::MethodDescriptorProtoView,
                     >(),
                 )?;
-                view.method
-                    .push(
-                        <super::super::__buffa::view::MethodDescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::MethodDescriptorProtoView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.method.push(__elem);
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -5833,18 +5585,12 @@ impl<'a> ::buffa::ViewEncode<'a> for ServiceDescriptorProtoView<'a> {
         for v in &self.method {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
-        if self.options.is_set() {
+        if let ::core::option::Option::Some(__v) = self.options.as_option() {
             let __slot = __cache.reserve();
-            let inner_size = self.options.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            let inner_size = __v.compute_size(__cache);
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -5861,20 +5607,12 @@ impl<'a> ::buffa::ViewEncode<'a> for ServiceDescriptorProtoView<'a> {
             ::buffa::types::put_string_field(1u32, v, buf);
         }
         for v in &self.method {
-            ::buffa::types::put_len_delimited_header(
-                2u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(2u32, __cache, buf);
             v.write_to(__cache, buf);
         }
-        if self.options.is_set() {
-            ::buffa::types::put_len_delimited_header(
-                3u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            self.options.write_to(__cache, buf);
+        if let ::core::option::Option::Some(__v) = self.options.as_option() {
+            ::buffa::types::put_submessage_header(3u32, __cache, buf);
+            __v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -6023,7 +5761,7 @@ impl ServiceDescriptorProtoOwnedView {
     #[must_use]
     pub fn options(
         &self,
-    ) -> &::buffa::MessageFieldView<
+    ) -> &::buffa::InlineMessageFieldView<
         super::super::__buffa::view::ServiceOptionsView<'_>,
     > {
         &self.0.reborrow().options
@@ -6073,7 +5811,7 @@ pub struct MethodDescriptorProtoView<'a> {
     /// Field 3: `output_type`
     pub output_type: ::core::option::Option<&'a str>,
     /// Field 4: `options`
-    pub options: ::buffa::MessageFieldView<
+    pub options: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::MethodOptionsView<'a>,
     >,
     /// Identifies if client streams multiple client messages
@@ -6088,6 +5826,15 @@ pub struct MethodDescriptorProtoView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for MethodDescriptorProtoView<'a> {
     type Owned = super::super::MethodDescriptorProto;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -6117,25 +5864,21 @@ impl<'a> ::buffa::MessageView<'a> for MethodDescriptorProtoView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.name = Some(::buffa::types::borrow_str(&mut cur)?);
+                ::buffa::types::borrow_opt_str_field(tag, &mut view.name, &mut cur)?;
             }
             2u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::borrow_opt_str_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut view.input_type,
+                    &mut cur,
                 )?;
-                view.input_type = Some(::buffa::types::borrow_str(&mut cur)?);
             }
             3u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::borrow_opt_str_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut view.output_type,
+                    &mut cur,
                 )?;
-                view.output_type = Some(::buffa::types::borrow_str(&mut cur)?);
             }
             4u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -6144,33 +5887,25 @@ impl<'a> ::buffa::MessageView<'a> for MethodDescriptorProtoView<'a> {
                 )?;
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                match view.options.as_mut() {
-                    Some(existing) => {
-                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
-                    }
-                    None => {
-                        view.options = ::buffa::MessageFieldView::set(
-                            <super::super::__buffa::view::MethodOptionsView as ::buffa::MessageView>::decode_view_ctx(
-                                sub,
-                                __sub_ctx,
-                            )?,
-                        );
-                    }
-                }
+                ::buffa::MessageView::merge_into_view(
+                    view.options.get_or_insert_default(),
+                    sub,
+                    __sub_ctx,
+                )?;
             }
             5u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_bool_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.client_streaming,
+                    &mut cur,
                 )?;
-                view.client_streaming = Some(::buffa::types::decode_bool(&mut cur)?);
             }
             6u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_bool_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.server_streaming,
+                    &mut cur,
                 )?;
-                view.server_streaming = Some(::buffa::types::decode_bool(&mut cur)?);
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -6234,13 +5969,10 @@ impl<'a> ::buffa::ViewEncode<'a> for MethodDescriptorProtoView<'a> {
         if let Some(ref v) = self.output_type {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
-        if self.options.is_set() {
+        if let ::core::option::Option::Some(__v) = self.options.as_option() {
             let __slot = __cache.reserve();
-            let inner_size = self.options.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            let inner_size = __v.compute_size(__cache);
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         if self.client_streaming.is_some() {
             size += 1u64 + ::buffa::types::BOOL_ENCODED_LEN as u64;
@@ -6268,13 +6000,9 @@ impl<'a> ::buffa::ViewEncode<'a> for MethodDescriptorProtoView<'a> {
         if let Some(ref v) = self.output_type {
             ::buffa::types::put_string_field(3u32, v, buf);
         }
-        if self.options.is_set() {
-            ::buffa::types::put_len_delimited_header(
-                4u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            self.options.write_to(__cache, buf);
+        if let ::core::option::Option::Some(__v) = self.options.as_option() {
+            ::buffa::types::put_submessage_header(4u32, __cache, buf);
+            __v.write_to(__cache, buf);
         }
         if let Some(v) = self.client_streaming {
             ::buffa::types::put_bool_field(5u32, v, buf);
@@ -6441,7 +6169,9 @@ impl MethodDescriptorProtoOwnedView {
     #[must_use]
     pub fn options(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::MethodOptionsView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<
+        super::super::__buffa::view::MethodOptionsView<'_>,
+    > {
         &self.0.reborrow().options
     }
     /// Identifies if client streams multiple client messages
@@ -6648,7 +6378,7 @@ pub struct FileOptionsView<'a> {
     /// developers should rely on the protoreflect APIs for their client language.
     ///
     /// Field 50: `features`
-    pub features: ::buffa::MessageFieldView<
+    pub features: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::FeatureSetView<'a>,
     >,
     /// The parser stores options it doesn't recognize here.
@@ -6663,6 +6393,15 @@ pub struct FileOptionsView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for FileOptionsView<'a> {
     type Owned = super::super::FileOptions;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -6692,43 +6431,39 @@ impl<'a> ::buffa::MessageView<'a> for FileOptionsView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::borrow_opt_str_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut view.java_package,
+                    &mut cur,
                 )?;
-                view.java_package = Some(::buffa::types::borrow_str(&mut cur)?);
             }
             8u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::borrow_opt_str_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut view.java_outer_classname,
+                    &mut cur,
                 )?;
-                view.java_outer_classname = Some(::buffa::types::borrow_str(&mut cur)?);
             }
             10u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_bool_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.java_multiple_files,
+                    &mut cur,
                 )?;
-                view.java_multiple_files = Some(::buffa::types::decode_bool(&mut cur)?);
             }
             20u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_bool_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.java_generate_equals_and_hash,
+                    &mut cur,
                 )?;
-                view.java_generate_equals_and_hash = Some(
-                    ::buffa::types::decode_bool(&mut cur)?,
-                );
             }
             27u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_bool_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.java_string_check_utf8,
+                    &mut cur,
                 )?;
-                view.java_string_check_utf8 = Some(
-                    ::buffa::types::decode_bool(&mut cur)?,
-                );
             }
             9u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -6747,99 +6482,95 @@ impl<'a> ::buffa::MessageView<'a> for FileOptionsView<'a> {
                 }
             }
             11u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::borrow_opt_str_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut view.go_package,
+                    &mut cur,
                 )?;
-                view.go_package = Some(::buffa::types::borrow_str(&mut cur)?);
             }
             16u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_bool_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.cc_generic_services,
+                    &mut cur,
                 )?;
-                view.cc_generic_services = Some(::buffa::types::decode_bool(&mut cur)?);
             }
             17u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_bool_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.java_generic_services,
+                    &mut cur,
                 )?;
-                view.java_generic_services = Some(
-                    ::buffa::types::decode_bool(&mut cur)?,
-                );
             }
             18u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_bool_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.py_generic_services,
+                    &mut cur,
                 )?;
-                view.py_generic_services = Some(::buffa::types::decode_bool(&mut cur)?);
             }
             23u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_bool_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.deprecated,
+                    &mut cur,
                 )?;
-                view.deprecated = Some(::buffa::types::decode_bool(&mut cur)?);
             }
             31u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_bool_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.cc_enable_arenas,
+                    &mut cur,
                 )?;
-                view.cc_enable_arenas = Some(::buffa::types::decode_bool(&mut cur)?);
             }
             36u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::borrow_opt_str_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut view.objc_class_prefix,
+                    &mut cur,
                 )?;
-                view.objc_class_prefix = Some(::buffa::types::borrow_str(&mut cur)?);
             }
             37u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::borrow_opt_str_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut view.csharp_namespace,
+                    &mut cur,
                 )?;
-                view.csharp_namespace = Some(::buffa::types::borrow_str(&mut cur)?);
             }
             39u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::borrow_opt_str_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut view.swift_prefix,
+                    &mut cur,
                 )?;
-                view.swift_prefix = Some(::buffa::types::borrow_str(&mut cur)?);
             }
             40u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::borrow_opt_str_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut view.php_class_prefix,
+                    &mut cur,
                 )?;
-                view.php_class_prefix = Some(::buffa::types::borrow_str(&mut cur)?);
             }
             41u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::borrow_opt_str_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut view.php_namespace,
+                    &mut cur,
                 )?;
-                view.php_namespace = Some(::buffa::types::borrow_str(&mut cur)?);
             }
             44u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::borrow_opt_str_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut view.php_metadata_namespace,
+                    &mut cur,
                 )?;
-                view.php_metadata_namespace = Some(
-                    ::buffa::types::borrow_str(&mut cur)?,
-                );
             }
             45u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::borrow_opt_str_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut view.ruby_package,
+                    &mut cur,
                 )?;
-                view.ruby_package = Some(::buffa::types::borrow_str(&mut cur)?);
             }
             50u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -6848,19 +6579,11 @@ impl<'a> ::buffa::MessageView<'a> for FileOptionsView<'a> {
                 )?;
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                match view.features.as_mut() {
-                    Some(existing) => {
-                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
-                    }
-                    None => {
-                        view.features = ::buffa::MessageFieldView::set(
-                            <super::super::__buffa::view::FeatureSetView as ::buffa::MessageView>::decode_view_ctx(
-                                sub,
-                                __sub_ctx,
-                            )?,
-                        );
-                    }
-                }
+                ::buffa::MessageView::merge_into_view(
+                    view.features.get_or_insert_default(),
+                    sub,
+                    __sub_ctx,
+                )?;
             }
             999u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -6874,13 +6597,9 @@ impl<'a> ::buffa::MessageView<'a> for FileOptionsView<'a> {
                         super::super::__buffa::view::UninterpretedOptionView,
                     >(),
                 )?;
-                view.uninterpreted_option
-                    .push(
-                        <super::super::__buffa::view::UninterpretedOptionView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::UninterpretedOptionView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.uninterpreted_option.push(__elem);
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -7005,21 +6724,15 @@ impl<'a> ::buffa::ViewEncode<'a> for FileOptionsView<'a> {
         if let Some(ref v) = self.ruby_package {
             size += 2u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
-        if self.features.is_set() {
+        if let ::core::option::Option::Some(__v) = self.features.as_option() {
             let __slot = __cache.reserve();
-            let inner_size = self.features.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            let inner_size = __v.compute_size(__cache);
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.uninterpreted_option {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -7089,20 +6802,12 @@ impl<'a> ::buffa::ViewEncode<'a> for FileOptionsView<'a> {
         if let Some(ref v) = self.ruby_package {
             ::buffa::types::put_string_field(45u32, v, buf);
         }
-        if self.features.is_set() {
-            ::buffa::types::put_len_delimited_header(
-                50u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            self.features.write_to(__cache, buf);
+        if let ::core::option::Option::Some(__v) = self.features.as_option() {
+            ::buffa::types::put_submessage_header(50u32, __cache, buf);
+            __v.write_to(__cache, buf);
         }
         for v in &self.uninterpreted_option {
-            ::buffa::types::put_len_delimited_header(
-                999u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(999u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -7474,7 +7179,9 @@ impl FileOptionsOwnedView {
     #[must_use]
     pub fn features(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::FeatureSetView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<
+        super::super::__buffa::view::FeatureSetView<'_>,
+    > {
         &self.0.reborrow().features
     }
     /// The parser stores options it doesn't recognize here.
@@ -7607,7 +7314,7 @@ pub struct MessageOptionsView<'a> {
     /// developers should rely on the protoreflect APIs for their client language.
     ///
     /// Field 12: `features`
-    pub features: ::buffa::MessageFieldView<
+    pub features: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::FeatureSetView<'a>,
     >,
     /// The parser stores options it doesn't recognize here. See above.
@@ -7621,6 +7328,15 @@ pub struct MessageOptionsView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for MessageOptionsView<'a> {
     type Owned = super::super::MessageOptions;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -7650,45 +7366,39 @@ impl<'a> ::buffa::MessageView<'a> for MessageOptionsView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_bool_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.message_set_wire_format,
+                    &mut cur,
                 )?;
-                view.message_set_wire_format = Some(
-                    ::buffa::types::decode_bool(&mut cur)?,
-                );
             }
             2u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_bool_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.no_standard_descriptor_accessor,
+                    &mut cur,
                 )?;
-                view.no_standard_descriptor_accessor = Some(
-                    ::buffa::types::decode_bool(&mut cur)?,
-                );
             }
             3u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_bool_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.deprecated,
+                    &mut cur,
                 )?;
-                view.deprecated = Some(::buffa::types::decode_bool(&mut cur)?);
             }
             7u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_bool_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.map_entry,
+                    &mut cur,
                 )?;
-                view.map_entry = Some(::buffa::types::decode_bool(&mut cur)?);
             }
             11u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_bool_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.deprecated_legacy_json_field_conflicts,
+                    &mut cur,
                 )?;
-                view.deprecated_legacy_json_field_conflicts = Some(
-                    ::buffa::types::decode_bool(&mut cur)?,
-                );
             }
             12u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -7697,19 +7407,11 @@ impl<'a> ::buffa::MessageView<'a> for MessageOptionsView<'a> {
                 )?;
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                match view.features.as_mut() {
-                    Some(existing) => {
-                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
-                    }
-                    None => {
-                        view.features = ::buffa::MessageFieldView::set(
-                            <super::super::__buffa::view::FeatureSetView as ::buffa::MessageView>::decode_view_ctx(
-                                sub,
-                                __sub_ctx,
-                            )?,
-                        );
-                    }
-                }
+                ::buffa::MessageView::merge_into_view(
+                    view.features.get_or_insert_default(),
+                    sub,
+                    __sub_ctx,
+                )?;
             }
             999u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -7723,13 +7425,9 @@ impl<'a> ::buffa::MessageView<'a> for MessageOptionsView<'a> {
                         super::super::__buffa::view::UninterpretedOptionView,
                     >(),
                 )?;
-                view.uninterpreted_option
-                    .push(
-                        <super::super::__buffa::view::UninterpretedOptionView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::UninterpretedOptionView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.uninterpreted_option.push(__elem);
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -7799,21 +7497,15 @@ impl<'a> ::buffa::ViewEncode<'a> for MessageOptionsView<'a> {
         if self.deprecated_legacy_json_field_conflicts.is_some() {
             size += 1u64 + ::buffa::types::BOOL_ENCODED_LEN as u64;
         }
-        if self.features.is_set() {
+        if let ::core::option::Option::Some(__v) = self.features.as_option() {
             let __slot = __cache.reserve();
-            let inner_size = self.features.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            let inner_size = __v.compute_size(__cache);
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.uninterpreted_option {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -7841,20 +7533,12 @@ impl<'a> ::buffa::ViewEncode<'a> for MessageOptionsView<'a> {
         if let Some(v) = self.deprecated_legacy_json_field_conflicts {
             ::buffa::types::put_bool_field(11u32, v, buf);
         }
-        if self.features.is_set() {
-            ::buffa::types::put_len_delimited_header(
-                12u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            self.features.write_to(__cache, buf);
+        if let ::core::option::Option::Some(__v) = self.features.as_option() {
+            ::buffa::types::put_submessage_header(12u32, __cache, buf);
+            __v.write_to(__cache, buf);
         }
         for v in &self.uninterpreted_option {
-            ::buffa::types::put_len_delimited_header(
-                999u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(999u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -8100,7 +7784,9 @@ impl MessageOptionsOwnedView {
     #[must_use]
     pub fn features(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::FeatureSetView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<
+        super::super::__buffa::view::FeatureSetView<'_>,
+    > {
         &self.0.reborrow().features
     }
     /// The parser stores options it doesn't recognize here. See above.
@@ -8249,11 +7935,11 @@ pub struct FieldOptionsView<'a> {
     /// developers should rely on the protoreflect APIs for their client language.
     ///
     /// Field 21: `features`
-    pub features: ::buffa::MessageFieldView<
+    pub features: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::FeatureSetView<'a>,
     >,
     /// Field 22: `feature_support`
-    pub feature_support: ::buffa::MessageFieldView<
+    pub feature_support: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::field_options::FeatureSupportView<'a>,
     >,
     /// The parser stores options it doesn't recognize here. See above.
@@ -8267,6 +7953,15 @@ pub struct FieldOptionsView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for FieldOptionsView<'a> {
     type Owned = super::super::FieldOptions;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -8312,11 +8007,7 @@ impl<'a> ::buffa::MessageView<'a> for FieldOptionsView<'a> {
                 }
             }
             2u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.packed = Some(::buffa::types::decode_bool(&mut cur)?);
+                ::buffa::types::merge_opt_bool_field(tag, &mut view.packed, &mut cur)?;
             }
             6u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -8335,39 +8026,31 @@ impl<'a> ::buffa::MessageView<'a> for FieldOptionsView<'a> {
                 }
             }
             5u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.lazy = Some(::buffa::types::decode_bool(&mut cur)?);
+                ::buffa::types::merge_opt_bool_field(tag, &mut view.lazy, &mut cur)?;
             }
             15u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_bool_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.unverified_lazy,
+                    &mut cur,
                 )?;
-                view.unverified_lazy = Some(::buffa::types::decode_bool(&mut cur)?);
             }
             3u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_bool_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.deprecated,
+                    &mut cur,
                 )?;
-                view.deprecated = Some(::buffa::types::decode_bool(&mut cur)?);
             }
             10u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.weak = Some(::buffa::types::decode_bool(&mut cur)?);
+                ::buffa::types::merge_opt_bool_field(tag, &mut view.weak, &mut cur)?;
             }
             16u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_bool_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.debug_redact,
+                    &mut cur,
                 )?;
-                view.debug_redact = Some(::buffa::types::decode_bool(&mut cur)?);
             }
             17u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -8392,19 +8075,11 @@ impl<'a> ::buffa::MessageView<'a> for FieldOptionsView<'a> {
                 )?;
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                match view.features.as_mut() {
-                    Some(existing) => {
-                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
-                    }
-                    None => {
-                        view.features = ::buffa::MessageFieldView::set(
-                            <super::super::__buffa::view::FeatureSetView as ::buffa::MessageView>::decode_view_ctx(
-                                sub,
-                                __sub_ctx,
-                            )?,
-                        );
-                    }
-                }
+                ::buffa::MessageView::merge_into_view(
+                    view.features.get_or_insert_default(),
+                    sub,
+                    __sub_ctx,
+                )?;
             }
             22u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -8413,19 +8088,11 @@ impl<'a> ::buffa::MessageView<'a> for FieldOptionsView<'a> {
                 )?;
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                match view.feature_support.as_mut() {
-                    Some(existing) => {
-                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
-                    }
-                    None => {
-                        view.feature_support = ::buffa::MessageFieldView::set(
-                            <super::super::__buffa::view::field_options::FeatureSupportView as ::buffa::MessageView>::decode_view_ctx(
-                                sub,
-                                __sub_ctx,
-                            )?,
-                        );
-                    }
-                }
+                ::buffa::MessageView::merge_into_view(
+                    view.feature_support.get_or_insert_default(),
+                    sub,
+                    __sub_ctx,
+                )?;
             }
             19u32 => {
                 if tag.wire_type() == ::buffa::encoding::WireType::LengthDelimited {
@@ -8475,13 +8142,9 @@ impl<'a> ::buffa::MessageView<'a> for FieldOptionsView<'a> {
                         super::super::__buffa::view::field_options::EditionDefaultView,
                     >(),
                 )?;
-                view.edition_defaults
-                    .push(
-                        <super::super::__buffa::view::field_options::EditionDefaultView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::field_options::EditionDefaultView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.edition_defaults.push(__elem);
             }
             999u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -8495,13 +8158,9 @@ impl<'a> ::buffa::MessageView<'a> for FieldOptionsView<'a> {
                         super::super::__buffa::view::UninterpretedOptionView,
                     >(),
                 )?;
-                view.uninterpreted_option
-                    .push(
-                        <super::super::__buffa::view::UninterpretedOptionView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::UninterpretedOptionView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.uninterpreted_option.push(__elem);
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -8607,34 +8266,22 @@ impl<'a> ::buffa::ViewEncode<'a> for FieldOptionsView<'a> {
         for v in &self.edition_defaults {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
-        if self.features.is_set() {
+        if let ::core::option::Option::Some(__v) = self.features.as_option() {
             let __slot = __cache.reserve();
-            let inner_size = self.features.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            let inner_size = __v.compute_size(__cache);
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
-        if self.feature_support.is_set() {
+        if let ::core::option::Option::Some(__v) = self.feature_support.as_option() {
             let __slot = __cache.reserve();
-            let inner_size = self.feature_support.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            let inner_size = __v.compute_size(__cache);
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.uninterpreted_option {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -8678,35 +8325,19 @@ impl<'a> ::buffa::ViewEncode<'a> for FieldOptionsView<'a> {
             ::buffa::types::put_int32_field(19u32, v.to_i32(), buf);
         }
         for v in &self.edition_defaults {
-            ::buffa::types::put_len_delimited_header(
-                20u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(20u32, __cache, buf);
             v.write_to(__cache, buf);
         }
-        if self.features.is_set() {
-            ::buffa::types::put_len_delimited_header(
-                21u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            self.features.write_to(__cache, buf);
+        if let ::core::option::Option::Some(__v) = self.features.as_option() {
+            ::buffa::types::put_submessage_header(21u32, __cache, buf);
+            __v.write_to(__cache, buf);
         }
-        if self.feature_support.is_set() {
-            ::buffa::types::put_len_delimited_header(
-                22u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            self.feature_support.write_to(__cache, buf);
+        if let ::core::option::Option::Some(__v) = self.feature_support.as_option() {
+            ::buffa::types::put_submessage_header(22u32, __cache, buf);
+            __v.write_to(__cache, buf);
         }
         for v in &self.uninterpreted_option {
-            ::buffa::types::put_len_delimited_header(
-                999u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(999u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -9020,14 +8651,16 @@ impl FieldOptionsOwnedView {
     #[must_use]
     pub fn features(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::FeatureSetView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<
+        super::super::__buffa::view::FeatureSetView<'_>,
+    > {
         &self.0.reborrow().features
     }
     /// Field 22: `feature_support`
     #[must_use]
     pub fn feature_support(
         &self,
-    ) -> &::buffa::MessageFieldView<
+    ) -> &::buffa::InlineMessageFieldView<
         super::super::__buffa::view::field_options::FeatureSupportView<'_>,
     > {
         &self.0.reborrow().feature_support
@@ -9091,6 +8724,15 @@ pub mod field_options {
     }
     impl<'a> ::buffa::MessageView<'a> for EditionDefaultView<'a> {
         type Owned = super::super::super::field_options::EditionDefault;
+        #[inline]
+        fn decode_view_ctx(
+            buf: &'a [u8],
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+            let mut view = <Self as ::core::default::Default>::default();
+            ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+            ::core::result::Result::Ok(view)
+        }
         fn decode_view(
             buf: &'a [u8],
         ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
@@ -9138,11 +8780,11 @@ pub mod field_options {
                     }
                 }
                 2u32 => {
-                    ::buffa::encoding::check_wire_type(
+                    ::buffa::types::borrow_opt_str_field(
                         tag,
-                        ::buffa::encoding::WireType::LengthDelimited,
+                        &mut view.value,
+                        &mut cur,
                     )?;
-                    view.value = Some(::buffa::types::borrow_str(&mut cur)?);
                 }
                 _ => {
                     ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -9408,6 +9050,15 @@ pub mod field_options {
     }
     impl<'a> ::buffa::MessageView<'a> for FeatureSupportView<'a> {
         type Owned = super::super::super::field_options::FeatureSupport;
+        #[inline]
+        fn decode_view_ctx(
+            buf: &'a [u8],
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+            let mut view = <Self as ::core::default::Default>::default();
+            ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+            ::core::result::Result::Ok(view)
+        }
         fn decode_view(
             buf: &'a [u8],
         ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
@@ -9471,13 +9122,11 @@ pub mod field_options {
                     }
                 }
                 3u32 => {
-                    ::buffa::encoding::check_wire_type(
+                    ::buffa::types::borrow_opt_str_field(
                         tag,
-                        ::buffa::encoding::WireType::LengthDelimited,
+                        &mut view.deprecation_warning,
+                        &mut cur,
                     )?;
-                    view.deprecation_warning = Some(
-                        ::buffa::types::borrow_str(&mut cur)?,
-                    );
                 }
                 4u32 => {
                     ::buffa::encoding::check_wire_type(
@@ -9795,7 +9444,7 @@ pub struct OneofOptionsView<'a> {
     /// developers should rely on the protoreflect APIs for their client language.
     ///
     /// Field 1: `features`
-    pub features: ::buffa::MessageFieldView<
+    pub features: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::FeatureSetView<'a>,
     >,
     /// The parser stores options it doesn't recognize here. See above.
@@ -9809,6 +9458,15 @@ pub struct OneofOptionsView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for OneofOptionsView<'a> {
     type Owned = super::super::OneofOptions;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -9844,19 +9502,11 @@ impl<'a> ::buffa::MessageView<'a> for OneofOptionsView<'a> {
                 )?;
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                match view.features.as_mut() {
-                    Some(existing) => {
-                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
-                    }
-                    None => {
-                        view.features = ::buffa::MessageFieldView::set(
-                            <super::super::__buffa::view::FeatureSetView as ::buffa::MessageView>::decode_view_ctx(
-                                sub,
-                                __sub_ctx,
-                            )?,
-                        );
-                    }
-                }
+                ::buffa::MessageView::merge_into_view(
+                    view.features.get_or_insert_default(),
+                    sub,
+                    __sub_ctx,
+                )?;
             }
             999u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -9870,13 +9520,9 @@ impl<'a> ::buffa::MessageView<'a> for OneofOptionsView<'a> {
                         super::super::__buffa::view::UninterpretedOptionView,
                     >(),
                 )?;
-                view.uninterpreted_option
-                    .push(
-                        <super::super::__buffa::view::UninterpretedOptionView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::UninterpretedOptionView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.uninterpreted_option.push(__elem);
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -9925,21 +9571,15 @@ impl<'a> ::buffa::ViewEncode<'a> for OneofOptionsView<'a> {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
         let mut size = 0u64;
-        if self.features.is_set() {
+        if let ::core::option::Option::Some(__v) = self.features.as_option() {
             let __slot = __cache.reserve();
-            let inner_size = self.features.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            let inner_size = __v.compute_size(__cache);
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.uninterpreted_option {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -9952,20 +9592,12 @@ impl<'a> ::buffa::ViewEncode<'a> for OneofOptionsView<'a> {
     ) {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
-        if self.features.is_set() {
-            ::buffa::types::put_len_delimited_header(
-                1u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            self.features.write_to(__cache, buf);
+        if let ::core::option::Option::Some(__v) = self.features.as_option() {
+            ::buffa::types::put_submessage_header(1u32, __cache, buf);
+            __v.write_to(__cache, buf);
         }
         for v in &self.uninterpreted_option {
-            ::buffa::types::put_len_delimited_header(
-                999u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(999u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -10098,7 +9730,9 @@ impl OneofOptionsOwnedView {
     #[must_use]
     pub fn features(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::FeatureSetView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<
+        super::super::__buffa::view::FeatureSetView<'_>,
+    > {
         &self.0.reborrow().features
     }
     /// The parser stores options it doesn't recognize here. See above.
@@ -10174,7 +9808,7 @@ pub struct EnumOptionsView<'a> {
     /// developers should rely on the protoreflect APIs for their client language.
     ///
     /// Field 7: `features`
-    pub features: ::buffa::MessageFieldView<
+    pub features: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::FeatureSetView<'a>,
     >,
     /// The parser stores options it doesn't recognize here. See above.
@@ -10188,6 +9822,15 @@ pub struct EnumOptionsView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for EnumOptionsView<'a> {
     type Owned = super::super::EnumOptions;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -10217,27 +9860,25 @@ impl<'a> ::buffa::MessageView<'a> for EnumOptionsView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             2u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_bool_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.allow_alias,
+                    &mut cur,
                 )?;
-                view.allow_alias = Some(::buffa::types::decode_bool(&mut cur)?);
             }
             3u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_bool_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.deprecated,
+                    &mut cur,
                 )?;
-                view.deprecated = Some(::buffa::types::decode_bool(&mut cur)?);
             }
             6u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_bool_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.deprecated_legacy_json_field_conflicts,
+                    &mut cur,
                 )?;
-                view.deprecated_legacy_json_field_conflicts = Some(
-                    ::buffa::types::decode_bool(&mut cur)?,
-                );
             }
             7u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -10246,19 +9887,11 @@ impl<'a> ::buffa::MessageView<'a> for EnumOptionsView<'a> {
                 )?;
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                match view.features.as_mut() {
-                    Some(existing) => {
-                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
-                    }
-                    None => {
-                        view.features = ::buffa::MessageFieldView::set(
-                            <super::super::__buffa::view::FeatureSetView as ::buffa::MessageView>::decode_view_ctx(
-                                sub,
-                                __sub_ctx,
-                            )?,
-                        );
-                    }
-                }
+                ::buffa::MessageView::merge_into_view(
+                    view.features.get_or_insert_default(),
+                    sub,
+                    __sub_ctx,
+                )?;
             }
             999u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -10272,13 +9905,9 @@ impl<'a> ::buffa::MessageView<'a> for EnumOptionsView<'a> {
                         super::super::__buffa::view::UninterpretedOptionView,
                     >(),
                 )?;
-                view.uninterpreted_option
-                    .push(
-                        <super::super::__buffa::view::UninterpretedOptionView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::UninterpretedOptionView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.uninterpreted_option.push(__elem);
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -10340,21 +9969,15 @@ impl<'a> ::buffa::ViewEncode<'a> for EnumOptionsView<'a> {
         if self.deprecated_legacy_json_field_conflicts.is_some() {
             size += 1u64 + ::buffa::types::BOOL_ENCODED_LEN as u64;
         }
-        if self.features.is_set() {
+        if let ::core::option::Option::Some(__v) = self.features.as_option() {
             let __slot = __cache.reserve();
-            let inner_size = self.features.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            let inner_size = __v.compute_size(__cache);
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.uninterpreted_option {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -10376,20 +9999,12 @@ impl<'a> ::buffa::ViewEncode<'a> for EnumOptionsView<'a> {
         if let Some(v) = self.deprecated_legacy_json_field_conflicts {
             ::buffa::types::put_bool_field(6u32, v, buf);
         }
-        if self.features.is_set() {
-            ::buffa::types::put_len_delimited_header(
-                7u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            self.features.write_to(__cache, buf);
+        if let ::core::option::Option::Some(__v) = self.features.as_option() {
+            ::buffa::types::put_submessage_header(7u32, __cache, buf);
+            __v.write_to(__cache, buf);
         }
         for v in &self.uninterpreted_option {
-            ::buffa::types::put_len_delimited_header(
-                999u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(999u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -10565,7 +10180,9 @@ impl EnumOptionsOwnedView {
     #[must_use]
     pub fn features(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::FeatureSetView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<
+        super::super::__buffa::view::FeatureSetView<'_>,
+    > {
         &self.0.reborrow().features
     }
     /// The parser stores options it doesn't recognize here. See above.
@@ -10627,7 +10244,7 @@ pub struct EnumValueOptionsView<'a> {
     /// developers should rely on the protoreflect APIs for their client language.
     ///
     /// Field 2: `features`
-    pub features: ::buffa::MessageFieldView<
+    pub features: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::FeatureSetView<'a>,
     >,
     /// Indicate that fields annotated with this enum value should not be printed
@@ -10639,7 +10256,7 @@ pub struct EnumValueOptionsView<'a> {
     /// Information about the support window of a feature value.
     ///
     /// Field 4: `feature_support`
-    pub feature_support: ::buffa::MessageFieldView<
+    pub feature_support: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::field_options::FeatureSupportView<'a>,
     >,
     /// The parser stores options it doesn't recognize here. See above.
@@ -10653,6 +10270,15 @@ pub struct EnumValueOptionsView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for EnumValueOptionsView<'a> {
     type Owned = super::super::EnumValueOptions;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -10682,11 +10308,11 @@ impl<'a> ::buffa::MessageView<'a> for EnumValueOptionsView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_bool_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.deprecated,
+                    &mut cur,
                 )?;
-                view.deprecated = Some(::buffa::types::decode_bool(&mut cur)?);
             }
             2u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -10695,26 +10321,18 @@ impl<'a> ::buffa::MessageView<'a> for EnumValueOptionsView<'a> {
                 )?;
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                match view.features.as_mut() {
-                    Some(existing) => {
-                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
-                    }
-                    None => {
-                        view.features = ::buffa::MessageFieldView::set(
-                            <super::super::__buffa::view::FeatureSetView as ::buffa::MessageView>::decode_view_ctx(
-                                sub,
-                                __sub_ctx,
-                            )?,
-                        );
-                    }
-                }
+                ::buffa::MessageView::merge_into_view(
+                    view.features.get_or_insert_default(),
+                    sub,
+                    __sub_ctx,
+                )?;
             }
             3u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_bool_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.debug_redact,
+                    &mut cur,
                 )?;
-                view.debug_redact = Some(::buffa::types::decode_bool(&mut cur)?);
             }
             4u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -10723,19 +10341,11 @@ impl<'a> ::buffa::MessageView<'a> for EnumValueOptionsView<'a> {
                 )?;
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                match view.feature_support.as_mut() {
-                    Some(existing) => {
-                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
-                    }
-                    None => {
-                        view.feature_support = ::buffa::MessageFieldView::set(
-                            <super::super::__buffa::view::field_options::FeatureSupportView as ::buffa::MessageView>::decode_view_ctx(
-                                sub,
-                                __sub_ctx,
-                            )?,
-                        );
-                    }
-                }
+                ::buffa::MessageView::merge_into_view(
+                    view.feature_support.get_or_insert_default(),
+                    sub,
+                    __sub_ctx,
+                )?;
             }
             999u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -10749,13 +10359,9 @@ impl<'a> ::buffa::MessageView<'a> for EnumValueOptionsView<'a> {
                         super::super::__buffa::view::UninterpretedOptionView,
                     >(),
                 )?;
-                view.uninterpreted_option
-                    .push(
-                        <super::super::__buffa::view::UninterpretedOptionView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::UninterpretedOptionView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.uninterpreted_option.push(__elem);
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -10818,32 +10424,23 @@ impl<'a> ::buffa::ViewEncode<'a> for EnumValueOptionsView<'a> {
         if self.deprecated.is_some() {
             size += 1u64 + ::buffa::types::BOOL_ENCODED_LEN as u64;
         }
-        if self.features.is_set() {
+        if let ::core::option::Option::Some(__v) = self.features.as_option() {
             let __slot = __cache.reserve();
-            let inner_size = self.features.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            let inner_size = __v.compute_size(__cache);
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         if self.debug_redact.is_some() {
             size += 1u64 + ::buffa::types::BOOL_ENCODED_LEN as u64;
         }
-        if self.feature_support.is_set() {
+        if let ::core::option::Option::Some(__v) = self.feature_support.as_option() {
             let __slot = __cache.reserve();
-            let inner_size = self.feature_support.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            let inner_size = __v.compute_size(__cache);
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.uninterpreted_option {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -10859,31 +10456,19 @@ impl<'a> ::buffa::ViewEncode<'a> for EnumValueOptionsView<'a> {
         if let Some(v) = self.deprecated {
             ::buffa::types::put_bool_field(1u32, v, buf);
         }
-        if self.features.is_set() {
-            ::buffa::types::put_len_delimited_header(
-                2u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            self.features.write_to(__cache, buf);
+        if let ::core::option::Option::Some(__v) = self.features.as_option() {
+            ::buffa::types::put_submessage_header(2u32, __cache, buf);
+            __v.write_to(__cache, buf);
         }
         if let Some(v) = self.debug_redact {
             ::buffa::types::put_bool_field(3u32, v, buf);
         }
-        if self.feature_support.is_set() {
-            ::buffa::types::put_len_delimited_header(
-                4u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            self.feature_support.write_to(__cache, buf);
+        if let ::core::option::Option::Some(__v) = self.feature_support.as_option() {
+            ::buffa::types::put_submessage_header(4u32, __cache, buf);
+            __v.write_to(__cache, buf);
         }
         for v in &self.uninterpreted_option {
-            ::buffa::types::put_len_delimited_header(
-                999u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(999u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -11039,7 +10624,9 @@ impl EnumValueOptionsOwnedView {
     #[must_use]
     pub fn features(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::FeatureSetView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<
+        super::super::__buffa::view::FeatureSetView<'_>,
+    > {
         &self.0.reborrow().features
     }
     /// Indicate that fields annotated with this enum value should not be printed
@@ -11057,7 +10644,7 @@ impl EnumValueOptionsOwnedView {
     #[must_use]
     pub fn feature_support(
         &self,
-    ) -> &::buffa::MessageFieldView<
+    ) -> &::buffa::InlineMessageFieldView<
         super::super::__buffa::view::field_options::FeatureSupportView<'_>,
     > {
         &self.0.reborrow().feature_support
@@ -11114,7 +10701,7 @@ pub struct ServiceOptionsView<'a> {
     /// developers should rely on the protoreflect APIs for their client language.
     ///
     /// Field 34: `features`
-    pub features: ::buffa::MessageFieldView<
+    pub features: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::FeatureSetView<'a>,
     >,
     /// Note:  Field numbers 1 through 32 are reserved for Google's internal RPC
@@ -11140,6 +10727,15 @@ pub struct ServiceOptionsView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for ServiceOptionsView<'a> {
     type Owned = super::super::ServiceOptions;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -11175,26 +10771,18 @@ impl<'a> ::buffa::MessageView<'a> for ServiceOptionsView<'a> {
                 )?;
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                match view.features.as_mut() {
-                    Some(existing) => {
-                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
-                    }
-                    None => {
-                        view.features = ::buffa::MessageFieldView::set(
-                            <super::super::__buffa::view::FeatureSetView as ::buffa::MessageView>::decode_view_ctx(
-                                sub,
-                                __sub_ctx,
-                            )?,
-                        );
-                    }
-                }
+                ::buffa::MessageView::merge_into_view(
+                    view.features.get_or_insert_default(),
+                    sub,
+                    __sub_ctx,
+                )?;
             }
             33u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_bool_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.deprecated,
+                    &mut cur,
                 )?;
-                view.deprecated = Some(::buffa::types::decode_bool(&mut cur)?);
             }
             999u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -11208,13 +10796,9 @@ impl<'a> ::buffa::MessageView<'a> for ServiceOptionsView<'a> {
                         super::super::__buffa::view::UninterpretedOptionView,
                     >(),
                 )?;
-                view.uninterpreted_option
-                    .push(
-                        <super::super::__buffa::view::UninterpretedOptionView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::UninterpretedOptionView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.uninterpreted_option.push(__elem);
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -11267,21 +10851,15 @@ impl<'a> ::buffa::ViewEncode<'a> for ServiceOptionsView<'a> {
         if self.deprecated.is_some() {
             size += 2u64 + ::buffa::types::BOOL_ENCODED_LEN as u64;
         }
-        if self.features.is_set() {
+        if let ::core::option::Option::Some(__v) = self.features.as_option() {
             let __slot = __cache.reserve();
-            let inner_size = self.features.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            let inner_size = __v.compute_size(__cache);
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.uninterpreted_option {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -11297,20 +10875,12 @@ impl<'a> ::buffa::ViewEncode<'a> for ServiceOptionsView<'a> {
         if let Some(v) = self.deprecated {
             ::buffa::types::put_bool_field(33u32, v, buf);
         }
-        if self.features.is_set() {
-            ::buffa::types::put_len_delimited_header(
-                34u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            self.features.write_to(__cache, buf);
+        if let ::core::option::Option::Some(__v) = self.features.as_option() {
+            ::buffa::types::put_submessage_header(34u32, __cache, buf);
+            __v.write_to(__cache, buf);
         }
         for v in &self.uninterpreted_option {
-            ::buffa::types::put_len_delimited_header(
-                999u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(999u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -11448,7 +11018,9 @@ impl ServiceOptionsOwnedView {
     #[must_use]
     pub fn features(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::FeatureSetView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<
+        super::super::__buffa::view::FeatureSetView<'_>,
+    > {
         &self.0.reborrow().features
     }
     /// Note:  Field numbers 1 through 32 are reserved for Google's internal RPC
@@ -11534,7 +11106,7 @@ pub struct MethodOptionsView<'a> {
     /// developers should rely on the protoreflect APIs for their client language.
     ///
     /// Field 35: `features`
-    pub features: ::buffa::MessageFieldView<
+    pub features: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::FeatureSetView<'a>,
     >,
     /// The parser stores options it doesn't recognize here. See above.
@@ -11548,6 +11120,15 @@ pub struct MethodOptionsView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for MethodOptionsView<'a> {
     type Owned = super::super::MethodOptions;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -11577,11 +11158,11 @@ impl<'a> ::buffa::MessageView<'a> for MethodOptionsView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             33u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_bool_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.deprecated,
+                    &mut cur,
                 )?;
-                view.deprecated = Some(::buffa::types::decode_bool(&mut cur)?);
             }
             34u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -11606,19 +11187,11 @@ impl<'a> ::buffa::MessageView<'a> for MethodOptionsView<'a> {
                 )?;
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                match view.features.as_mut() {
-                    Some(existing) => {
-                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
-                    }
-                    None => {
-                        view.features = ::buffa::MessageFieldView::set(
-                            <super::super::__buffa::view::FeatureSetView as ::buffa::MessageView>::decode_view_ctx(
-                                sub,
-                                __sub_ctx,
-                            )?,
-                        );
-                    }
-                }
+                ::buffa::MessageView::merge_into_view(
+                    view.features.get_or_insert_default(),
+                    sub,
+                    __sub_ctx,
+                )?;
             }
             999u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -11632,13 +11205,9 @@ impl<'a> ::buffa::MessageView<'a> for MethodOptionsView<'a> {
                         super::super::__buffa::view::UninterpretedOptionView,
                     >(),
                 )?;
-                view.uninterpreted_option
-                    .push(
-                        <super::super::__buffa::view::UninterpretedOptionView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::UninterpretedOptionView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.uninterpreted_option.push(__elem);
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -11695,21 +11264,15 @@ impl<'a> ::buffa::ViewEncode<'a> for MethodOptionsView<'a> {
         if let Some(ref v) = self.idempotency_level {
             size += 2u64 + ::buffa::types::int32_encoded_len(v.to_i32()) as u64;
         }
-        if self.features.is_set() {
+        if let ::core::option::Option::Some(__v) = self.features.as_option() {
             let __slot = __cache.reserve();
-            let inner_size = self.features.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            let inner_size = __v.compute_size(__cache);
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.uninterpreted_option {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -11728,20 +11291,12 @@ impl<'a> ::buffa::ViewEncode<'a> for MethodOptionsView<'a> {
         if let Some(ref v) = self.idempotency_level {
             ::buffa::types::put_int32_field(34u32, v.to_i32(), buf);
         }
-        if self.features.is_set() {
-            ::buffa::types::put_len_delimited_header(
-                35u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            self.features.write_to(__cache, buf);
+        if let ::core::option::Option::Some(__v) = self.features.as_option() {
+            ::buffa::types::put_submessage_header(35u32, __cache, buf);
+            __v.write_to(__cache, buf);
         }
         for v in &self.uninterpreted_option {
-            ::buffa::types::put_len_delimited_header(
-                999u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(999u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -11906,7 +11461,9 @@ impl MethodOptionsOwnedView {
     #[must_use]
     pub fn features(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::FeatureSetView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<
+        super::super::__buffa::view::FeatureSetView<'_>,
+    > {
         &self.0.reborrow().features
     }
     /// The parser stores options it doesn't recognize here. See above.
@@ -11985,6 +11542,15 @@ pub struct UninterpretedOptionView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for UninterpretedOptionView<'a> {
     type Owned = super::super::UninterpretedOption;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -12014,46 +11580,46 @@ impl<'a> ::buffa::MessageView<'a> for UninterpretedOptionView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             3u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::borrow_opt_str_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut view.identifier_value,
+                    &mut cur,
                 )?;
-                view.identifier_value = Some(::buffa::types::borrow_str(&mut cur)?);
             }
             4u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_uint64_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.positive_int_value,
+                    &mut cur,
                 )?;
-                view.positive_int_value = Some(::buffa::types::decode_uint64(&mut cur)?);
             }
             5u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_int64_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.negative_int_value,
+                    &mut cur,
                 )?;
-                view.negative_int_value = Some(::buffa::types::decode_int64(&mut cur)?);
             }
             6u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_double_field(
                     tag,
-                    ::buffa::encoding::WireType::Fixed64,
+                    &mut view.double_value,
+                    &mut cur,
                 )?;
-                view.double_value = Some(::buffa::types::decode_double(&mut cur)?);
             }
             7u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::borrow_opt_bytes_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut view.string_value,
+                    &mut cur,
                 )?;
-                view.string_value = Some(::buffa::types::borrow_bytes(&mut cur)?);
             }
             8u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::borrow_opt_str_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut view.aggregate_value,
+                    &mut cur,
                 )?;
-                view.aggregate_value = Some(::buffa::types::borrow_str(&mut cur)?);
             }
             2u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -12067,13 +11633,9 @@ impl<'a> ::buffa::MessageView<'a> for UninterpretedOptionView<'a> {
                         super::super::__buffa::view::uninterpreted_option::NamePartView,
                     >(),
                 )?;
-                view.name
-                    .push(
-                        <super::super::__buffa::view::uninterpreted_option::NamePartView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::uninterpreted_option::NamePartView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.name.push(__elem);
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -12128,10 +11690,7 @@ impl<'a> ::buffa::ViewEncode<'a> for UninterpretedOptionView<'a> {
         for v in &self.name {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         if let Some(ref v) = self.identifier_value {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
@@ -12163,11 +11722,7 @@ impl<'a> ::buffa::ViewEncode<'a> for UninterpretedOptionView<'a> {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
         for v in &self.name {
-            ::buffa::types::put_len_delimited_header(
-                2u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(2u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         if let Some(ref v) = self.identifier_value {
@@ -12452,6 +12007,15 @@ Distinguishes a field that was absent from one explicitly encoded with its defau
     }
     impl<'a> ::buffa::MessageView<'a> for NamePartView<'a> {
         type Owned = super::super::super::uninterpreted_option::NamePart;
+        #[inline]
+        fn decode_view_ctx(
+            buf: &'a [u8],
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+            let mut view = <Self as ::core::default::Default>::default();
+            ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+            ::core::result::Result::Ok(view)
+        }
         fn decode_view(
             buf: &'a [u8],
         ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
@@ -12483,19 +12047,19 @@ Distinguishes a field that was absent from one explicitly encoded with its defau
             let mut cur = cur;
             match tag.field_number() {
                 1u32 => {
-                    ::buffa::encoding::check_wire_type(
+                    ::buffa::types::borrow_str_field(
                         tag,
-                        ::buffa::encoding::WireType::LengthDelimited,
+                        &mut view.name_part,
+                        &mut cur,
                     )?;
-                    view.name_part = ::buffa::types::borrow_str(&mut cur)?;
                     view.__buffa_required_seen_0 |= 1u64;
                 }
                 2u32 => {
-                    ::buffa::encoding::check_wire_type(
+                    ::buffa::types::merge_bool_field(
                         tag,
-                        ::buffa::encoding::WireType::Varint,
+                        &mut view.is_extension,
+                        &mut cur,
                     )?;
-                    view.is_extension = ::buffa::types::decode_bool(&mut cur)?;
                     view.__buffa_required_seen_0 |= 2u64;
                 }
                 _ => {
@@ -12760,6 +12324,15 @@ pub struct FeatureSetView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for FeatureSetView<'a> {
     type Owned = super::super::FeatureSet;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -13284,6 +12857,15 @@ pub mod feature_set {
     }
     impl<'a> ::buffa::MessageView<'a> for VisibilityFeatureView<'a> {
         type Owned = super::super::super::feature_set::VisibilityFeature;
+        #[inline]
+        fn decode_view_ctx(
+            buf: &'a [u8],
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+            let mut view = <Self as ::core::default::Default>::default();
+            ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+            ::core::result::Result::Ok(view)
+        }
         fn decode_view(
             buf: &'a [u8],
         ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
@@ -13544,6 +13126,15 @@ pub struct FeatureSetDefaultsView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for FeatureSetDefaultsView<'a> {
     type Owned = super::super::FeatureSetDefaults;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -13616,13 +13207,9 @@ impl<'a> ::buffa::MessageView<'a> for FeatureSetDefaultsView<'a> {
                         super::super::__buffa::view::feature_set_defaults::FeatureSetEditionDefaultView,
                     >(),
                 )?;
-                view.defaults
-                    .push(
-                        <super::super::__buffa::view::feature_set_defaults::FeatureSetEditionDefaultView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::feature_set_defaults::FeatureSetEditionDefaultView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.defaults.push(__elem);
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -13667,10 +13254,7 @@ impl<'a> ::buffa::ViewEncode<'a> for FeatureSetDefaultsView<'a> {
         for v in &self.defaults {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         if let Some(ref v) = self.minimum_edition {
             size += 1u64 + ::buffa::types::int32_encoded_len(v.to_i32()) as u64;
@@ -13690,11 +13274,7 @@ impl<'a> ::buffa::ViewEncode<'a> for FeatureSetDefaultsView<'a> {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
         for v in &self.defaults {
-            ::buffa::types::put_len_delimited_header(
-                1u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(1u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         if let Some(ref v) = self.minimum_edition {
@@ -13911,19 +13491,36 @@ pub mod feature_set_defaults {
         /// Defaults of features that can be overridden in this edition.
         ///
         /// Field 4: `overridable_features`
-        pub overridable_features: ::buffa::MessageFieldView<
+        pub overridable_features: ::buffa::InlineMessageFieldView<
             super::super::super::__buffa::view::FeatureSetView<'a>,
         >,
         /// Defaults of features that can't be overridden in this edition.
         ///
         /// Field 5: `fixed_features`
-        pub fixed_features: ::buffa::MessageFieldView<
+        pub fixed_features: ::buffa::InlineMessageFieldView<
             super::super::super::__buffa::view::FeatureSetView<'a>,
         >,
         pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
     }
     impl<'a> ::buffa::MessageView<'a> for FeatureSetEditionDefaultView<'a> {
         type Owned = super::super::super::feature_set_defaults::FeatureSetEditionDefault;
+        #[inline]
+        fn decode_view_ctx(
+            buf: &'a [u8],
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+            let mut view = <Self as ::core::default::Default>::default();
+            ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+            ::core::result::Result::Ok(view)
+        }
+        #[inline]
+        fn merge_into_view(
+            &mut self,
+            buf: &'a [u8],
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            ::buffa::__private::merge_into_view_inline(self, buf, ctx)
+        }
         fn decode_view(
             buf: &'a [u8],
         ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
@@ -13977,23 +13574,11 @@ pub mod feature_set_defaults {
                     )?;
                     let __sub_ctx = ctx.descend()?;
                     let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                    match view.overridable_features.as_mut() {
-                        Some(existing) => {
-                            ::buffa::MessageView::merge_into_view(
-                                existing,
-                                sub,
-                                __sub_ctx,
-                            )?
-                        }
-                        None => {
-                            view.overridable_features = ::buffa::MessageFieldView::set(
-                                <super::super::super::__buffa::view::FeatureSetView as ::buffa::MessageView>::decode_view_ctx(
-                                    sub,
-                                    __sub_ctx,
-                                )?,
-                            );
-                        }
-                    }
+                    ::buffa::MessageView::merge_into_view(
+                        view.overridable_features.get_or_insert_default(),
+                        sub,
+                        __sub_ctx,
+                    )?;
                 }
                 5u32 => {
                     ::buffa::encoding::check_wire_type(
@@ -14002,23 +13587,11 @@ pub mod feature_set_defaults {
                     )?;
                     let __sub_ctx = ctx.descend()?;
                     let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                    match view.fixed_features.as_mut() {
-                        Some(existing) => {
-                            ::buffa::MessageView::merge_into_view(
-                                existing,
-                                sub,
-                                __sub_ctx,
-                            )?
-                        }
-                        None => {
-                            view.fixed_features = ::buffa::MessageFieldView::set(
-                                <super::super::super::__buffa::view::FeatureSetView as ::buffa::MessageView>::decode_view_ctx(
-                                    sub,
-                                    __sub_ctx,
-                                )?,
-                            );
-                        }
-                    }
+                    ::buffa::MessageView::merge_into_view(
+                        view.fixed_features.get_or_insert_default(),
+                        sub,
+                        __sub_ctx,
+                    )?;
                 }
                 _ => {
                     ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -14081,21 +13654,18 @@ pub mod feature_set_defaults {
             if let Some(ref v) = self.edition {
                 size += 1u64 + ::buffa::types::int32_encoded_len(v.to_i32()) as u64;
             }
-            if self.overridable_features.is_set() {
+            if let ::core::option::Option::Some(__v) = self
+                .overridable_features
+                .as_option()
+            {
                 let __slot = __cache.reserve();
-                let inner_size = self.overridable_features.compute_size(__cache);
-                __cache.set(__slot, inner_size);
-                size
-                    += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                        + inner_size as u64;
+                let inner_size = __v.compute_size(__cache);
+                size += 1u64 + __cache.record_submessage(__slot, inner_size);
             }
-            if self.fixed_features.is_set() {
+            if let ::core::option::Option::Some(__v) = self.fixed_features.as_option() {
                 let __slot = __cache.reserve();
-                let inner_size = self.fixed_features.compute_size(__cache);
-                __cache.set(__slot, inner_size);
-                size
-                    += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                        + inner_size as u64;
+                let inner_size = __v.compute_size(__cache);
+                size += 1u64 + __cache.record_submessage(__slot, inner_size);
             }
             size += self.__buffa_unknown_fields.encoded_len() as u64;
             ::buffa::saturate_size(size)
@@ -14111,21 +13681,16 @@ pub mod feature_set_defaults {
             if let Some(ref v) = self.edition {
                 ::buffa::types::put_int32_field(3u32, v.to_i32(), buf);
             }
-            if self.overridable_features.is_set() {
-                ::buffa::types::put_len_delimited_header(
-                    4u32,
-                    u64::from(__cache.consume_next()),
-                    buf,
-                );
-                self.overridable_features.write_to(__cache, buf);
+            if let ::core::option::Option::Some(__v) = self
+                .overridable_features
+                .as_option()
+            {
+                ::buffa::types::put_submessage_header(4u32, __cache, buf);
+                __v.write_to(__cache, buf);
             }
-            if self.fixed_features.is_set() {
-                ::buffa::types::put_len_delimited_header(
-                    5u32,
-                    u64::from(__cache.consume_next()),
-                    buf,
-                );
-                self.fixed_features.write_to(__cache, buf);
+            if let ::core::option::Option::Some(__v) = self.fixed_features.as_option() {
+                ::buffa::types::put_submessage_header(5u32, __cache, buf);
+                __v.write_to(__cache, buf);
             }
             self.__buffa_unknown_fields.write_to(buf);
         }
@@ -14280,7 +13845,7 @@ pub mod feature_set_defaults {
         #[must_use]
         pub fn overridable_features(
             &self,
-        ) -> &::buffa::MessageFieldView<
+        ) -> &::buffa::InlineMessageFieldView<
             super::super::super::__buffa::view::FeatureSetView<'_>,
         > {
             &self.0.reborrow().overridable_features
@@ -14291,7 +13856,7 @@ pub mod feature_set_defaults {
         #[must_use]
         pub fn fixed_features(
             &self,
-        ) -> &::buffa::MessageFieldView<
+        ) -> &::buffa::InlineMessageFieldView<
             super::super::super::__buffa::view::FeatureSetView<'_>,
         > {
             &self.0.reborrow().fixed_features
@@ -14395,6 +13960,15 @@ pub struct SourceCodeInfoView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for SourceCodeInfoView<'a> {
     type Owned = super::super::SourceCodeInfo;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -14435,13 +14009,9 @@ impl<'a> ::buffa::MessageView<'a> for SourceCodeInfoView<'a> {
                         super::super::__buffa::view::source_code_info::LocationView,
                     >(),
                 )?;
-                view.location
-                    .push(
-                        <super::super::__buffa::view::source_code_info::LocationView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::source_code_info::LocationView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.location.push(__elem);
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -14484,10 +14054,7 @@ impl<'a> ::buffa::ViewEncode<'a> for SourceCodeInfoView<'a> {
         for v in &self.location {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -14501,11 +14068,7 @@ impl<'a> ::buffa::ViewEncode<'a> for SourceCodeInfoView<'a> {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
         for v in &self.location {
-            ::buffa::types::put_len_delimited_header(
-                1u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(1u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -14817,6 +14380,15 @@ pub mod source_code_info {
     }
     impl<'a> ::buffa::MessageView<'a> for LocationView<'a> {
         type Owned = super::super::super::source_code_info::Location;
+        #[inline]
+        fn decode_view_ctx(
+            buf: &'a [u8],
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+            let mut view = <Self as ::core::default::Default>::default();
+            ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+            ::core::result::Result::Ok(view)
+        }
         fn decode_view(
             buf: &'a [u8],
         ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
@@ -14848,18 +14420,18 @@ pub mod source_code_info {
             let mut cur = cur;
             match tag.field_number() {
                 3u32 => {
-                    ::buffa::encoding::check_wire_type(
+                    ::buffa::types::borrow_opt_str_field(
                         tag,
-                        ::buffa::encoding::WireType::LengthDelimited,
+                        &mut view.leading_comments,
+                        &mut cur,
                     )?;
-                    view.leading_comments = Some(::buffa::types::borrow_str(&mut cur)?);
                 }
                 4u32 => {
-                    ::buffa::encoding::check_wire_type(
+                    ::buffa::types::borrow_opt_str_field(
                         tag,
-                        ::buffa::encoding::WireType::LengthDelimited,
+                        &mut view.trailing_comments,
+                        &mut cur,
                     )?;
-                    view.trailing_comments = Some(::buffa::types::borrow_str(&mut cur)?);
                 }
                 1u32 => {
                     if tag.wire_type() == ::buffa::encoding::WireType::LengthDelimited {
@@ -14900,15 +14472,12 @@ pub mod source_code_info {
                     }
                 }
                 6u32 => {
-                    ::buffa::encoding::check_wire_type(
+                    ::buffa::types::push_str_field(
                         tag,
-                        ::buffa::encoding::WireType::LengthDelimited,
+                        &mut view.leading_detached_comments,
+                        &mut cur,
+                        ctx,
                     )?;
-                    let __elem = ::buffa::types::borrow_str(&mut cur)?;
-                    ctx.register_element_memory(
-                        ::buffa::__private::element_footprint(&__elem),
-                    )?;
-                    view.leading_detached_comments.push(__elem);
                 }
                 _ => {
                     ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -15326,6 +14895,15 @@ pub struct GeneratedCodeInfoView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for GeneratedCodeInfoView<'a> {
     type Owned = super::super::GeneratedCodeInfo;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -15366,13 +14944,9 @@ impl<'a> ::buffa::MessageView<'a> for GeneratedCodeInfoView<'a> {
                         super::super::__buffa::view::generated_code_info::AnnotationView,
                     >(),
                 )?;
-                view.annotation
-                    .push(
-                        <super::super::__buffa::view::generated_code_info::AnnotationView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::generated_code_info::AnnotationView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.annotation.push(__elem);
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -15415,10 +14989,7 @@ impl<'a> ::buffa::ViewEncode<'a> for GeneratedCodeInfoView<'a> {
         for v in &self.annotation {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -15432,11 +15003,7 @@ impl<'a> ::buffa::ViewEncode<'a> for GeneratedCodeInfoView<'a> {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
         for v in &self.annotation {
-            ::buffa::types::put_len_delimited_header(
-                1u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(1u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -15637,6 +15204,15 @@ pub mod generated_code_info {
     }
     impl<'a> ::buffa::MessageView<'a> for AnnotationView<'a> {
         type Owned = super::super::super::generated_code_info::Annotation;
+        #[inline]
+        fn decode_view_ctx(
+            buf: &'a [u8],
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+            let mut view = <Self as ::core::default::Default>::default();
+            ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+            ::core::result::Result::Ok(view)
+        }
         fn decode_view(
             buf: &'a [u8],
         ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
@@ -15668,25 +15244,21 @@ pub mod generated_code_info {
             let mut cur = cur;
             match tag.field_number() {
                 2u32 => {
-                    ::buffa::encoding::check_wire_type(
+                    ::buffa::types::borrow_opt_str_field(
                         tag,
-                        ::buffa::encoding::WireType::LengthDelimited,
+                        &mut view.source_file,
+                        &mut cur,
                     )?;
-                    view.source_file = Some(::buffa::types::borrow_str(&mut cur)?);
                 }
                 3u32 => {
-                    ::buffa::encoding::check_wire_type(
+                    ::buffa::types::merge_opt_int32_field(
                         tag,
-                        ::buffa::encoding::WireType::Varint,
+                        &mut view.begin,
+                        &mut cur,
                     )?;
-                    view.begin = Some(::buffa::types::decode_int32(&mut cur)?);
                 }
                 4u32 => {
-                    ::buffa::encoding::check_wire_type(
-                        tag,
-                        ::buffa::encoding::WireType::Varint,
-                    )?;
-                    view.end = Some(::buffa::types::decode_int32(&mut cur)?);
+                    ::buffa::types::merge_opt_int32_field(tag, &mut view.end, &mut cur)?;
                 }
                 5u32 => {
                     ::buffa::encoding::check_wire_type(

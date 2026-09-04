@@ -239,6 +239,21 @@ enum FieldKind<'a> {
     },
 }
 
+/// Whether `field` is a `string` or `bytes` field, whose owned decode
+/// allocates, copies or validates a payload per occurrence (see the
+/// tiny-message rule in [`generate_message_impl`]).
+///
+/// Tests the declared type rather than [`effective_type`]: the only rewrites
+/// that function applies are `MESSAGE → GROUP` (editions `DELIMITED`) and
+/// `STRING → BYTES` (`utf8_validation = NONE`), and `{STRING, BYTES}` is
+/// closed under both, so the answer is the same without a `ctx`.
+pub(crate) fn is_string_or_bytes(field: &FieldDescriptorProto) -> bool {
+    matches!(
+        field.r#type.unwrap_or_default(),
+        Type::TYPE_STRING | Type::TYPE_BYTES
+    )
+}
+
 /// Classify every field of `msg` and return the result sorted by ascending
 /// field number. Oneof members are folded into a single [`FieldKind::Oneof`]
 /// per group, positioned at the lowest member number.
@@ -404,6 +419,80 @@ pub fn generate_message_impl(
     let name_ident = format_ident!("{}", rust_name);
 
     let fields = classify_fields_ordered(msg, oneof_idents)?;
+    // Tiny messages (at most four singular fields, none string/bytes)
+    // override the type-erased decode loops with monomorphic, inlinable ones. Their `merge_field` is a
+    // handful of arms, so inlining the whole sub-decoder into the parent arm
+    // costs a few dozen bytes, while the erased loop's per-field indirect
+    // call is a measurable fraction of decoding a trivial field (a 3-float
+    // vertex decoded through the erased loop was 45% slower). Singular message
+    // fields count as tiny too: their arm is one call into the child's own
+    // loop. Repeated, map and oneof fields carry element loops or many arms,
+    // so a message with any of those keeps the shared loops. So does one with
+    // a string or bytes field: decoding it allocates, copies or validates a
+    // payload, next to which the indirect call is noise, and in a large
+    // schema such messages outnumber the numeric ones (280 of the 436
+    // messages with at most four singular fields in `whatsapp.proto` carry
+    // a string or bytes field), each with a private copy of the loop that
+    // bought no measurable change on the benchmark shapes.
+    let is_message_set = msg
+        .options
+        .as_option()
+        .and_then(|o| o.message_set_wire_format)
+        .unwrap_or(false);
+    // A MessageSet has no regular fields but the heaviest fallthrough arm
+    // codegen emits (Item-group parsing), and an empty message's body is its
+    // fallthrough; neither is "a handful of arms", so both keep the shared
+    // loops. Groups are legacy proto2 and rare; the override covers them too
+    // so a tiny group-typed field decodes the same way as a message-typed one.
+    let tiny = !is_message_set
+        && !fields.is_empty()
+        && fields.len() <= 4
+        && fields.iter().all(|k| match k {
+            FieldKind::Scalar(f) => !is_string_or_bytes(f),
+            _ => false,
+        });
+    // Every message overrides `merge_to_limit` with the monomorphic loop: the
+    // trait's top-level entry points (`merge`, `decode_length_delimited`,
+    // `DecodeOptions`) dispatch through it, so this is what keeps top-level
+    // decoding free of the erased loop's shared indirect call, and only the
+    // types an application decodes directly instantiate it. Nested messages
+    // enter the erased loop directly through `merge_length_delimited` /
+    // `merge_group`, which tiny messages alone override.
+    let top_level_loop_override = quote! {
+        #[inline]
+        fn merge_to_limit(
+            &mut self,
+            buf: &mut impl ::buffa::bytes::Buf,
+            ctx: ::buffa::DecodeContext<'_>,
+            limit: usize,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+        }
+    };
+    let tiny_loop_overrides = if tiny {
+        quote! {
+            #[inline]
+            fn merge_length_delimited(
+                &mut self,
+                buf: &mut impl ::buffa::bytes::Buf,
+                ctx: ::buffa::DecodeContext<'_>,
+            ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+                ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
+            }
+
+            #[inline]
+            fn merge_group(
+                &mut self,
+                buf: &mut impl ::buffa::bytes::Buf,
+                ctx: ::buffa::DecodeContext<'_>,
+                field_number: u32,
+            ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+                ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
+            }
+        }
+    } else {
+        quote! {}
+    };
     // The lazy predicate applies to the lazy view family only; owned is eager.
     let cache_ident = if message_uses_size_cache(ctx, msg, &fields, features, None) {
         format_ident!("__cache")
@@ -416,6 +505,7 @@ pub fn generate_message_impl(
     // the same traversal order that compute_size's reserve()/set() filled them.
     let mut compute_stmts: Vec<TokenStream> = Vec::with_capacity(fields.len());
     let mut write_stmts: Vec<TokenStream> = Vec::with_capacity(fields.len());
+    let mut single_pass_stmts: Vec<TokenStream> = Vec::with_capacity(fields.len());
     let mut merge_arms: Vec<TokenStream> = Vec::with_capacity(fields.len());
     let mut clear_stmts: Vec<TokenStream> = Vec::with_capacity(fields.len());
     for kind in &fields {
@@ -423,6 +513,7 @@ pub fn generate_message_impl(
             FieldKind::Scalar(f) => {
                 compute_stmts.push(scalar_compute_size_stmt(ctx, f, features)?);
                 write_stmts.push(scalar_write_to_stmt(ctx, f, features)?);
+                single_pass_stmts.push(singular_single_pass_stmt(ctx, f, features)?);
                 merge_arms.push(scalar_merge_arm(
                     ctx,
                     f,
@@ -443,6 +534,7 @@ pub fn generate_message_impl(
                 let repr = field_repeated_repr(ctx, proto_fqn, f.name.as_deref().unwrap_or(""));
                 compute_stmts.push(repeated_compute_size_stmt(ctx, f, features, &repr)?);
                 write_stmts.push(repeated_write_to_stmt(ctx, f, features, &repr)?);
+                single_pass_stmts.push(repeated_single_pass_stmt(ctx, f, features, &repr)?);
                 merge_arms.push(repeated_merge_arm(
                     ctx,
                     f,
@@ -456,6 +548,7 @@ pub fn generate_message_impl(
             FieldKind::Map(f) => {
                 compute_stmts.push(map_compute_size_stmt(ctx, msg, f, proto_fqn, features)?);
                 write_stmts.push(map_write_to_stmt(ctx, msg, f, proto_fqn, features)?);
+                single_pass_stmts.push(map_single_pass_stmt(ctx, msg, f, proto_fqn, features)?);
                 merge_arms.push(map_merge_arm(ctx, msg, f, proto_fqn, features)?);
                 clear_stmts.push(map_field_clear_stmt(ctx, f, proto_fqn)?);
             }
@@ -464,7 +557,7 @@ pub fn generate_message_impl(
                 enum_ident,
                 fields,
             } => {
-                let (cs, ws, mas) = generate_oneof_impls(
+                let (cs, ws, sps, mas) = generate_oneof_impls(
                     ctx,
                     enum_ident,
                     name,
@@ -478,6 +571,7 @@ pub fn generate_message_impl(
                 )?;
                 compute_stmts.push(cs);
                 write_stmts.push(ws);
+                single_pass_stmts.push(sps);
                 merge_arms.extend(mas);
                 let ident = ctx.oneof_ident(name);
                 clear_stmts.push(quote! { self.#ident = ::core::option::Option::None; });
@@ -490,11 +584,6 @@ pub fn generate_message_impl(
     // but stored flat as `{number: type_id, data: LD(payload)}`. The gate
     // check (`CodeGenConfig::allow_message_set`) is in `message.rs`; by the
     // time we're here, the flag is set or the option was absent.
-    let is_message_set = msg
-        .options
-        .as_option()
-        .and_then(|o| o.message_set_wire_format)
-        .unwrap_or(false);
 
     // Generate unknown-fields snippets based on config.
     let unknown_fields_size_stmt = if is_message_set {
@@ -588,6 +677,13 @@ pub fn generate_message_impl(
         quote! { buf: &mut impl ::buffa::EncodeSink }
     } else {
         quote! { _buf: &mut impl ::buffa::EncodeSink }
+    };
+    // Same suppression for the single-pass method: one stmt per field kind
+    // plus the shared unknown-fields tail.
+    let sp_buf_param = if !single_pass_stmts.is_empty() || !unknown_fields_write_stmt.is_empty() {
+        quote! { buf: &mut ::buffa::alloc::vec::Vec<u8> }
+    } else {
+        quote! { _buf: &mut ::buffa::alloc::vec::Vec<u8> }
     };
 
     let extension_set_impl = if preserve_unknown_fields {
@@ -697,6 +793,21 @@ pub fn generate_message_impl(
                 #unknown_fields_write_stmt
             }
 
+            /// Single-pass encode into a contiguous buffer (experiment).
+            ///
+            /// Same bytes as `compute_size` + `write_to`, but length prefixes
+            /// are reserved and backpatched: the field set is walked once.
+            /// Falls back to the two passes only for hand-written impls that
+            /// do not override it.
+            fn encode_single_pass(&self, #sp_buf_param) {
+                #[allow(unused_imports)]
+                use ::buffa::EncodeSink as _;
+                #[allow(unused_imports)]
+                use ::buffa::Enumeration as _;
+                #(#single_pass_stmts)*
+                #unknown_fields_write_stmt
+            }
+
             fn merge_field(
                 &mut self,
                 tag: ::buffa::encoding::Tag,
@@ -718,6 +829,9 @@ pub fn generate_message_impl(
                 #(#clear_stmts)*
                 #unknown_fields_clear_stmt
             }
+
+            #top_level_loop_override
+            #tiny_loop_overrides
         }
 
         #extension_set_impl
@@ -1402,6 +1516,42 @@ fn put_field_fn_token(ty: Type) -> TokenStream {
     }
 }
 
+/// Path of the fused singular reader (`merge_<type>_field`, or the
+/// `merge_opt_<type>_field` sibling when `optional` is set) for a numeric or
+/// bool field; see `merge_field_fn!` in `buffa::types`.
+pub(crate) fn merge_field_fn_token(ty: Type, optional: bool) -> TokenStream {
+    let base = match ty {
+        Type::TYPE_INT32 => "int32",
+        Type::TYPE_INT64 => "int64",
+        Type::TYPE_UINT32 => "uint32",
+        Type::TYPE_UINT64 => "uint64",
+        Type::TYPE_SINT32 => "sint32",
+        Type::TYPE_SINT64 => "sint64",
+        Type::TYPE_FIXED32 => "fixed32",
+        Type::TYPE_FIXED64 => "fixed64",
+        Type::TYPE_SFIXED32 => "sfixed32",
+        Type::TYPE_SFIXED64 => "sfixed64",
+        Type::TYPE_FLOAT => "float",
+        Type::TYPE_DOUBLE => "double",
+        Type::TYPE_BOOL => "bool",
+        // String and bytes readers are named directly by the arms that
+        // emit them (their `_field` readers take the concrete container).
+        Type::TYPE_STRING
+        | Type::TYPE_BYTES
+        | Type::TYPE_ENUM
+        | Type::TYPE_MESSAGE
+        | Type::TYPE_GROUP => {
+            unreachable!("merge_field_fn_token called for {:?}", ty)
+        }
+    };
+    let name = if optional {
+        format_ident!("merge_opt_{}_field", base)
+    } else {
+        format_ident!("merge_{}_field", base)
+    };
+    quote! { ::buffa::types::#name }
+}
+
 pub(crate) fn decode_fn_token(ty: Type) -> TokenStream {
     match ty {
         Type::TYPE_INT32 => quote! { ::buffa::types::decode_int32 },
@@ -1669,22 +1819,25 @@ fn scalar_compute_size_stmt(
             });
         }
         Type::TYPE_MESSAGE => {
+            // `as_option()` rather than `is_set()` + auto-deref: the deref
+            // path falls back to `T::default_instance()`, which would pull a
+            // lazily-initialised static default (and its initialiser) into
+            // the binary for every message type reachable from an encoder.
+            // Binding the `Option` keeps that instantiation out of code that
+            // never reads an unset field.
             return Ok(quote! {
-                if self.#ident.is_set() {
+                if let ::core::option::Option::Some(__v) = self.#ident.as_option() {
                     let __slot = __cache.reserve();
-                    let inner_size = self.#ident.compute_size(__cache);
-                    __cache.set(__slot, inner_size);
-                    size += #tag_len
-                        + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                        + inner_size as u64;
+                    let inner_size = __v.compute_size(__cache);
+                    size += #tag_len + __cache.record_submessage(__slot, inner_size);
                 }
             });
         }
         Type::TYPE_GROUP => {
             // Groups: start_tag + body + end_tag (no length prefix).
             return Ok(quote! {
-                if self.#ident.is_set() {
-                    let inner_size = self.#ident.compute_size(__cache);
+                if let ::core::option::Option::Some(__v) = self.#ident.as_option() {
+                    let inner_size = __v.compute_size(__cache);
                     size += #tag_len + inner_size as u64 + #tag_len;
                 }
             });
@@ -1795,22 +1948,19 @@ fn scalar_write_to_stmt(
             });
         }
         Type::TYPE_MESSAGE => {
+            // `as_option()` for the same reason as in `compute_size`.
             return Ok(quote! {
-                if self.#ident.is_set() {
-                    ::buffa::types::put_len_delimited_header(
-                        #field_number,
-                        u64::from(__cache.consume_next()),
-                        buf,
-                    );
-                    self.#ident.write_to(__cache, buf);
+                if let ::core::option::Option::Some(__v) = self.#ident.as_option() {
+                    ::buffa::types::put_submessage_header(#field_number, __cache, buf);
+                    __v.write_to(__cache, buf);
                 }
             });
         }
         Type::TYPE_GROUP => {
             return Ok(quote! {
-                if self.#ident.is_set() {
+                if let ::core::option::Option::Some(__v) = self.#ident.as_option() {
                     ::buffa::types::put_group_start(#field_number, buf);
-                    self.#ident.write_to(__cache, buf);
+                    __v.write_to(__cache, buf);
                     ::buffa::types::put_group_end(#field_number, buf);
                 }
             });
@@ -1834,6 +1984,62 @@ fn scalar_write_to_stmt(
     })
 }
 
+/// Single-pass `encode_single_pass` body for one singular field (experiment).
+///
+/// Every arm except message-typed ones is identical to
+/// [`scalar_write_to_stmt`] (no `SizeCache` involved), so those delegate.
+/// A message arm reserves the length prefix, encodes the child straight into
+/// the buffer, then patches the prefix — no size pre-pass. Groups carry no
+/// prefix and just recurse.
+fn singular_single_pass_stmt(
+    ctx: &CodeGenContext,
+    field: &FieldDescriptorProto,
+    features: &ResolvedFeatures,
+) -> Result<TokenStream, CodeGenError> {
+    let ty = effective_type(ctx, field, features);
+    match ty {
+        Type::TYPE_MESSAGE => {
+            let field_name = field
+                .name
+                .as_deref()
+                .ok_or(CodeGenError::MissingField("field.name"))?;
+            let field_number = validated_field_number(field)?;
+            let ident = ctx.field_ident(field_name, field.number.unwrap_or(0));
+            Ok(quote! {
+                if let ::core::option::Option::Some(__v) = self.#ident.as_option() {
+                    ::buffa::encoding::Tag::new(
+                        #field_number,
+                        ::buffa::encoding::WireType::LengthDelimited,
+                    ).encode(buf);
+                    let __len_pos = ::buffa::types::reserve_len_prefix(buf);
+                    let __payload_start = buf.len();
+                    __v.encode_single_pass(buf);
+                    let __len = ::core::primitive::u32::try_from(
+                        buf.len() - __payload_start,
+                    ).unwrap_or(::core::primitive::u32::MAX);
+                    ::buffa::types::patch_len_prefix(buf, __len_pos, __len);
+                }
+            })
+        }
+        Type::TYPE_GROUP => {
+            let field_name = field
+                .name
+                .as_deref()
+                .ok_or(CodeGenError::MissingField("field.name"))?;
+            let field_number = validated_field_number(field)?;
+            let ident = ctx.field_ident(field_name, field.number.unwrap_or(0));
+            Ok(quote! {
+                if let ::core::option::Option::Some(__v) = self.#ident.as_option() {
+                    ::buffa::types::put_group_start(#field_number, buf);
+                    __v.encode_single_pass(buf);
+                    ::buffa::types::put_group_end(#field_number, buf);
+                }
+            })
+        }
+        _ => scalar_write_to_stmt(ctx, field, features),
+    }
+}
+
 /// Generate a merge match arm for a field with explicit presence (`Option<T>`).
 ///
 /// Emits `field_number => { wire_check; self.field = Some(decoded_value); }`.
@@ -1852,11 +2058,7 @@ fn explicit_presence_merge_arm(
     match ty {
         Type::TYPE_STRING if string_repr.is_default() => quote! {
             #field_number => {
-                #wire_check
-                ::buffa::types::merge_string(
-                    self.#ident.get_or_insert_with(::buffa::alloc::string::String::new),
-                    buf,
-                )?;
+                ::buffa::types::merge_opt_string_field(tag, &mut self.#ident, buf)?;
             }
         },
         Type::TYPE_STRING => quote! {
@@ -1871,11 +2073,7 @@ fn explicit_presence_merge_arm(
             if bytes_repr.is_default() {
                 quote! {
                     #field_number => {
-                        #wire_check
-                        ::buffa::types::merge_bytes(
-                            self.#ident.get_or_insert_with(::buffa::alloc::vec::Vec::new),
-                            buf,
-                        )?;
+                        ::buffa::types::merge_opt_bytes_field(tag, &mut self.#ident, buf)?;
                     }
                 }
             } else {
@@ -1918,11 +2116,10 @@ fn explicit_presence_merge_arm(
             }
         }
         _ => {
-            let decode_fn = decode_fn_token(ty);
+            let merge_fn = merge_field_fn_token(ty, true);
             quote! {
                 #field_number => {
-                    #wire_check
-                    self.#ident = ::core::option::Option::Some(#decode_fn(buf)?);
+                    #merge_fn(tag, &mut self.#ident, buf)?;
                 }
             }
         }
@@ -1977,8 +2174,7 @@ fn scalar_merge_arm(
             return Ok(if string_repr.is_default() {
                 quote! {
                     #field_number => {
-                        #wire_check
-                        ::buffa::types::merge_string(&mut self.#ident, buf)?;
+                        ::buffa::types::merge_string_field(tag, &mut self.#ident, buf)?;
                     }
                 }
             } else {
@@ -1996,8 +2192,7 @@ fn scalar_merge_arm(
             return Ok(if bytes_repr.is_default() {
                 quote! {
                     #field_number => {
-                        #wire_check
-                        ::buffa::types::merge_bytes(&mut self.#ident, buf)?;
+                        ::buffa::types::merge_bytes_field(tag, &mut self.#ident, buf)?;
                     }
                 }
             } else {
@@ -2067,11 +2262,10 @@ fn scalar_merge_arm(
     }
 
     // Numeric scalars (proto3 last-wins: plain assignment overwrites any prior value).
-    let decode_fn = decode_fn_token(ty);
+    let merge_fn = merge_field_fn_token(ty, false);
     Ok(quote! {
         #field_number => {
-            #wire_check
-            self.#ident = #decode_fn(buf)?;
+            #merge_fn(tag, &mut self.#ident, buf)?;
         }
     })
 }
@@ -2199,10 +2393,7 @@ fn repeated_compute_size_stmt(
             for v in #elems {
                 let __slot = __cache.reserve();
                 let inner_size = v.compute_size(__cache);
-                __cache.set(__slot, inner_size);
-                size += #ld_tag_len
-                    + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+                size += #ld_tag_len + __cache.record_submessage(__slot, inner_size);
             }
         });
     }
@@ -2290,11 +2481,7 @@ fn repeated_write_to_stmt(
     if ty == Type::TYPE_MESSAGE {
         return Ok(quote! {
             for v in #elems {
-                ::buffa::types::put_len_delimited_header(
-                    #field_number,
-                    u64::from(__cache.consume_next()),
-                    buf,
-                );
+                ::buffa::types::put_submessage_header(#field_number, __cache, buf);
                 v.write_to(__cache, buf);
             }
         });
@@ -2346,6 +2533,62 @@ fn repeated_write_to_stmt(
             #encode_loop
         }
     })
+}
+
+/// Single-pass `encode_single_pass` body for one repeated field (experiment).
+///
+/// Non-message arms are [`repeated_write_to_stmt`] verbatim (no cache); the
+/// message/group arms reserve + patch per element and recurse without it.
+fn repeated_single_pass_stmt(
+    ctx: &CodeGenContext,
+    field: &FieldDescriptorProto,
+    features: &ResolvedFeatures,
+    repr: &crate::RepeatedRepr,
+) -> Result<TokenStream, CodeGenError> {
+    let ty = effective_type(ctx, field, features);
+    match ty {
+        Type::TYPE_MESSAGE => {
+            let field_name = field
+                .name
+                .as_deref()
+                .ok_or(CodeGenError::MissingField("field.name"))?;
+            let field_number = validated_field_number(field)?;
+            let ident = ctx.field_ident(field_name, field.number.unwrap_or(0));
+            let elems = repeated_for_iter(&ident, repr);
+            Ok(quote! {
+                for v in #elems {
+                    ::buffa::encoding::Tag::new(
+                        #field_number,
+                        ::buffa::encoding::WireType::LengthDelimited,
+                    ).encode(buf);
+                    let __len_pos = ::buffa::types::reserve_len_prefix(buf);
+                    let __payload_start = buf.len();
+                    v.encode_single_pass(buf);
+                    let __len = ::core::primitive::u32::try_from(
+                        buf.len() - __payload_start,
+                    ).unwrap_or(::core::primitive::u32::MAX);
+                    ::buffa::types::patch_len_prefix(buf, __len_pos, __len);
+                }
+            })
+        }
+        Type::TYPE_GROUP => {
+            let field_name = field
+                .name
+                .as_deref()
+                .ok_or(CodeGenError::MissingField("field.name"))?;
+            let field_number = validated_field_number(field)?;
+            let ident = ctx.field_ident(field_name, field.number.unwrap_or(0));
+            let elems = repeated_for_iter(&ident, repr);
+            Ok(quote! {
+                for v in #elems {
+                    ::buffa::types::put_group_start(#field_number, buf);
+                    v.encode_single_pass(buf);
+                    ::buffa::types::put_group_end(#field_number, buf);
+                }
+            })
+        }
+        _ => repeated_write_to_stmt(ctx, field, features, repr),
+    }
 }
 
 fn repeated_merge_arm(
@@ -2407,6 +2650,30 @@ fn repeated_merge_arm(
                 self.#ident.push(elem);
             }
         });
+    }
+    // Default `Vec<String>` / `Vec<Vec<u8>>` append through one fused reader
+    // (wire check, decode, budget charge, push); see `push_string_field`.
+    // Only the non-generic readers pay off: a reader generic over the
+    // element type instantiates once per type, which measured larger than
+    // the arm bytes it saves, so message and enum arms keep the spelled-out
+    // form.
+    if !is_packed_type(ty) && repr.is_default() {
+        let fused = match ty {
+            Type::TYPE_STRING if field_string_repr(ctx, proto_fqn, field_name).is_default() => {
+                Some(quote! { ::buffa::types::push_string_field })
+            }
+            Type::TYPE_BYTES if bytes_repr.is_default() => {
+                Some(quote! { ::buffa::types::push_bytes_field })
+            }
+            _ => None,
+        };
+        if let Some(reader) = fused {
+            return Ok(quote! {
+                #field_number => {
+                    #reader(tag, &mut self.#ident, buf, ctx)?;
+                }
+            });
+        }
     }
     if !is_packed_type(ty) {
         let wire_check = wire_type_check(
@@ -2616,10 +2883,7 @@ fn oneof_size_arm(
             #enum_ident::#variant_ident(x) => {
                 let __slot = __cache.reserve();
                 let inner = x.compute_size(__cache);
-                __cache.set(__slot, inner);
-                size += #tag_len
-                    + ::buffa::encoding::varint_len(inner as u64) as u64
-                    + inner as u64;
+                size += #tag_len + __cache.record_submessage(__slot, inner);
             }
         },
         Type::TYPE_GROUP => quote! {
@@ -2685,11 +2949,7 @@ fn oneof_write_arm(
         },
         Type::TYPE_MESSAGE => quote! {
             #enum_ident::#variant_ident(x) => {
-                ::buffa::types::put_len_delimited_header(
-                    #field_number,
-                    u64::from(__cache.consume_next()),
-                    buf,
-                );
+                ::buffa::types::put_submessage_header(#field_number, __cache, buf);
                 x.write_to(__cache, buf);
             }
         },
@@ -2708,6 +2968,43 @@ fn oneof_write_arm(
                 }
             }
         }
+    }
+}
+
+/// Single-pass `encode_single_pass` arm for one oneof variant (experiment).
+///
+/// Non-message variants are [`oneof_write_arm`] verbatim; message/group
+/// variants reserve + patch and recurse without the `SizeCache`.
+fn oneof_single_pass_arm(
+    enum_ident: &TokenStream,
+    variant_ident: &Ident,
+    field_number: u32,
+    ty: Type,
+) -> TokenStream {
+    match ty {
+        Type::TYPE_MESSAGE => quote! {
+            #enum_ident::#variant_ident(x) => {
+                ::buffa::encoding::Tag::new(
+                    #field_number,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                ).encode(buf);
+                let __len_pos = ::buffa::types::reserve_len_prefix(buf);
+                let __payload_start = buf.len();
+                x.encode_single_pass(buf);
+                let __len = ::core::primitive::u32::try_from(
+                    buf.len() - __payload_start,
+                ).unwrap_or(::core::primitive::u32::MAX);
+                ::buffa::types::patch_len_prefix(buf, __len_pos, __len);
+            }
+        },
+        Type::TYPE_GROUP => quote! {
+            #enum_ident::#variant_ident(x) => {
+                ::buffa::types::put_group_start(#field_number, buf);
+                x.encode_single_pass(buf);
+                ::buffa::types::put_group_end(#field_number, buf);
+            }
+        },
+        _ => oneof_write_arm(enum_ident, variant_ident, field_number, ty),
     }
 }
 
@@ -2879,12 +3176,13 @@ fn generate_oneof_impls(
     nesting: usize,
     features: &ResolvedFeatures,
     preserve_unknown_fields: bool,
-) -> Result<(TokenStream, TokenStream, Vec<TokenStream>), CodeGenError> {
+) -> Result<(TokenStream, TokenStream, TokenStream, Vec<TokenStream>), CodeGenError> {
     let field_ident = ctx.oneof_ident(oneof_name);
     let qualified_enum: TokenStream = quote! { #oneof_prefix #enum_ident };
 
     let mut size_arms: Vec<TokenStream> = Vec::new();
     let mut write_arms: Vec<TokenStream> = Vec::new();
+    let mut single_pass_arms: Vec<TokenStream> = Vec::new();
     let mut merge_arm_list: Vec<TokenStream> = Vec::new();
 
     for field in fields {
@@ -2899,6 +3197,12 @@ fn generate_oneof_impls(
 
         size_arms.push(oneof_size_arm(&qualified_enum, &variant_ident, tag_len, ty));
         write_arms.push(oneof_write_arm(
+            &qualified_enum,
+            &variant_ident,
+            field_number,
+            ty,
+        ));
+        single_pass_arms.push(oneof_single_pass_arm(
             &qualified_enum,
             &variant_ident,
             field_number,
@@ -2956,8 +3260,15 @@ fn generate_oneof_impls(
             }
         }
     };
+    let single_pass_stmt = quote! {
+        if let ::core::option::Option::Some(ref v) = self.#field_ident {
+            match v {
+                #(#single_pass_arms)*
+            }
+        }
+    };
 
-    Ok((compute_stmt, write_stmt, merge_arm_list))
+    Ok((compute_stmt, write_stmt, single_pass_stmt, merge_arm_list))
 }
 
 // ---------------------------------------------------------------------------
@@ -3203,8 +3514,7 @@ fn map_view_compute_size_stmt(
             {
                 let __slot = __cache.reserve();
                 let inner = #v.compute_size(__cache);
-                __cache.set(__slot, inner);
-                ::buffa::encoding::varint_len(inner as u64) as u64 + inner as u64
+                __cache.record_submessage(__slot, inner)
             }
         }
     } else {
@@ -3357,6 +3667,37 @@ fn map_write_to_stmt(
             buf,
         );
     })
+}
+
+/// Single-pass `encode_single_pass` body for one map field (experiment).
+///
+/// Scalar values are [`map_write_to_stmt`] verbatim; message values go
+/// through the backpatching [`::buffa::map_codec::write_message_field_single_pass`]
+/// instead of the `SizeCache`-slot runtime.
+fn map_single_pass_stmt(
+    ctx: &CodeGenContext,
+    msg: &DescriptorProto,
+    field: &FieldDescriptorProto,
+    proto_fqn: &str,
+    features: &ResolvedFeatures,
+) -> Result<TokenStream, CodeGenError> {
+    let m = map_entry_ctx(ctx, msg, field, proto_fqn, features)?;
+    let MapEntryCtx {
+        field_number,
+        ident,
+        key_codec,
+        ..
+    } = &m;
+    if m.val_ty == Type::TYPE_MESSAGE {
+        return Ok(quote! {
+            ::buffa::map_codec::write_message_field_single_pass::<#key_codec, _, _>(
+                &self.#ident,
+                #field_number,
+                buf,
+            );
+        });
+    }
+    map_write_to_stmt(ctx, msg, field, proto_fqn, features)
 }
 
 fn map_merge_arm(

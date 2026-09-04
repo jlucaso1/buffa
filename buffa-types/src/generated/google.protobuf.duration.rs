@@ -244,6 +244,25 @@ impl ::buffa::Message for Duration {
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
+    /// Single-pass encode into a contiguous buffer (experiment).
+    ///
+    /// Same bytes as `compute_size` + `write_to`, but length prefixes
+    /// are reserved and backpatched: the field set is walked once.
+    /// Falls back to the two passes only for hand-written impls that
+    /// do not override it.
+    fn encode_single_pass(&self, buf: &mut ::buffa::alloc::vec::Vec<u8>) {
+        #[allow(unused_imports)]
+        use ::buffa::EncodeSink as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if self.seconds != 0i64 {
+            ::buffa::types::put_int64_field(1u32, self.seconds, buf);
+        }
+        if self.nanos != 0i32 {
+            ::buffa::types::put_int32_field(2u32, self.nanos, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
     fn merge_field(
         &mut self,
         tag: ::buffa::encoding::Tag,
@@ -256,18 +275,10 @@ impl ::buffa::Message for Duration {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.seconds = ::buffa::types::decode_int64(buf)?;
+                ::buffa::types::merge_int64_field(tag, &mut self.seconds, buf)?;
             }
             2u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.nanos = ::buffa::types::decode_int32(buf)?;
+                ::buffa::types::merge_int32_field(tag, &mut self.nanos, buf)?;
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -280,6 +291,32 @@ impl ::buffa::Message for Duration {
         self.seconds = 0i64;
         self.nanos = 0i32;
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+    }
+    #[inline]
+    fn merge_length_delimited(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
+    }
+    #[inline]
+    fn merge_group(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        field_number: u32,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
     }
 }
 impl ::buffa::ExtensionSet for Duration {

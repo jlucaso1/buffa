@@ -233,9 +233,11 @@ fn the_generated_view_entry_point_attaches_the_element_budget() {
         "the attached budget must start at the documented default"
     );
     // The arms that spend it are worth pinning too: a budget with nothing
-    // charging against it is the same no-op from the other direction.
+    // charging against it is the same no-op from the other direction. A
+    // repeated string element is charged inside `push_str_field`, which
+    // takes the arm's `ctx`.
     assert!(
-        flat.contains("register_element_memory"),
-        "generated view arms must charge the budget they carry"
+        flat.contains("::buffa::types::push_str_field(tag,&mutview.names,&mutcur,ctx)?"),
+        "generated view arms must hand the budget to the fused reader"
     );
 }

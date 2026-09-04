@@ -119,7 +119,8 @@ pub(crate) fn generate_owned_view_wrapper(
             let ty = view_singular_type(scope, field, &lt)?;
             let tag_line = format!("Field {number}: `{field_name}`");
             match effective_type(ctx, field, &field_features) {
-                // Message fields are held in a `MessageFieldView` (not `Copy`);
+                // Message fields are held in a field wrapper
+                // (`MessageFieldView` or `InlineMessageFieldView`, not `Copy`);
                 // hand out a reference.
                 Type::TYPE_MESSAGE | Type::TYPE_GROUP => (
                     tag_line,

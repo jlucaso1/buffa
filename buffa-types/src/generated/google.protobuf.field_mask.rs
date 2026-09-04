@@ -381,6 +381,22 @@ impl ::buffa::Message for FieldMask {
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
+    /// Single-pass encode into a contiguous buffer (experiment).
+    ///
+    /// Same bytes as `compute_size` + `write_to`, but length prefixes
+    /// are reserved and backpatched: the field set is walked once.
+    /// Falls back to the two passes only for hand-written impls that
+    /// do not override it.
+    fn encode_single_pass(&self, buf: &mut ::buffa::alloc::vec::Vec<u8>) {
+        #[allow(unused_imports)]
+        use ::buffa::EncodeSink as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        for v in &self.paths {
+            ::buffa::types::put_string_field(1u32, v, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
     fn merge_field(
         &mut self,
         tag: ::buffa::encoding::Tag,
@@ -393,15 +409,7 @@ impl ::buffa::Message for FieldMask {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                let __elem = ::buffa::types::decode_string(buf)?;
-                ctx.register_element_memory(
-                    ::buffa::__private::element_footprint(&__elem),
-                )?;
-                self.paths.push(__elem);
+                ::buffa::types::push_string_field(tag, &mut self.paths, buf, ctx)?;
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -413,6 +421,15 @@ impl ::buffa::Message for FieldMask {
     fn clear(&mut self) {
         self.paths.clear();
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for FieldMask {

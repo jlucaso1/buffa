@@ -161,6 +161,22 @@ impl ::buffa::Message for SourceContext {
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
+    /// Single-pass encode into a contiguous buffer (experiment).
+    ///
+    /// Same bytes as `compute_size` + `write_to`, but length prefixes
+    /// are reserved and backpatched: the field set is walked once.
+    /// Falls back to the two passes only for hand-written impls that
+    /// do not override it.
+    fn encode_single_pass(&self, buf: &mut ::buffa::alloc::vec::Vec<u8>) {
+        #[allow(unused_imports)]
+        use ::buffa::EncodeSink as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if !self.file_name.is_empty() {
+            ::buffa::types::put_string_field(1u32, &self.file_name, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
     fn merge_field(
         &mut self,
         tag: ::buffa::encoding::Tag,
@@ -173,11 +189,7 @@ impl ::buffa::Message for SourceContext {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(&mut self.file_name, buf)?;
+                ::buffa::types::merge_string_field(tag, &mut self.file_name, buf)?;
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -189,6 +201,15 @@ impl ::buffa::Message for SourceContext {
     fn clear(&mut self) {
         self.file_name.clear();
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for SourceContext {

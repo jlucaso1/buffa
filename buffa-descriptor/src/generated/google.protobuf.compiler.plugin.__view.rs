@@ -19,6 +19,15 @@ pub struct VersionView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for VersionView<'a> {
     type Owned = super::super::Version;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -48,32 +57,16 @@ impl<'a> ::buffa::MessageView<'a> for VersionView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.major = Some(::buffa::types::decode_int32(&mut cur)?);
+                ::buffa::types::merge_opt_int32_field(tag, &mut view.major, &mut cur)?;
             }
             2u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.minor = Some(::buffa::types::decode_int32(&mut cur)?);
+                ::buffa::types::merge_opt_int32_field(tag, &mut view.minor, &mut cur)?;
             }
             3u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.patch = Some(::buffa::types::decode_int32(&mut cur)?);
+                ::buffa::types::merge_opt_int32_field(tag, &mut view.patch, &mut cur)?;
             }
             4u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.suffix = Some(::buffa::types::borrow_str(&mut cur)?);
+                ::buffa::types::borrow_opt_str_field(tag, &mut view.suffix, &mut cur)?;
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -375,13 +368,22 @@ pub struct CodeGeneratorRequestView<'a> {
     /// The version number of protocol compiler.
     ///
     /// Field 3: `compiler_version`
-    pub compiler_version: ::buffa::MessageFieldView<
+    pub compiler_version: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::VersionView<'a>,
     >,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
 }
 impl<'a> ::buffa::MessageView<'a> for CodeGeneratorRequestView<'a> {
     type Owned = super::super::CodeGeneratorRequest;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -411,11 +413,11 @@ impl<'a> ::buffa::MessageView<'a> for CodeGeneratorRequestView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             2u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::borrow_opt_str_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut view.parameter,
+                    &mut cur,
                 )?;
-                view.parameter = Some(::buffa::types::borrow_str(&mut cur)?);
             }
             3u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -424,30 +426,19 @@ impl<'a> ::buffa::MessageView<'a> for CodeGeneratorRequestView<'a> {
                 )?;
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                match view.compiler_version.as_mut() {
-                    Some(existing) => {
-                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
-                    }
-                    None => {
-                        view.compiler_version = ::buffa::MessageFieldView::set(
-                            <super::super::__buffa::view::VersionView as ::buffa::MessageView>::decode_view_ctx(
-                                sub,
-                                __sub_ctx,
-                            )?,
-                        );
-                    }
-                }
+                ::buffa::MessageView::merge_into_view(
+                    view.compiler_version.get_or_insert_default(),
+                    sub,
+                    __sub_ctx,
+                )?;
             }
             1u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::push_str_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut view.file_to_generate,
+                    &mut cur,
+                    ctx,
                 )?;
-                let __elem = ::buffa::types::borrow_str(&mut cur)?;
-                ctx.register_element_memory(
-                    ::buffa::__private::element_footprint(&__elem),
-                )?;
-                view.file_to_generate.push(__elem);
             }
             15u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -461,13 +452,9 @@ impl<'a> ::buffa::MessageView<'a> for CodeGeneratorRequestView<'a> {
                         super::super::super::__buffa::view::FileDescriptorProtoView,
                     >(),
                 )?;
-                view.proto_file
-                    .push(
-                        <super::super::super::__buffa::view::FileDescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::super::__buffa::view::FileDescriptorProtoView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.proto_file.push(__elem);
             }
             17u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -481,13 +468,9 @@ impl<'a> ::buffa::MessageView<'a> for CodeGeneratorRequestView<'a> {
                         super::super::super::__buffa::view::FileDescriptorProtoView,
                     >(),
                 )?;
-                view.source_file_descriptors
-                    .push(
-                        <super::super::super::__buffa::view::FileDescriptorProtoView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::super::__buffa::view::FileDescriptorProtoView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.source_file_descriptors.push(__elem);
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -559,29 +542,20 @@ impl<'a> ::buffa::ViewEncode<'a> for CodeGeneratorRequestView<'a> {
         if let Some(ref v) = self.parameter {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
         }
-        if self.compiler_version.is_set() {
+        if let ::core::option::Option::Some(__v) = self.compiler_version.as_option() {
             let __slot = __cache.reserve();
-            let inner_size = self.compiler_version.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            let inner_size = __v.compute_size(__cache);
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.proto_file {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.source_file_descriptors {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 2u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -600,28 +574,16 @@ impl<'a> ::buffa::ViewEncode<'a> for CodeGeneratorRequestView<'a> {
         if let Some(ref v) = self.parameter {
             ::buffa::types::put_string_field(2u32, v, buf);
         }
-        if self.compiler_version.is_set() {
-            ::buffa::types::put_len_delimited_header(
-                3u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            self.compiler_version.write_to(__cache, buf);
+        if let ::core::option::Option::Some(__v) = self.compiler_version.as_option() {
+            ::buffa::types::put_submessage_header(3u32, __cache, buf);
+            __v.write_to(__cache, buf);
         }
         for v in &self.proto_file {
-            ::buffa::types::put_len_delimited_header(
-                15u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(15u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         for v in &self.source_file_descriptors {
-            ::buffa::types::put_len_delimited_header(
-                17u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(17u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -829,7 +791,7 @@ impl CodeGeneratorRequestOwnedView {
     #[must_use]
     pub fn compiler_version(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::VersionView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<super::super::__buffa::view::VersionView<'_>> {
         &self.0.reborrow().compiler_version
     }
 }
@@ -906,6 +868,15 @@ pub struct CodeGeneratorResponseView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for CodeGeneratorResponseView<'a> {
     type Owned = super::super::CodeGeneratorResponse;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -935,32 +906,28 @@ impl<'a> ::buffa::MessageView<'a> for CodeGeneratorResponseView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.error = Some(::buffa::types::borrow_str(&mut cur)?);
+                ::buffa::types::borrow_opt_str_field(tag, &mut view.error, &mut cur)?;
             }
             2u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_uint64_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.supported_features,
+                    &mut cur,
                 )?;
-                view.supported_features = Some(::buffa::types::decode_uint64(&mut cur)?);
             }
             3u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_int32_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.minimum_edition,
+                    &mut cur,
                 )?;
-                view.minimum_edition = Some(::buffa::types::decode_int32(&mut cur)?);
             }
             4u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_opt_int32_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.maximum_edition,
+                    &mut cur,
                 )?;
-                view.maximum_edition = Some(::buffa::types::decode_int32(&mut cur)?);
             }
             15u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -974,13 +941,9 @@ impl<'a> ::buffa::MessageView<'a> for CodeGeneratorResponseView<'a> {
                         super::super::__buffa::view::code_generator_response::FileView,
                     >(),
                 )?;
-                view.file
-                    .push(
-                        <super::super::__buffa::view::code_generator_response::FileView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::code_generator_response::FileView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.file.push(__elem);
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -1045,10 +1008,7 @@ impl<'a> ::buffa::ViewEncode<'a> for CodeGeneratorResponseView<'a> {
         for v in &self.file {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -1074,11 +1034,7 @@ impl<'a> ::buffa::ViewEncode<'a> for CodeGeneratorResponseView<'a> {
             ::buffa::types::put_int32_field(4u32, v, buf);
         }
         for v in &self.file {
-            ::buffa::types::put_len_delimited_header(
-                15u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(15u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -1378,13 +1334,22 @@ pub mod code_generator_response {
         /// into the code generation metadata for the generated files.
         ///
         /// Field 16: `generated_code_info`
-        pub generated_code_info: ::buffa::MessageFieldView<
+        pub generated_code_info: ::buffa::InlineMessageFieldView<
             super::super::super::super::__buffa::view::GeneratedCodeInfoView<'a>,
         >,
         pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
     }
     impl<'a> ::buffa::MessageView<'a> for FileView<'a> {
         type Owned = super::super::super::code_generator_response::File;
+        #[inline]
+        fn decode_view_ctx(
+            buf: &'a [u8],
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+            let mut view = <Self as ::core::default::Default>::default();
+            ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+            ::core::result::Result::Ok(view)
+        }
         fn decode_view(
             buf: &'a [u8],
         ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
@@ -1416,25 +1381,21 @@ pub mod code_generator_response {
             let mut cur = cur;
             match tag.field_number() {
                 1u32 => {
-                    ::buffa::encoding::check_wire_type(
-                        tag,
-                        ::buffa::encoding::WireType::LengthDelimited,
-                    )?;
-                    view.name = Some(::buffa::types::borrow_str(&mut cur)?);
+                    ::buffa::types::borrow_opt_str_field(tag, &mut view.name, &mut cur)?;
                 }
                 2u32 => {
-                    ::buffa::encoding::check_wire_type(
+                    ::buffa::types::borrow_opt_str_field(
                         tag,
-                        ::buffa::encoding::WireType::LengthDelimited,
+                        &mut view.insertion_point,
+                        &mut cur,
                     )?;
-                    view.insertion_point = Some(::buffa::types::borrow_str(&mut cur)?);
                 }
                 15u32 => {
-                    ::buffa::encoding::check_wire_type(
+                    ::buffa::types::borrow_opt_str_field(
                         tag,
-                        ::buffa::encoding::WireType::LengthDelimited,
+                        &mut view.content,
+                        &mut cur,
                     )?;
-                    view.content = Some(::buffa::types::borrow_str(&mut cur)?);
                 }
                 16u32 => {
                     ::buffa::encoding::check_wire_type(
@@ -1443,23 +1404,11 @@ pub mod code_generator_response {
                     )?;
                     let __sub_ctx = ctx.descend()?;
                     let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                    match view.generated_code_info.as_mut() {
-                        Some(existing) => {
-                            ::buffa::MessageView::merge_into_view(
-                                existing,
-                                sub,
-                                __sub_ctx,
-                            )?
-                        }
-                        None => {
-                            view.generated_code_info = ::buffa::MessageFieldView::set(
-                                <super::super::super::super::__buffa::view::GeneratedCodeInfoView as ::buffa::MessageView>::decode_view_ctx(
-                                    sub,
-                                    __sub_ctx,
-                                )?,
-                            );
-                        }
-                    }
+                    ::buffa::MessageView::merge_into_view(
+                        view.generated_code_info.get_or_insert_default(),
+                        sub,
+                        __sub_ctx,
+                    )?;
                 }
                 _ => {
                     ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -1523,13 +1472,13 @@ pub mod code_generator_response {
             if let Some(ref v) = self.content {
                 size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
             }
-            if self.generated_code_info.is_set() {
+            if let ::core::option::Option::Some(__v) = self
+                .generated_code_info
+                .as_option()
+            {
                 let __slot = __cache.reserve();
-                let inner_size = self.generated_code_info.compute_size(__cache);
-                __cache.set(__slot, inner_size);
-                size
-                    += 2u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                        + inner_size as u64;
+                let inner_size = __v.compute_size(__cache);
+                size += 2u64 + __cache.record_submessage(__slot, inner_size);
             }
             size += self.__buffa_unknown_fields.encoded_len() as u64;
             ::buffa::saturate_size(size)
@@ -1551,13 +1500,12 @@ pub mod code_generator_response {
             if let Some(ref v) = self.content {
                 ::buffa::types::put_string_field(15u32, v, buf);
             }
-            if self.generated_code_info.is_set() {
-                ::buffa::types::put_len_delimited_header(
-                    16u32,
-                    u64::from(__cache.consume_next()),
-                    buf,
-                );
-                self.generated_code_info.write_to(__cache, buf);
+            if let ::core::option::Option::Some(__v) = self
+                .generated_code_info
+                .as_option()
+            {
+                ::buffa::types::put_submessage_header(16u32, __cache, buf);
+                __v.write_to(__cache, buf);
             }
             self.__buffa_unknown_fields.write_to(buf);
         }
@@ -1764,7 +1712,7 @@ pub mod code_generator_response {
         #[must_use]
         pub fn generated_code_info(
             &self,
-        ) -> &::buffa::MessageFieldView<
+        ) -> &::buffa::InlineMessageFieldView<
             super::super::super::super::__buffa::view::GeneratedCodeInfoView<'_>,
         > {
             &self.0.reborrow().generated_code_info

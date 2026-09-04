@@ -154,12 +154,13 @@ fn test_owned_view_message_repeated_and_map_accessors_return_refs() {
     )
     .expect("should generate");
     let content = &joined(&files);
-    // Non-Copy container fields are handed out by reference.
+    // Non-Copy container fields are handed out by reference. `Inner` is a
+    // leaf message, so its view field is stored inline (no box).
     assert!(
-        content.contains("pub fn inner(&self) -> &::buffa::MessageFieldView<")
+        content.contains("pub fn inner(&self) -> &::buffa::InlineMessageFieldView<")
             || content
-                .contains("pub fn inner(\n        &self,\n    ) -> &::buffa::MessageFieldView<"),
-        "message-field accessor must return &MessageFieldView: {content}"
+                .contains("pub fn inner(\n        &self,\n    ) -> &::buffa::InlineMessageFieldView<"),
+        "message-field accessor must return &InlineMessageFieldView for a non-recursive field: {content}"
     );
     assert!(
         content.contains("&::buffa::RepeatedView<'_, &'_ str>"),

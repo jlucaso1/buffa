@@ -121,6 +121,23 @@ pub struct TimestampView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for TimestampView<'a> {
     type Owned = super::super::Timestamp;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
+    #[inline]
+    fn merge_into_view(
+        &mut self,
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_into_view_inline(self, buf, ctx)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -150,18 +167,10 @@ impl<'a> ::buffa::MessageView<'a> for TimestampView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.seconds = ::buffa::types::decode_int64(&mut cur)?;
+                ::buffa::types::merge_int64_field(tag, &mut view.seconds, &mut cur)?;
             }
             2u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.nanos = ::buffa::types::decode_int32(&mut cur)?;
+                ::buffa::types::merge_int32_field(tag, &mut view.nanos, &mut cur)?;
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;

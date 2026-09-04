@@ -155,6 +155,19 @@ impl ::buffa::Message for Empty {
         use ::buffa::Enumeration as _;
         self.__buffa_unknown_fields.write_to(buf);
     }
+    /// Single-pass encode into a contiguous buffer (experiment).
+    ///
+    /// Same bytes as `compute_size` + `write_to`, but length prefixes
+    /// are reserved and backpatched: the field set is walked once.
+    /// Falls back to the two passes only for hand-written impls that
+    /// do not override it.
+    fn encode_single_pass(&self, buf: &mut ::buffa::alloc::vec::Vec<u8>) {
+        #[allow(unused_imports)]
+        use ::buffa::EncodeSink as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        self.__buffa_unknown_fields.write_to(buf);
+    }
     fn merge_field(
         &mut self,
         tag: ::buffa::encoding::Tag,
@@ -175,6 +188,15 @@ impl ::buffa::Message for Empty {
     }
     fn clear(&mut self) {
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for Empty {

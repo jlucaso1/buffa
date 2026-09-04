@@ -1,0 +1,4 @@
+kind: Changed
+body: |-
+    **`decode_varint` inlines its one-byte fast path.** The decoder is now a one-byte check that a speed-optimised build inlines at every call site, with the multi-byte and fragmented-buffer paths in a separate out-of-line function. A length prefix or a small scalar is one byte far more often than not, and each nested message, string or bytes field previously paid a call plus a `Result<u64, DecodeError>` returned through memory for it. On the `bench-iso` datasets that is 7% fewer retired instructions on `mesh/decode` (a flat list of 3-float vertices), 6% on `mesh/decode_view` and 1% on `api_response/decode`; size-optimised builds keep one call per site, so generated code does not grow. `Tag::decode`, which has its own one-byte path, now calls the multi-byte decoder directly.
+time: 2026-09-03T22:00:00.000000-03:00

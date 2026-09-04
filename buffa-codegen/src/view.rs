@@ -20,9 +20,9 @@ use crate::impl_message::{
     closed_enum_decode, closed_enum_decode_with_unknown, decode_fn_token, effective_type,
     effective_type_in_map_entry, extend_packed_fn_token, extend_packed_varint_fn_token,
     field_string_repr, find_map_entry_fields, is_explicit_presence_scalar, is_packed_type,
-    is_real_oneof_member, is_required_field, is_supported_field_type, map_string_repr,
-    map_value_bytes_repr, packed_decode_fn_token, validated_field_number, wire_type_check,
-    wire_type_token,
+    is_real_oneof_member, is_required_field, is_string_or_bytes, is_supported_field_type,
+    map_string_repr, map_value_bytes_repr, merge_field_fn_token, packed_decode_fn_token,
+    validated_field_number, wire_type_check, wire_type_token,
 };
 use crate::message::{is_closed_enum, is_map_field, make_field_ident, rust_path_to_tokens};
 use crate::oneof::{is_null_value_field, serde_helper_path};
@@ -189,6 +189,49 @@ pub(crate) fn generate_view_with_nesting(
         &oneof_idents,
         &required.bit_stmts,
     )?;
+
+    // Tiny views (at most four singular fields, none string/bytes, no
+    // repeated/map/oneof) keep a monomorphic, inlinable tag loop instead of
+    // the type-erased default; same threshold as the owned side (see `tiny`
+    // in `impl_message.rs`). A view's string or bytes arm only borrows, so
+    // the owned rationale for excluding those fields (per-field allocation
+    // dwarfing the indirect call) does not carry over; they are excluded
+    // here for the measured size (−2.7% on a 750-message schema) and so the
+    // two sides pick the same messages.
+    let tiny = !scalar_arms.is_empty()
+        && scalar_arms.len() <= 4
+        && repeated_arms.is_empty()
+        && oneof_arms.is_empty()
+        && !msg.field.iter().any(is_string_or_bytes);
+    // Every view overrides the top-level entry `decode_view_ctx` with the
+    // monomorphic loop (the trait default dispatches through
+    // `merge_into_view`, so a hand-written override applies there); nested
+    // views enter the erased loop, which tiny views alone override.
+    let top_level_loop_override = quote! {
+        #[inline]
+        fn decode_view_ctx(
+            buf: &'a [u8],
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+            let mut view = <Self as ::core::default::Default>::default();
+            ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+            ::core::result::Result::Ok(view)
+        }
+    };
+    let tiny_loop_override = if tiny {
+        quote! {
+            #[inline]
+            fn merge_into_view(
+                &mut self,
+                buf: &'a [u8],
+                ctx: ::buffa::DecodeContext<'_>,
+            ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+                ::buffa::__private::merge_into_view_inline(self, buf, ctx)
+            }
+        }
+    } else {
+        quote! {}
+    };
 
     // to_owned_message field initialisers.
     let owned_fields = build_to_owned_fields(
@@ -417,6 +460,9 @@ pub(crate) fn generate_view_with_nesting(
 
         impl<'a> ::buffa::MessageView<'a> for #view_ident<'a> {
             type Owned = #owned_path;
+
+            #top_level_loop_override
+            #tiny_loop_override
 
             fn decode_view(
                 buf: &'a [u8],
@@ -739,6 +785,7 @@ pub(crate) fn view_singular_type(
 ) -> Result<TokenStream, CodeGenError> {
     let MessageScope {
         ctx,
+        proto_fqn,
         features: parent_features,
         ..
     } = scope;
@@ -769,7 +816,24 @@ pub(crate) fn view_singular_type(
         Type::TYPE_BYTES => Ok(quote! { &#lt [u8] }),
         Type::TYPE_MESSAGE | Type::TYPE_GROUP => {
             let view_ty = resolve_view_ty_tokens(scope, field, lt)?;
-            Ok(quote! { ::buffa::MessageFieldView<#view_ty> })
+            // Non-recursive fields (same `inlined_message_fields` predicate
+            // as owned `Inline` storage, unless the `view_inline_fields`
+            // override says otherwise) hold the sub-view by value: no
+            // per-occurrence box allocation when decoding. Recursive fields
+            // (including `Self`, which never clears the cycle check) keep
+            // the boxed `MessageFieldView` so the type stays sized.
+            let field_name = field
+                .name
+                .as_deref()
+                .ok_or(CodeGenError::MissingField("field.name"))?;
+            // Leading-dot form, matching `inlined_message_fields` keys and
+            // every owned `pointer_repr` call site.
+            let field_fqn = format!(".{}.{}", proto_fqn, field_name);
+            if ctx.view_field_inline(&field_fqn) {
+                Ok(quote! { ::buffa::InlineMessageFieldView<#view_ty> })
+            } else {
+                Ok(quote! { ::buffa::MessageFieldView<#view_ty> })
+            }
         }
         Type::TYPE_ENUM => {
             let et = resolve_enum_ty(scope, field)?;
@@ -1371,13 +1435,25 @@ pub(crate) fn scalar_decode_arm(
 
     let wire_check = wire_type_check(&quote! { tag }, &wire_type);
 
+    // Numeric, bool, string and bytes fields decode through one fused reader
+    // (wire check + decode + store); see `merge_field_fn!` in `buffa::types`
+    // and the owned-side arms in `impl_message.rs`. The owned numeric readers
+    // serve views as well, `&mut &[u8]` being a `Buf`.
     if is_explicit_presence_scalar(field, ty, features) {
         let assign = match ty {
             Type::TYPE_STRING => {
-                quote! { view.#ident = Some(::buffa::types::borrow_str(&mut cur)?); }
+                return Ok(quote! {
+                    #field_number => {
+                        ::buffa::types::borrow_opt_str_field(tag, &mut view.#ident, &mut cur)?;
+                    }
+                });
             }
             Type::TYPE_BYTES => {
-                quote! { view.#ident = Some(::buffa::types::borrow_bytes(&mut cur)?); }
+                return Ok(quote! {
+                    #field_number => {
+                        ::buffa::types::borrow_opt_bytes_field(tag, &mut view.#ident, &mut cur)?;
+                    }
+                });
             }
             Type::TYPE_ENUM => {
                 if is_closed_enum(features) {
@@ -1394,8 +1470,12 @@ pub(crate) fn scalar_decode_arm(
                 }
             }
             _ => {
-                let dfn = decode_fn_token(ty);
-                quote! { view.#ident = Some(#dfn(&mut cur)?); }
+                let merge_fn = merge_field_fn_token(ty, true);
+                return Ok(quote! {
+                    #field_number => {
+                        #merge_fn(tag, &mut view.#ident, &mut cur)?;
+                    }
+                });
             }
         };
         return Ok(quote! { #field_number => { #wire_check #assign } });
@@ -1404,10 +1484,20 @@ pub(crate) fn scalar_decode_arm(
     let bit_stmt = required_bit_stmt.cloned().unwrap_or_default();
     let assign = match ty {
         Type::TYPE_STRING => {
-            quote! { view.#ident = ::buffa::types::borrow_str(&mut cur)?; #bit_stmt }
+            return Ok(quote! {
+                #field_number => {
+                    ::buffa::types::borrow_str_field(tag, &mut view.#ident, &mut cur)?;
+                    #bit_stmt
+                }
+            });
         }
         Type::TYPE_BYTES => {
-            quote! { view.#ident = ::buffa::types::borrow_bytes(&mut cur)?; #bit_stmt }
+            return Ok(quote! {
+                #field_number => {
+                    ::buffa::types::borrow_bytes_field(tag, &mut view.#ident, &mut cur)?;
+                    #bit_stmt
+                }
+            });
         }
         Type::TYPE_ENUM => {
             if is_closed_enum(features) {
@@ -1422,40 +1512,39 @@ pub(crate) fn scalar_decode_arm(
             }
         }
         Type::TYPE_MESSAGE => {
-            let vt = resolve_view_decode_tokens(scope, field)?;
+            // Proto merge semantics: a repeated occurrence merges into the
+            // existing view. Routing the first occurrence through the same
+            // `get_or_insert_default` + `merge_into_view` slot (instead of a
+            // separate `decode_view_ctx` call) keeps one sub-decoder per arm.
             quote! {
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                // Proto merge semantics: if this field appeared before,
-                // merge the new bytes into the existing view.
-                match view.#ident.as_mut() {
-                    Some(existing) => {
-                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
-                    }
-                    None => view.#ident = ::buffa::MessageFieldView::set(
-                        <#vt as ::buffa::MessageView>::decode_view_ctx(sub, __sub_ctx)?
-                    ),
-                }
+                ::buffa::MessageView::merge_into_view(
+                    view.#ident.get_or_insert_default(),
+                    sub,
+                    __sub_ctx,
+                )?;
             }
         }
         Type::TYPE_GROUP => {
-            let vt = resolve_view_decode_tokens(scope, field)?;
             quote! {
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_group(&mut cur, #field_number, __sub_ctx.depth())?;
-                match view.#ident.as_mut() {
-                    Some(existing) => {
-                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
-                    }
-                    None => view.#ident = ::buffa::MessageFieldView::set(
-                        <#vt as ::buffa::MessageView>::decode_view_ctx(sub, __sub_ctx)?
-                    ),
-                }
+                ::buffa::MessageView::merge_into_view(
+                    view.#ident.get_or_insert_default(),
+                    sub,
+                    __sub_ctx,
+                )?;
             }
         }
         _ => {
-            let dfn = decode_fn_token(ty);
-            quote! { view.#ident = #dfn(&mut cur)?; #bit_stmt }
+            let merge_fn = merge_field_fn_token(ty, false);
+            return Ok(quote! {
+                #field_number => {
+                    #merge_fn(tag, &mut view.#ident, &mut cur)?;
+                    #bit_stmt
+                }
+            });
         }
     };
 
@@ -1488,13 +1577,20 @@ pub(crate) fn repeated_decode_arm(
             &quote! { ::buffa::encoding::WireType::LengthDelimited },
         );
         let vt = resolve_view_decode_tokens(scope, field)?;
+        // A fresh element merged through `merge_into_view` reaches the shared
+        // erased loop. `decode_view_ctx` would instantiate a monomorphic loop
+        // per element type and inline it into this arm, which is the
+        // duplication the erasure exists to remove; the group arm below
+        // follows the same shape.
         return Ok(quote! {
             #field_number => {
                 #ld_check
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_bytes(&mut cur)?;
                 ctx.register_element_memory(::core::mem::size_of::<#vt>())?;
-                view.#ident.push(<#vt as ::buffa::MessageView>::decode_view_ctx(sub, __sub_ctx)?);
+                let mut __elem = <#vt as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.#ident.push(__elem);
             }
         });
     }
@@ -1512,13 +1608,29 @@ pub(crate) fn repeated_decode_arm(
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_group(&mut cur, #field_number, __sub_ctx.depth())?;
                 ctx.register_element_memory(::core::mem::size_of::<#vt>())?;
-                view.#ident.push(<#vt as ::buffa::MessageView>::decode_view_ctx(sub, __sub_ctx)?);
+                let mut __elem = <#vt as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.#ident.push(__elem);
             }
         });
     }
 
     // String and bytes: unpacked only (no packed encoding for LD types).
+    // They append through one fused reader (wire check, borrow, budget
+    // charge, push); see `push_str_field`.
     if !is_packed_type(ty) {
+        let fused = match ty {
+            Type::TYPE_STRING => Some(quote! { ::buffa::types::push_str_field }),
+            Type::TYPE_BYTES => Some(quote! { ::buffa::types::push_borrowed_bytes_field }),
+            _ => None,
+        };
+        if let Some(reader) = fused {
+            return Ok(quote! {
+                #field_number => {
+                    #reader(tag, &mut view.#ident, &mut cur, ctx)?;
+                }
+            });
+        }
         let ld_check = wire_type_check(
             &quote! { tag },
             &quote! { ::buffa::encoding::WireType::LengthDelimited },
@@ -1837,7 +1949,6 @@ pub(crate) fn oneof_decode_arms(
                 Type::TYPE_STRING => quote! { ::buffa::types::borrow_str(&mut cur)? },
                 Type::TYPE_BYTES => quote! { ::buffa::types::borrow_bytes(&mut cur)? },
                 Type::TYPE_MESSAGE => {
-                    let vt = resolve_view_decode_tokens(scope, field)?;
                     // Proto merge semantics: if this same variant is already set,
                     // merge into the existing boxed view rather than replacing.
                     // Uses an early `return Ok(...)` since the merge path doesn't
@@ -1847,41 +1958,42 @@ pub(crate) fn oneof_decode_arms(
                             #wire_check
                             let __sub_ctx = ctx.descend()?;
                             let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                            if let Some(#view_enum::#variant(ref mut existing)) = view.#field_ident {
-                                ::buffa::MessageView::merge_into_view(
-                                    &mut **existing,
-                                    sub,
-                                    __sub_ctx,
-                                )?;
-                            } else {
+                            // Install an empty box unless this variant is already
+                            // set (any other variant is replaced, per oneof
+                            // semantics), then merge in place: one sub-decoder
+                            // per arm, and no wildcard arm against the oneof
+                            // enum, which on a single-variant oneof would be an
+                            // `unreachable_patterns` warning in the consumer crate.
+                            if !::core::matches!(view.#field_ident, Some(#view_enum::#variant(_))) {
                                 view.#field_ident = Some(#view_enum::#variant(
-                                    ::buffa::alloc::boxed::Box::new(
-                                        <#vt as ::buffa::MessageView>::decode_view_ctx(sub, __sub_ctx)?
-                                    )
+                                    ::core::default::Default::default(),
                                 ));
+                            }
+                            if let Some(#view_enum::#variant(ref mut __boxed)) = view.#field_ident {
+                                ::buffa::MessageView::merge_into_view(&mut **__boxed, sub, __sub_ctx)?;
                             }
                         }
                     });
                 }
                 Type::TYPE_GROUP => {
-                    let vt = resolve_view_decode_tokens(scope, field)?;
                     return Ok(quote! {
                         #field_number => {
                             #wire_check
                             let __sub_ctx = ctx.descend()?;
                             let sub = ::buffa::types::borrow_group(&mut cur, #field_number, __sub_ctx.depth())?;
-                            if let Some(#view_enum::#variant(ref mut existing)) = view.#field_ident {
-                                ::buffa::MessageView::merge_into_view(
-                                    &mut **existing,
-                                    sub,
-                                    __sub_ctx,
-                                )?;
-                            } else {
+                            // Install an empty box unless this variant is already
+                            // set (any other variant is replaced, per oneof
+                            // semantics), then merge in place: one sub-decoder
+                            // per arm, and no wildcard arm against the oneof
+                            // enum, which on a single-variant oneof would be an
+                            // `unreachable_patterns` warning in the consumer crate.
+                            if !::core::matches!(view.#field_ident, Some(#view_enum::#variant(_))) {
                                 view.#field_ident = Some(#view_enum::#variant(
-                                    ::buffa::alloc::boxed::Box::new(
-                                        <#vt as ::buffa::MessageView>::decode_view_ctx(sub, __sub_ctx)?
-                                    )
+                                    ::core::default::Default::default(),
                                 ));
+                            }
+                            if let Some(#view_enum::#variant(ref mut __boxed)) = view.#field_ident {
+                                ::buffa::MessageView::merge_into_view(&mut **__boxed, sub, __sub_ctx)?;
                             }
                         }
                     });

@@ -886,9 +886,15 @@ fn inline_bytes_field_mapping() {
         content.contains("::buffa::bytes::Bytes"),
         "bytes fields should use Bytes type: {content}"
     );
+    // Field declarations must use Bytes (`encode_single_pass`'s
+    // `&mut Vec<u8>` sink parameter is exempt — it is not a field type).
     assert!(
-        !content.contains("Vec<u8>"),
-        "bytes fields should not use Vec<u8> when bytes mapping is enabled"
+        content.contains("pub data: ::buffa::bytes::Bytes"),
+        "bytes field declaration should use Bytes type: {content}"
+    );
+    assert!(
+        content.contains("pub payload: ::buffa::bytes::Bytes"),
+        "bytes field declaration should use Bytes type: {content}"
     );
     // Regression: decode path must use the Bytes-producing helper (not call
     // merge_bytes which expects &mut Vec<u8>).
@@ -1163,7 +1169,7 @@ fn inline_string_default_is_unchanged() {
         "default string repr should remain String: {content}"
     );
     assert!(
-        content.contains("merge_string(&mut self"),
+        content.contains("merge_string_field(tag, &mut self"),
         "default string field should keep the in-place merge_string fast path: {content}"
     );
     assert!(

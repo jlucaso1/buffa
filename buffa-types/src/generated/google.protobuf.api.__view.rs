@@ -56,7 +56,7 @@ pub struct ApiView<'a> {
     /// message.
     ///
     /// Field 5: `source_context`
-    pub source_context: ::buffa::MessageFieldView<
+    pub source_context: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::SourceContextView<'a>,
     >,
     /// Included interfaces. See [Mixin].
@@ -75,6 +75,15 @@ pub struct ApiView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for ApiView<'a> {
     type Owned = super::super::Api;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -104,18 +113,10 @@ impl<'a> ::buffa::MessageView<'a> for ApiView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.name = ::buffa::types::borrow_str(&mut cur)?;
+                ::buffa::types::borrow_str_field(tag, &mut view.name, &mut cur)?;
             }
             4u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.version = ::buffa::types::borrow_str(&mut cur)?;
+                ::buffa::types::borrow_str_field(tag, &mut view.version, &mut cur)?;
             }
             5u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -124,19 +125,11 @@ impl<'a> ::buffa::MessageView<'a> for ApiView<'a> {
                 )?;
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                match view.source_context.as_mut() {
-                    Some(existing) => {
-                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
-                    }
-                    None => {
-                        view.source_context = ::buffa::MessageFieldView::set(
-                            <super::super::__buffa::view::SourceContextView as ::buffa::MessageView>::decode_view_ctx(
-                                sub,
-                                __sub_ctx,
-                            )?,
-                        );
-                    }
-                }
+                ::buffa::MessageView::merge_into_view(
+                    view.source_context.get_or_insert_default(),
+                    sub,
+                    __sub_ctx,
+                )?;
             }
             7u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -148,11 +141,7 @@ impl<'a> ::buffa::MessageView<'a> for ApiView<'a> {
                 );
             }
             8u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.edition = ::buffa::types::borrow_str(&mut cur)?;
+                ::buffa::types::borrow_str_field(tag, &mut view.edition, &mut cur)?;
             }
             2u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -164,13 +153,9 @@ impl<'a> ::buffa::MessageView<'a> for ApiView<'a> {
                 ctx.register_element_memory(
                     ::core::mem::size_of::<super::super::__buffa::view::MethodView>(),
                 )?;
-                view.methods
-                    .push(
-                        <super::super::__buffa::view::MethodView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::MethodView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.methods.push(__elem);
             }
             3u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -182,13 +167,9 @@ impl<'a> ::buffa::MessageView<'a> for ApiView<'a> {
                 ctx.register_element_memory(
                     ::core::mem::size_of::<super::super::__buffa::view::OptionView>(),
                 )?;
-                view.options
-                    .push(
-                        <super::super::__buffa::view::OptionView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::OptionView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.options.push(__elem);
             }
             6u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -200,13 +181,9 @@ impl<'a> ::buffa::MessageView<'a> for ApiView<'a> {
                 ctx.register_element_memory(
                     ::core::mem::size_of::<super::super::__buffa::view::MixinView>(),
                 )?;
-                view.mixins
-                    .push(
-                        <super::super::__buffa::view::MixinView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::MixinView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.mixins.push(__elem);
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -275,37 +252,25 @@ impl<'a> ::buffa::ViewEncode<'a> for ApiView<'a> {
         for v in &self.methods {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.options {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         if !self.version.is_empty() {
             size += 1u64 + ::buffa::types::string_encoded_len(&self.version) as u64;
         }
-        if self.source_context.is_set() {
+        if let ::core::option::Option::Some(__v) = self.source_context.as_option() {
             let __slot = __cache.reserve();
-            let inner_size = self.source_context.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            let inner_size = __v.compute_size(__cache);
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.mixins {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         {
             let val = self.syntax.to_i32();
@@ -331,38 +296,22 @@ impl<'a> ::buffa::ViewEncode<'a> for ApiView<'a> {
             ::buffa::types::put_string_field(1u32, &self.name, buf);
         }
         for v in &self.methods {
-            ::buffa::types::put_len_delimited_header(
-                2u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(2u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         for v in &self.options {
-            ::buffa::types::put_len_delimited_header(
-                3u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(3u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         if !self.version.is_empty() {
             ::buffa::types::put_string_field(4u32, &self.version, buf);
         }
-        if self.source_context.is_set() {
-            ::buffa::types::put_len_delimited_header(
-                5u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            self.source_context.write_to(__cache, buf);
+        if let ::core::option::Option::Some(__v) = self.source_context.as_option() {
+            ::buffa::types::put_submessage_header(5u32, __cache, buf);
+            __v.write_to(__cache, buf);
         }
         for v in &self.mixins {
-            ::buffa::types::put_len_delimited_header(
-                6u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(6u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         {
@@ -519,7 +468,9 @@ impl ApiOwnedView {
     #[must_use]
     pub fn source_context(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::SourceContextView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<
+        super::super::__buffa::view::SourceContextView<'_>,
+    > {
         &self.0.reborrow().source_context
     }
     /// Included interfaces. See [Mixin].
@@ -740,6 +691,15 @@ pub struct MethodView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for MethodView<'a> {
     type Owned = super::super::Method;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -769,39 +729,35 @@ impl<'a> ::buffa::MessageView<'a> for MethodView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.name = ::buffa::types::borrow_str(&mut cur)?;
+                ::buffa::types::borrow_str_field(tag, &mut view.name, &mut cur)?;
             }
             2u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::borrow_str_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut view.request_type_url,
+                    &mut cur,
                 )?;
-                view.request_type_url = ::buffa::types::borrow_str(&mut cur)?;
             }
             3u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_bool_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.request_streaming,
+                    &mut cur,
                 )?;
-                view.request_streaming = ::buffa::types::decode_bool(&mut cur)?;
             }
             4u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::borrow_str_field(
                     tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
+                    &mut view.response_type_url,
+                    &mut cur,
                 )?;
-                view.response_type_url = ::buffa::types::borrow_str(&mut cur)?;
             }
             5u32 => {
-                ::buffa::encoding::check_wire_type(
+                ::buffa::types::merge_bool_field(
                     tag,
-                    ::buffa::encoding::WireType::Varint,
+                    &mut view.response_streaming,
+                    &mut cur,
                 )?;
-                view.response_streaming = ::buffa::types::decode_bool(&mut cur)?;
             }
             7u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -813,11 +769,7 @@ impl<'a> ::buffa::MessageView<'a> for MethodView<'a> {
                 );
             }
             8u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.edition = ::buffa::types::borrow_str(&mut cur)?;
+                ::buffa::types::borrow_str_field(tag, &mut view.edition, &mut cur)?;
             }
             6u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -829,13 +781,9 @@ impl<'a> ::buffa::MessageView<'a> for MethodView<'a> {
                 ctx.register_element_memory(
                     ::core::mem::size_of::<super::super::__buffa::view::OptionView>(),
                 )?;
-                view.options
-                    .push(
-                        <super::super::__buffa::view::OptionView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::OptionView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.options.push(__elem);
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -904,10 +852,7 @@ impl<'a> ::buffa::ViewEncode<'a> for MethodView<'a> {
         for v in &self.options {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         {
             let val = self.syntax.to_i32();
@@ -945,11 +890,7 @@ impl<'a> ::buffa::ViewEncode<'a> for MethodView<'a> {
             ::buffa::types::put_bool_field(5u32, self.response_streaming, buf);
         }
         for v in &self.options {
-            ::buffa::types::put_len_delimited_header(
-                6u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(6u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         {
@@ -1363,6 +1304,15 @@ pub struct MixinView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for MixinView<'a> {
     type Owned = super::super::Mixin;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -1392,18 +1342,10 @@ impl<'a> ::buffa::MessageView<'a> for MixinView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.name = ::buffa::types::borrow_str(&mut cur)?;
+                ::buffa::types::borrow_str_field(tag, &mut view.name, &mut cur)?;
             }
             2u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.root = ::buffa::types::borrow_str(&mut cur)?;
+                ::buffa::types::borrow_str_field(tag, &mut view.root, &mut cur)?;
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;

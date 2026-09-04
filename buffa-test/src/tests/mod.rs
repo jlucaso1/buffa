@@ -87,6 +87,7 @@ mod proto3_semantics;
 mod repeated_type;
 mod rope_encode;
 mod shared_pool;
+mod single_pass;
 mod string_type;
 mod textproto;
 mod type_prefix;

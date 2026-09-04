@@ -109,6 +109,11 @@ pub struct CodeGenContext<'a> {
     /// contains recursive fields. [`pointer_repr`](Self::pointer_repr) demotes
     /// any raw `Inline` not in this set to `Box`.
     inlined_message_fields: Arc<HashSet<String>>,
+    /// Singular message-field paths acyclic under default rules (leading-dot
+    /// form). Same builder with empty pointer rules; backs the
+    /// `view_inline_fields = Some(true)` override in
+    /// [`view_field_inline`](Self::view_field_inline).
+    acyclic_message_fields: Arc<HashSet<String>>,
     /// Non-fatal diagnostics accumulated during generation (e.g. an enum whose
     /// idiomatic CamelCase aliases were suppressed by a naming conflict).
     ///
@@ -291,6 +296,7 @@ impl<'a> CodeGenContext<'a> {
         };
         let unboxed_oneof_variants = Arc::clone(shared.unboxed_oneof_variants());
         let inlined_message_fields = Arc::clone(shared.inlined_message_fields());
+        let acyclic_message_fields = Arc::clone(shared.acyclic_message_fields());
         let comment_map = Arc::clone(shared.comment_map());
 
         // Pre-pass: collect every package and top-level message name in the
@@ -477,6 +483,7 @@ impl<'a> CodeGenContext<'a> {
             nested_module_names,
             unboxed_oneof_variants,
             inlined_message_fields,
+            acyclic_message_fields,
             field_renames,
             oneof_keep_verbatim,
             warnings: std::cell::RefCell::new(plan_warnings),
@@ -1144,6 +1151,23 @@ impl<'a> CodeGenContext<'a> {
             crate::PointerRepr::Box
         } else {
             raw
+        }
+    }
+
+    /// Whether a singular message/group view field stores its sub-view inline
+    /// (`InlineMessageFieldView`) rather than boxed (`MessageFieldView`).
+    ///
+    /// Honors the `view_inline_fields` config override when set; otherwise
+    /// follows [`pointer_repr`](Self::pointer_repr), i.e. inline exactly
+    /// when the owned side would store the field inline. Cycle safety always
+    /// applies: paths absent from `inlined_message_fields` stay boxed, and
+    /// the force-inline override consults the rule-independent
+    /// `acyclic_message_fields` set instead.
+    pub fn view_field_inline(&self, field_fqn: &str) -> bool {
+        match self.config.view_inline_fields {
+            Some(true) => self.acyclic_message_fields.contains(field_fqn),
+            Some(false) => false,
+            None => self.pointer_repr(field_fqn) == crate::PointerRepr::Inline,
         }
     }
 

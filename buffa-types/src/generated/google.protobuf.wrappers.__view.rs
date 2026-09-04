@@ -14,6 +14,23 @@ pub struct DoubleValueView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for DoubleValueView<'a> {
     type Owned = super::super::DoubleValue;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
+    #[inline]
+    fn merge_into_view(
+        &mut self,
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_into_view_inline(self, buf, ctx)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -43,11 +60,7 @@ impl<'a> ::buffa::MessageView<'a> for DoubleValueView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Fixed64,
-                )?;
-                view.value = ::buffa::types::decode_double(&mut cur)?;
+                ::buffa::types::merge_double_field(tag, &mut view.value, &mut cur)?;
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -335,6 +348,23 @@ pub struct FloatValueView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for FloatValueView<'a> {
     type Owned = super::super::FloatValue;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
+    #[inline]
+    fn merge_into_view(
+        &mut self,
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_into_view_inline(self, buf, ctx)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -364,11 +394,7 @@ impl<'a> ::buffa::MessageView<'a> for FloatValueView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Fixed32,
-                )?;
-                view.value = ::buffa::types::decode_float(&mut cur)?;
+                ::buffa::types::merge_float_field(tag, &mut view.value, &mut cur)?;
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -656,6 +682,23 @@ pub struct Int64ValueView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for Int64ValueView<'a> {
     type Owned = super::super::Int64Value;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
+    #[inline]
+    fn merge_into_view(
+        &mut self,
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_into_view_inline(self, buf, ctx)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -685,11 +728,7 @@ impl<'a> ::buffa::MessageView<'a> for Int64ValueView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.value = ::buffa::types::decode_int64(&mut cur)?;
+                ::buffa::types::merge_int64_field(tag, &mut view.value, &mut cur)?;
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -977,6 +1016,23 @@ pub struct UInt64ValueView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for UInt64ValueView<'a> {
     type Owned = super::super::UInt64Value;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
+    #[inline]
+    fn merge_into_view(
+        &mut self,
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_into_view_inline(self, buf, ctx)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -1006,11 +1062,7 @@ impl<'a> ::buffa::MessageView<'a> for UInt64ValueView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.value = ::buffa::types::decode_uint64(&mut cur)?;
+                ::buffa::types::merge_uint64_field(tag, &mut view.value, &mut cur)?;
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -1298,6 +1350,23 @@ pub struct Int32ValueView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for Int32ValueView<'a> {
     type Owned = super::super::Int32Value;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
+    #[inline]
+    fn merge_into_view(
+        &mut self,
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_into_view_inline(self, buf, ctx)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -1327,11 +1396,7 @@ impl<'a> ::buffa::MessageView<'a> for Int32ValueView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.value = ::buffa::types::decode_int32(&mut cur)?;
+                ::buffa::types::merge_int32_field(tag, &mut view.value, &mut cur)?;
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -1619,6 +1684,23 @@ pub struct UInt32ValueView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for UInt32ValueView<'a> {
     type Owned = super::super::UInt32Value;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
+    #[inline]
+    fn merge_into_view(
+        &mut self,
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_into_view_inline(self, buf, ctx)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -1648,11 +1730,7 @@ impl<'a> ::buffa::MessageView<'a> for UInt32ValueView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.value = ::buffa::types::decode_uint32(&mut cur)?;
+                ::buffa::types::merge_uint32_field(tag, &mut view.value, &mut cur)?;
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -1940,6 +2018,23 @@ pub struct BoolValueView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for BoolValueView<'a> {
     type Owned = super::super::BoolValue;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
+    #[inline]
+    fn merge_into_view(
+        &mut self,
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_into_view_inline(self, buf, ctx)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -1969,11 +2064,7 @@ impl<'a> ::buffa::MessageView<'a> for BoolValueView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                view.value = ::buffa::types::decode_bool(&mut cur)?;
+                ::buffa::types::merge_bool_field(tag, &mut view.value, &mut cur)?;
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -2261,6 +2352,15 @@ pub struct StringValueView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for StringValueView<'a> {
     type Owned = super::super::StringValue;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -2290,11 +2390,7 @@ impl<'a> ::buffa::MessageView<'a> for StringValueView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.value = ::buffa::types::borrow_str(&mut cur)?;
+                ::buffa::types::borrow_str_field(tag, &mut view.value, &mut cur)?;
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -2582,6 +2678,15 @@ pub struct BytesValueView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for BytesValueView<'a> {
     type Owned = super::super::BytesValue;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -2611,11 +2716,7 @@ impl<'a> ::buffa::MessageView<'a> for BytesValueView<'a> {
         let mut cur = cur;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                view.value = ::buffa::types::borrow_bytes(&mut cur)?;
+                ::buffa::types::borrow_bytes_field(tag, &mut view.value, &mut cur)?;
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
