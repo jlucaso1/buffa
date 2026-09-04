@@ -610,7 +610,7 @@ fn test_view_encode_oneof_roundtrip() {
 
 #[test]
 fn test_view_encode_repeated_nested_and_oneof_from_borrows() {
-    use buffa::{MessageFieldView, RepeatedView};
+    use buffa::{InlineMessageFieldView, RepeatedView};
     let addr = AddressView {
         street: "x",
         city: "y",
@@ -620,7 +620,7 @@ fn test_view_encode_repeated_nested_and_oneof_from_borrows() {
     let view = PersonView {
         tags: RepeatedView::new(vec!["t1", "t2"]),
         lucky_numbers: RepeatedView::new(vec![7, 11]),
-        address: MessageFieldView::set(addr.clone()),
+        address: InlineMessageFieldView::set(addr.clone()),
         addresses: RepeatedView::new(vec![addr.clone()]),
         contact: Some(view_oneof::person::Contact::HomeAddress(Box::new(addr))),
         ..Default::default()
@@ -1007,4 +1007,63 @@ fn test_view_oneof_message_variant_merges_then_other_variant_replaces() {
         view.contact
     );
     assert_eq!(view.to_owned_message().unwrap(), owned);
+}
+
+/// Non-recursive singular message view fields are stored inline (no box);
+/// recursive ones keep `MessageFieldView`. Compile-time assertions: these
+/// only compile if codegen picked the expected storage.
+#[test]
+fn test_view_inline_storage_selection() {
+    fn assert_inline(_: &buffa::InlineMessageFieldView<AddressView<'_>>) {}
+    fn assert_boxed(
+        _: &buffa::MessageFieldView<crate::nested::__buffa::view::corecursive::NestedView<'_>>,
+    ) {}
+
+    let view = PersonView::default();
+    assert_inline(&view.address);
+    assert!(view.address.is_unset());
+
+    let corecursive = crate::nested::__buffa::view::CorecursiveView::default();
+    assert_boxed(&corecursive.nested);
+    assert!(corecursive.nested.is_unset());
+}
+
+/// An inline view field merges split occurrences exactly like the owned
+/// decoder, with wire-equivalent equality (unset == set-to-default).
+#[test]
+fn test_view_inline_field_merge_and_wire_eq() {
+    use buffa::InlineMessageFieldView;
+    const ADDRESS_FIELD: u8 = (7 << 3) | 2;
+    let zip_only = Address {
+        zip_code: 12345,
+        ..Default::default()
+    };
+    let city_only = Address {
+        city: "SF".into(),
+        ..Default::default()
+    };
+    let bytes = [
+        ld(ADDRESS_FIELD, &zip_only.encode_to_vec()),
+        ld(ADDRESS_FIELD, &city_only.encode_to_vec()),
+    ]
+    .concat();
+
+    let owned = Person::decode_from_slice(&bytes).expect("owned");
+    let view = PersonView::decode_view(&bytes).expect("view");
+    let addr = view.address.as_option().expect("address set");
+    assert_eq!((addr.zip_code, addr.city), (12345, "SF"));
+    assert_eq!(view.to_owned_message().unwrap(), owned);
+
+    // No allocation happens for the inline slot: setting + merging borrows
+    // only. Wire-equivalence (explicit default equals unset) holds through
+    // the owned round-trip.
+    let unset_view = PersonView::default();
+    let mut set_default_view = PersonView::default();
+    set_default_view.address = InlineMessageFieldView::set(AddressView::default());
+    assert!(unset_view.address.is_unset());
+    assert!(set_default_view.address.is_set());
+    assert_eq!(
+        unset_view.to_owned_message().unwrap(),
+        set_default_view.to_owned_message().unwrap()
+    );
 }

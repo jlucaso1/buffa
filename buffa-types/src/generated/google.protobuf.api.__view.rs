@@ -56,7 +56,7 @@ pub struct ApiView<'a> {
     /// message.
     ///
     /// Field 5: `source_context`
-    pub source_context: ::buffa::MessageFieldView<
+    pub source_context: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::SourceContextView<'a>,
     >,
     /// Included interfaces. See [Mixin].
@@ -468,7 +468,9 @@ impl ApiOwnedView {
     #[must_use]
     pub fn source_context(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::SourceContextView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<
+        super::super::__buffa::view::SourceContextView<'_>,
+    > {
         &self.0.reborrow().source_context
     }
     /// Included interfaces. See [Mixin].

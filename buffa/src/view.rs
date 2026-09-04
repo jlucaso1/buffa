@@ -1286,6 +1286,145 @@ impl<V: PartialEq + DefaultViewInstance> PartialEq for MessageFieldView<V> {
 
 impl<V: Eq + DefaultViewInstance> Eq for MessageFieldView<V> {}
 
+/// A borrowed view of an optional message field, stored inline.
+///
+/// Same API as [`MessageFieldView`], but the inner view is stored by value
+/// (`Option<V>`) instead of boxed. Generated code uses this for singular
+/// message/group fields that cannot form a reference cycle (the same
+/// `inlined_message_fields` predicate that gates owned `Inline` storage), so
+/// decoding a set field performs no heap allocation. Recursive fields keep
+/// [`MessageFieldView`] and its box.
+///
+/// Wire-equivalent equality, deref-to-default and encode forwarding match
+/// [`MessageFieldView`] exactly; only the storage differs.
+#[derive(Clone, Debug)]
+pub struct InlineMessageFieldView<V> {
+    inner: Option<V>,
+}
+
+impl<V> InlineMessageFieldView<V> {
+    /// An unset field (the default).
+    #[inline]
+    pub const fn unset() -> Self {
+        Self { inner: None }
+    }
+
+    /// A set field with the given view value.
+    #[inline]
+    pub fn set(v: V) -> Self {
+        Self { inner: Some(v) }
+    }
+
+    /// Alias for [`set`](Self::set), mirroring owned
+    /// [`MessageField::some`](crate::MessageField::some).
+    #[inline]
+    pub fn some(v: V) -> Self {
+        Self::set(v)
+    }
+
+    /// Returns `true` if the field has a value.
+    #[inline]
+    pub const fn is_set(&self) -> bool {
+        self.inner.is_some()
+    }
+
+    /// Returns `true` if the field has no value.
+    #[inline]
+    pub const fn is_unset(&self) -> bool {
+        self.inner.is_none()
+    }
+
+    /// Get a reference to the inner view, or `None` if unset.
+    #[inline]
+    pub fn as_option(&self) -> Option<&V> {
+        self.inner.as_ref()
+    }
+
+    /// Get a mutable reference to the inner view, or `None` if unset.
+    #[inline]
+    pub fn as_mut(&mut self) -> Option<&mut V> {
+        self.inner.as_mut()
+    }
+
+    /// Get a mutable reference to the inner view, setting it to `V::default()`
+    /// first if the field is unset. Never allocates. Generated decode code
+    /// merges every occurrence of a message field through this one call.
+    ///
+    /// ```
+    /// use buffa::view::InlineMessageFieldView;
+    ///
+    /// let mut field: InlineMessageFieldView<Vec<u8>> = InlineMessageFieldView::unset();
+    /// field.get_or_insert_default().push(1);
+    /// field.get_or_insert_default().push(2);
+    /// assert_eq!(field.as_option().map(Vec::as_slice), Some(&[1, 2][..]));
+    /// ```
+    #[inline]
+    pub fn get_or_insert_default(&mut self) -> &mut V
+    where
+        V: Default,
+    {
+        self.inner.get_or_insert_default()
+    }
+}
+
+impl<'a, V: ViewEncode<'a>> InlineMessageFieldView<V> {
+    /// Forward to the inner view's [`compute_size`](ViewEncode::compute_size),
+    /// or `0` if unset.
+    #[inline]
+    pub fn compute_size(&self, cache: &mut crate::SizeCache) -> u32 {
+        self.inner.as_ref().map_or(0, |v| v.compute_size(cache))
+    }
+
+    /// Forward to the inner view's [`write_to`](ViewEncode::write_to);
+    /// no-op if unset.
+    #[inline]
+    pub fn write_to(&self, cache: &mut crate::SizeCache, buf: &mut impl EncodeSink) {
+        if let Some(v) = self.inner.as_ref() {
+            v.write_to(cache, buf);
+        }
+    }
+}
+
+impl<V> Default for InlineMessageFieldView<V> {
+    #[inline]
+    fn default() -> Self {
+        Self::unset()
+    }
+}
+
+impl<V> From<V> for InlineMessageFieldView<V> {
+    #[inline]
+    fn from(v: V) -> Self {
+        Self::set(v)
+    }
+}
+
+impl<V: DefaultViewInstance> core::ops::Deref for InlineMessageFieldView<V> {
+    type Target = V;
+
+    #[inline]
+    fn deref(&self) -> &V {
+        self.inner
+            .as_ref()
+            .unwrap_or_else(V::default_view_instance)
+    }
+}
+
+/// Wire-equivalent equality, matching [`MessageFieldView`]: `Unset` equals
+/// `Set(v)` when `v` equals the default instance.
+impl<V: PartialEq + DefaultViewInstance> PartialEq for InlineMessageFieldView<V> {
+    fn eq(&self, other: &Self) -> bool {
+        match (&self.inner, &other.inner) {
+            (None, None) => true,
+            _ => {
+                <Self as core::ops::Deref>::deref(self) == <Self as core::ops::Deref>::deref(other)
+            }
+        }
+    }
+}
+
+impl<V: Eq + DefaultViewInstance> Eq for InlineMessageFieldView<V> {}
+
 // ---------------------------------------------------------------------------
 // Lazy views (generated under the `lazy_views` codegen option)
 // ---------------------------------------------------------------------------

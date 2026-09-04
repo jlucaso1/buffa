@@ -368,7 +368,7 @@ pub struct CodeGeneratorRequestView<'a> {
     /// The version number of protocol compiler.
     ///
     /// Field 3: `compiler_version`
-    pub compiler_version: ::buffa::MessageFieldView<
+    pub compiler_version: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::VersionView<'a>,
     >,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
@@ -791,7 +791,7 @@ impl CodeGeneratorRequestOwnedView {
     #[must_use]
     pub fn compiler_version(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::VersionView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<super::super::__buffa::view::VersionView<'_>> {
         &self.0.reborrow().compiler_version
     }
 }
@@ -1334,7 +1334,7 @@ pub mod code_generator_response {
         /// into the code generation metadata for the generated files.
         ///
         /// Field 16: `generated_code_info`
-        pub generated_code_info: ::buffa::MessageFieldView<
+        pub generated_code_info: ::buffa::InlineMessageFieldView<
             super::super::super::super::__buffa::view::GeneratedCodeInfoView<'a>,
         >,
         pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
@@ -1712,7 +1712,7 @@ pub mod code_generator_response {
         #[must_use]
         pub fn generated_code_info(
             &self,
-        ) -> &::buffa::MessageFieldView<
+        ) -> &::buffa::InlineMessageFieldView<
             super::super::super::super::__buffa::view::GeneratedCodeInfoView<'_>,
         > {
             &self.0.reborrow().generated_code_info

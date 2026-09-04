@@ -28,7 +28,7 @@ pub struct TypeView<'a> {
     /// The source context.
     ///
     /// Field 5: `source_context`
-    pub source_context: ::buffa::MessageFieldView<
+    pub source_context: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::SourceContextView<'a>,
     >,
     /// The source syntax.
@@ -388,7 +388,9 @@ impl TypeOwnedView {
     #[must_use]
     pub fn source_context(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::SourceContextView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<
+        super::super::__buffa::view::SourceContextView<'_>,
+    > {
         &self.0.reborrow().source_context
     }
     /// The source syntax.
@@ -1164,7 +1166,7 @@ pub struct EnumView<'a> {
     /// The source context.
     ///
     /// Field 4: `source_context`
-    pub source_context: ::buffa::MessageFieldView<
+    pub source_context: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::SourceContextView<'a>,
     >,
     /// The source syntax.
@@ -1507,7 +1509,9 @@ impl EnumOwnedView {
     #[must_use]
     pub fn source_context(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::SourceContextView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<
+        super::super::__buffa::view::SourceContextView<'_>,
+    > {
         &self.0.reborrow().source_context
     }
     /// The source syntax.
@@ -2081,7 +2085,7 @@ pub struct OptionView<'a> {
     /// value using the google.protobuf.Int32Value type.
     ///
     /// Field 2: `value`
-    pub value: ::buffa::MessageFieldView<super::super::__buffa::view::AnyView<'a>>,
+    pub value: ::buffa::InlineMessageFieldView<super::super::__buffa::view::AnyView<'a>>,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
 }
 impl<'a> ::buffa::MessageView<'a> for OptionView<'a> {
@@ -2314,7 +2318,7 @@ impl OptionOwnedView {
     #[must_use]
     pub fn value(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::AnyView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<super::super::__buffa::view::AnyView<'_>> {
         &self.0.reborrow().value
     }
 }

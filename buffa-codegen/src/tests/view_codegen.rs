@@ -861,3 +861,73 @@ fn test_tiny_view_gets_inline_loop_override() {
         );
     }
 }
+
+#[test]
+fn test_view_non_recursive_message_field_is_inline() {
+    let mut file = proto3_file("inline_view.proto");
+    file.message_type.push(DescriptorProto {
+        name: Some("Leaf".to_string()),
+        field: vec![make_field("v", 1, Label::LABEL_OPTIONAL, Type::TYPE_INT32)],
+        ..Default::default()
+    });
+    file.message_type.push(DescriptorProto {
+        name: Some("Root".to_string()),
+        field: vec![FieldDescriptorProto {
+            name: Some("leaf".to_string()),
+            number: Some(1),
+            label: Some(Label::LABEL_OPTIONAL),
+            r#type: Some(Type::TYPE_MESSAGE),
+            type_name: Some(".Leaf".to_string()),
+            ..Default::default()
+        }],
+        ..Default::default()
+    });
+    let files = generate(
+        &[file],
+        &["inline_view.proto".to_string()],
+        &CodeGenConfig::default(),
+    )
+    .expect("should generate");
+    let content = &joined(&files);
+    assert!(
+        content.contains("pub leaf: ::buffa::InlineMessageFieldView<"),
+        "non-recursive message view field must be InlineMessageFieldView: {content}"
+    );
+    // Decode still merges through the same slot: the wrapper API is identical.
+    assert!(
+        content.contains("view.leaf.get_or_insert_default()"),
+        "inline view arm must merge through get_or_insert_default: {content}"
+    );
+}
+
+#[test]
+fn test_view_recursive_message_field_stays_boxed() {
+    let mut file = proto3_file("boxed_view.proto");
+    file.message_type.push(DescriptorProto {
+        name: Some("Node".to_string()),
+        field: vec![FieldDescriptorProto {
+            name: Some("child".to_string()),
+            number: Some(1),
+            label: Some(Label::LABEL_OPTIONAL),
+            r#type: Some(Type::TYPE_MESSAGE),
+            type_name: Some(".Node".to_string()),
+            ..Default::default()
+        }],
+        ..Default::default()
+    });
+    let files = generate(
+        &[file],
+        &["boxed_view.proto".to_string()],
+        &CodeGenConfig::default(),
+    )
+    .expect("should generate");
+    let content = &joined(&files);
+    assert!(
+        content.contains("pub child: ::buffa::MessageFieldView<"),
+        "self-recursive message view field must stay boxed: {content}"
+    );
+    assert!(
+        !content.contains("InlineMessageFieldView"),
+        "no inline view storage on a recursive schema: {content}"
+    );
+}

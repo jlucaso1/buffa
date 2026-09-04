@@ -339,7 +339,7 @@ pub struct FileDescriptorProtoView<'a> {
         super::super::__buffa::view::FieldDescriptorProtoView<'a>,
     >,
     /// Field 8: `options`
-    pub options: ::buffa::MessageFieldView<
+    pub options: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::FileOptionsView<'a>,
     >,
     /// This field contains optional information about the original source code.
@@ -348,7 +348,7 @@ pub struct FileDescriptorProtoView<'a> {
     /// development tools.
     ///
     /// Field 9: `source_code_info`
-    pub source_code_info: ::buffa::MessageFieldView<
+    pub source_code_info: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::SourceCodeInfoView<'a>,
     >,
     /// The syntax of the proto file.
@@ -1046,7 +1046,9 @@ impl FileDescriptorProtoOwnedView {
     #[must_use]
     pub fn options(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::FileOptionsView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<
+        super::super::__buffa::view::FileOptionsView<'_>,
+    > {
         &self.0.reborrow().options
     }
     /// This field contains optional information about the original source code.
@@ -1058,7 +1060,7 @@ impl FileDescriptorProtoOwnedView {
     #[must_use]
     pub fn source_code_info(
         &self,
-    ) -> &::buffa::MessageFieldView<
+    ) -> &::buffa::InlineMessageFieldView<
         super::super::__buffa::view::SourceCodeInfoView<'_>,
     > {
         &self.0.reborrow().source_code_info
@@ -1151,7 +1153,7 @@ pub struct DescriptorProtoView<'a> {
         super::super::__buffa::view::OneofDescriptorProtoView<'a>,
     >,
     /// Field 7: `options`
-    pub options: ::buffa::MessageFieldView<
+    pub options: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::MessageOptionsView<'a>,
     >,
     /// Field 9: `reserved_range`
@@ -1765,7 +1767,7 @@ impl DescriptorProtoOwnedView {
     #[must_use]
     pub fn options(
         &self,
-    ) -> &::buffa::MessageFieldView<
+    ) -> &::buffa::InlineMessageFieldView<
         super::super::__buffa::view::MessageOptionsView<'_>,
     > {
         &self.0.reborrow().options
@@ -1841,7 +1843,7 @@ pub mod descriptor_proto {
         /// Field 2: `end`
         pub end: ::core::option::Option<i32>,
         /// Field 3: `options`
-        pub options: ::buffa::MessageFieldView<
+        pub options: ::buffa::InlineMessageFieldView<
             super::super::super::__buffa::view::ExtensionRangeOptionsView<'a>,
         >,
         pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
@@ -2146,7 +2148,7 @@ pub mod descriptor_proto {
         #[must_use]
         pub fn options(
             &self,
-        ) -> &::buffa::MessageFieldView<
+        ) -> &::buffa::InlineMessageFieldView<
             super::super::super::__buffa::view::ExtensionRangeOptionsView<'_>,
         > {
             &self.0.reborrow().options
@@ -2514,7 +2516,7 @@ pub struct ExtensionRangeOptionsView<'a> {
     /// Any features defined in the specific edition.
     ///
     /// Field 50: `features`
-    pub features: ::buffa::MessageFieldView<
+    pub features: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::FeatureSetView<'a>,
     >,
     /// The verification state of the range.
@@ -2897,7 +2899,9 @@ impl ExtensionRangeOptionsOwnedView {
     #[must_use]
     pub fn features(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::FeatureSetView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<
+        super::super::__buffa::view::FeatureSetView<'_>,
+    > {
         &self.0.reborrow().features
     }
     /// The verification state of the range.
@@ -3394,7 +3398,7 @@ pub struct FieldDescriptorProtoView<'a> {
     /// Field 10: `json_name`
     pub json_name: ::core::option::Option<&'a str>,
     /// Field 8: `options`
-    pub options: ::buffa::MessageFieldView<
+    pub options: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::FieldOptionsView<'a>,
     >,
     /// If true, this is a proto3 "optional". When a proto3 field is optional, it
@@ -3921,7 +3925,9 @@ impl FieldDescriptorProtoOwnedView {
     #[must_use]
     pub fn options(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::FieldOptionsView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<
+        super::super::__buffa::view::FieldOptionsView<'_>,
+    > {
         &self.0.reborrow().options
     }
     /// If true, this is a proto3 "optional". When a proto3 field is optional, it
@@ -3989,7 +3995,7 @@ pub struct OneofDescriptorProtoView<'a> {
     /// Field 1: `name`
     pub name: ::core::option::Option<&'a str>,
     /// Field 2: `options`
-    pub options: ::buffa::MessageFieldView<
+    pub options: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::OneofOptionsView<'a>,
     >,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
@@ -4258,7 +4264,9 @@ impl OneofDescriptorProtoOwnedView {
     #[must_use]
     pub fn options(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::OneofOptionsView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<
+        super::super::__buffa::view::OneofOptionsView<'_>,
+    > {
         &self.0.reborrow().options
     }
 }
@@ -4304,7 +4312,7 @@ pub struct EnumDescriptorProtoView<'a> {
         super::super::__buffa::view::EnumValueDescriptorProtoView<'a>,
     >,
     /// Field 3: `options`
-    pub options: ::buffa::MessageFieldView<
+    pub options: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::EnumOptionsView<'a>,
     >,
     /// Range of reserved numeric values. Reserved numeric values may not be used
@@ -4715,7 +4723,9 @@ impl EnumDescriptorProtoOwnedView {
     #[must_use]
     pub fn options(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::EnumOptionsView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<
+        super::super::__buffa::view::EnumOptionsView<'_>,
+    > {
         &self.0.reborrow().options
     }
     /// Range of reserved numeric values. Reserved numeric values may not be used
@@ -5104,7 +5114,7 @@ pub struct EnumValueDescriptorProtoView<'a> {
     /// Field 2: `number`
     pub number: ::core::option::Option<i32>,
     /// Field 3: `options`
-    pub options: ::buffa::MessageFieldView<
+    pub options: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::EnumValueOptionsView<'a>,
     >,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
@@ -5391,7 +5401,7 @@ impl EnumValueDescriptorProtoOwnedView {
     #[must_use]
     pub fn options(
         &self,
-    ) -> &::buffa::MessageFieldView<
+    ) -> &::buffa::InlineMessageFieldView<
         super::super::__buffa::view::EnumValueOptionsView<'_>,
     > {
         &self.0.reborrow().options
@@ -5439,7 +5449,7 @@ pub struct ServiceDescriptorProtoView<'a> {
         super::super::__buffa::view::MethodDescriptorProtoView<'a>,
     >,
     /// Field 3: `options`
-    pub options: ::buffa::MessageFieldView<
+    pub options: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::ServiceOptionsView<'a>,
     >,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
@@ -5751,7 +5761,7 @@ impl ServiceDescriptorProtoOwnedView {
     #[must_use]
     pub fn options(
         &self,
-    ) -> &::buffa::MessageFieldView<
+    ) -> &::buffa::InlineMessageFieldView<
         super::super::__buffa::view::ServiceOptionsView<'_>,
     > {
         &self.0.reborrow().options
@@ -5801,7 +5811,7 @@ pub struct MethodDescriptorProtoView<'a> {
     /// Field 3: `output_type`
     pub output_type: ::core::option::Option<&'a str>,
     /// Field 4: `options`
-    pub options: ::buffa::MessageFieldView<
+    pub options: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::MethodOptionsView<'a>,
     >,
     /// Identifies if client streams multiple client messages
@@ -6159,7 +6169,9 @@ impl MethodDescriptorProtoOwnedView {
     #[must_use]
     pub fn options(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::MethodOptionsView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<
+        super::super::__buffa::view::MethodOptionsView<'_>,
+    > {
         &self.0.reborrow().options
     }
     /// Identifies if client streams multiple client messages
@@ -6366,7 +6378,7 @@ pub struct FileOptionsView<'a> {
     /// developers should rely on the protoreflect APIs for their client language.
     ///
     /// Field 50: `features`
-    pub features: ::buffa::MessageFieldView<
+    pub features: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::FeatureSetView<'a>,
     >,
     /// The parser stores options it doesn't recognize here.
@@ -7167,7 +7179,9 @@ impl FileOptionsOwnedView {
     #[must_use]
     pub fn features(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::FeatureSetView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<
+        super::super::__buffa::view::FeatureSetView<'_>,
+    > {
         &self.0.reborrow().features
     }
     /// The parser stores options it doesn't recognize here.
@@ -7300,7 +7314,7 @@ pub struct MessageOptionsView<'a> {
     /// developers should rely on the protoreflect APIs for their client language.
     ///
     /// Field 12: `features`
-    pub features: ::buffa::MessageFieldView<
+    pub features: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::FeatureSetView<'a>,
     >,
     /// The parser stores options it doesn't recognize here. See above.
@@ -7770,7 +7784,9 @@ impl MessageOptionsOwnedView {
     #[must_use]
     pub fn features(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::FeatureSetView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<
+        super::super::__buffa::view::FeatureSetView<'_>,
+    > {
         &self.0.reborrow().features
     }
     /// The parser stores options it doesn't recognize here. See above.
@@ -7919,11 +7935,11 @@ pub struct FieldOptionsView<'a> {
     /// developers should rely on the protoreflect APIs for their client language.
     ///
     /// Field 21: `features`
-    pub features: ::buffa::MessageFieldView<
+    pub features: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::FeatureSetView<'a>,
     >,
     /// Field 22: `feature_support`
-    pub feature_support: ::buffa::MessageFieldView<
+    pub feature_support: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::field_options::FeatureSupportView<'a>,
     >,
     /// The parser stores options it doesn't recognize here. See above.
@@ -8635,14 +8651,16 @@ impl FieldOptionsOwnedView {
     #[must_use]
     pub fn features(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::FeatureSetView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<
+        super::super::__buffa::view::FeatureSetView<'_>,
+    > {
         &self.0.reborrow().features
     }
     /// Field 22: `feature_support`
     #[must_use]
     pub fn feature_support(
         &self,
-    ) -> &::buffa::MessageFieldView<
+    ) -> &::buffa::InlineMessageFieldView<
         super::super::__buffa::view::field_options::FeatureSupportView<'_>,
     > {
         &self.0.reborrow().feature_support
@@ -9426,7 +9444,7 @@ pub struct OneofOptionsView<'a> {
     /// developers should rely on the protoreflect APIs for their client language.
     ///
     /// Field 1: `features`
-    pub features: ::buffa::MessageFieldView<
+    pub features: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::FeatureSetView<'a>,
     >,
     /// The parser stores options it doesn't recognize here. See above.
@@ -9712,7 +9730,9 @@ impl OneofOptionsOwnedView {
     #[must_use]
     pub fn features(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::FeatureSetView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<
+        super::super::__buffa::view::FeatureSetView<'_>,
+    > {
         &self.0.reborrow().features
     }
     /// The parser stores options it doesn't recognize here. See above.
@@ -9788,7 +9808,7 @@ pub struct EnumOptionsView<'a> {
     /// developers should rely on the protoreflect APIs for their client language.
     ///
     /// Field 7: `features`
-    pub features: ::buffa::MessageFieldView<
+    pub features: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::FeatureSetView<'a>,
     >,
     /// The parser stores options it doesn't recognize here. See above.
@@ -10160,7 +10180,9 @@ impl EnumOptionsOwnedView {
     #[must_use]
     pub fn features(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::FeatureSetView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<
+        super::super::__buffa::view::FeatureSetView<'_>,
+    > {
         &self.0.reborrow().features
     }
     /// The parser stores options it doesn't recognize here. See above.
@@ -10222,7 +10244,7 @@ pub struct EnumValueOptionsView<'a> {
     /// developers should rely on the protoreflect APIs for their client language.
     ///
     /// Field 2: `features`
-    pub features: ::buffa::MessageFieldView<
+    pub features: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::FeatureSetView<'a>,
     >,
     /// Indicate that fields annotated with this enum value should not be printed
@@ -10234,7 +10256,7 @@ pub struct EnumValueOptionsView<'a> {
     /// Information about the support window of a feature value.
     ///
     /// Field 4: `feature_support`
-    pub feature_support: ::buffa::MessageFieldView<
+    pub feature_support: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::field_options::FeatureSupportView<'a>,
     >,
     /// The parser stores options it doesn't recognize here. See above.
@@ -10602,7 +10624,9 @@ impl EnumValueOptionsOwnedView {
     #[must_use]
     pub fn features(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::FeatureSetView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<
+        super::super::__buffa::view::FeatureSetView<'_>,
+    > {
         &self.0.reborrow().features
     }
     /// Indicate that fields annotated with this enum value should not be printed
@@ -10620,7 +10644,7 @@ impl EnumValueOptionsOwnedView {
     #[must_use]
     pub fn feature_support(
         &self,
-    ) -> &::buffa::MessageFieldView<
+    ) -> &::buffa::InlineMessageFieldView<
         super::super::__buffa::view::field_options::FeatureSupportView<'_>,
     > {
         &self.0.reborrow().feature_support
@@ -10677,7 +10701,7 @@ pub struct ServiceOptionsView<'a> {
     /// developers should rely on the protoreflect APIs for their client language.
     ///
     /// Field 34: `features`
-    pub features: ::buffa::MessageFieldView<
+    pub features: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::FeatureSetView<'a>,
     >,
     /// Note:  Field numbers 1 through 32 are reserved for Google's internal RPC
@@ -10994,7 +11018,9 @@ impl ServiceOptionsOwnedView {
     #[must_use]
     pub fn features(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::FeatureSetView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<
+        super::super::__buffa::view::FeatureSetView<'_>,
+    > {
         &self.0.reborrow().features
     }
     /// Note:  Field numbers 1 through 32 are reserved for Google's internal RPC
@@ -11080,7 +11106,7 @@ pub struct MethodOptionsView<'a> {
     /// developers should rely on the protoreflect APIs for their client language.
     ///
     /// Field 35: `features`
-    pub features: ::buffa::MessageFieldView<
+    pub features: ::buffa::InlineMessageFieldView<
         super::super::__buffa::view::FeatureSetView<'a>,
     >,
     /// The parser stores options it doesn't recognize here. See above.
@@ -11435,7 +11461,9 @@ impl MethodOptionsOwnedView {
     #[must_use]
     pub fn features(
         &self,
-    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::FeatureSetView<'_>> {
+    ) -> &::buffa::InlineMessageFieldView<
+        super::super::__buffa::view::FeatureSetView<'_>,
+    > {
         &self.0.reborrow().features
     }
     /// The parser stores options it doesn't recognize here. See above.
@@ -13463,13 +13491,13 @@ pub mod feature_set_defaults {
         /// Defaults of features that can be overridden in this edition.
         ///
         /// Field 4: `overridable_features`
-        pub overridable_features: ::buffa::MessageFieldView<
+        pub overridable_features: ::buffa::InlineMessageFieldView<
             super::super::super::__buffa::view::FeatureSetView<'a>,
         >,
         /// Defaults of features that can't be overridden in this edition.
         ///
         /// Field 5: `fixed_features`
-        pub fixed_features: ::buffa::MessageFieldView<
+        pub fixed_features: ::buffa::InlineMessageFieldView<
             super::super::super::__buffa::view::FeatureSetView<'a>,
         >,
         pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
@@ -13817,7 +13845,7 @@ pub mod feature_set_defaults {
         #[must_use]
         pub fn overridable_features(
             &self,
-        ) -> &::buffa::MessageFieldView<
+        ) -> &::buffa::InlineMessageFieldView<
             super::super::super::__buffa::view::FeatureSetView<'_>,
         > {
             &self.0.reborrow().overridable_features
@@ -13828,7 +13856,7 @@ pub mod feature_set_defaults {
         #[must_use]
         pub fn fixed_features(
             &self,
-        ) -> &::buffa::MessageFieldView<
+        ) -> &::buffa::InlineMessageFieldView<
             super::super::super::__buffa::view::FeatureSetView<'_>,
         > {
             &self.0.reborrow().fixed_features
