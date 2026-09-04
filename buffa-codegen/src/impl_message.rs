@@ -505,6 +505,7 @@ pub fn generate_message_impl(
     // the same traversal order that compute_size's reserve()/set() filled them.
     let mut compute_stmts: Vec<TokenStream> = Vec::with_capacity(fields.len());
     let mut write_stmts: Vec<TokenStream> = Vec::with_capacity(fields.len());
+    let mut single_pass_stmts: Vec<TokenStream> = Vec::with_capacity(fields.len());
     let mut merge_arms: Vec<TokenStream> = Vec::with_capacity(fields.len());
     let mut clear_stmts: Vec<TokenStream> = Vec::with_capacity(fields.len());
     for kind in &fields {
@@ -512,6 +513,7 @@ pub fn generate_message_impl(
             FieldKind::Scalar(f) => {
                 compute_stmts.push(scalar_compute_size_stmt(ctx, f, features)?);
                 write_stmts.push(scalar_write_to_stmt(ctx, f, features)?);
+                single_pass_stmts.push(singular_single_pass_stmt(ctx, f, features)?);
                 merge_arms.push(scalar_merge_arm(
                     ctx,
                     f,
@@ -532,6 +534,7 @@ pub fn generate_message_impl(
                 let repr = field_repeated_repr(ctx, proto_fqn, f.name.as_deref().unwrap_or(""));
                 compute_stmts.push(repeated_compute_size_stmt(ctx, f, features, &repr)?);
                 write_stmts.push(repeated_write_to_stmt(ctx, f, features, &repr)?);
+                single_pass_stmts.push(repeated_single_pass_stmt(ctx, f, features, &repr)?);
                 merge_arms.push(repeated_merge_arm(
                     ctx,
                     f,
@@ -545,6 +548,7 @@ pub fn generate_message_impl(
             FieldKind::Map(f) => {
                 compute_stmts.push(map_compute_size_stmt(ctx, msg, f, proto_fqn, features)?);
                 write_stmts.push(map_write_to_stmt(ctx, msg, f, proto_fqn, features)?);
+                single_pass_stmts.push(map_single_pass_stmt(ctx, msg, f, proto_fqn, features)?);
                 merge_arms.push(map_merge_arm(ctx, msg, f, proto_fqn, features)?);
                 clear_stmts.push(map_field_clear_stmt(ctx, f, proto_fqn)?);
             }
@@ -553,7 +557,7 @@ pub fn generate_message_impl(
                 enum_ident,
                 fields,
             } => {
-                let (cs, ws, mas) = generate_oneof_impls(
+                let (cs, ws, sps, mas) = generate_oneof_impls(
                     ctx,
                     enum_ident,
                     name,
@@ -567,6 +571,7 @@ pub fn generate_message_impl(
                 )?;
                 compute_stmts.push(cs);
                 write_stmts.push(ws);
+                single_pass_stmts.push(sps);
                 merge_arms.extend(mas);
                 let ident = ctx.oneof_ident(name);
                 clear_stmts.push(quote! { self.#ident = ::core::option::Option::None; });
@@ -778,6 +783,21 @@ pub fn generate_message_impl(
                 #[allow(unused_imports)]
                 use ::buffa::Enumeration as _;
                 #(#write_stmts)*
+                #unknown_fields_write_stmt
+            }
+
+            /// Single-pass encode into a contiguous buffer (experiment).
+            ///
+            /// Same bytes as `compute_size` + `write_to`, but length prefixes
+            /// are reserved and backpatched: the field set is walked once.
+            /// Falls back to the two passes only for hand-written impls that
+            /// do not override it.
+            fn encode_single_pass(&self, buf: &mut ::buffa::alloc::vec::Vec<u8>) {
+                #[allow(unused_imports)]
+                use ::buffa::EncodeSink as _;
+                #[allow(unused_imports)]
+                use ::buffa::Enumeration as _;
+                #(#single_pass_stmts)*
                 #unknown_fields_write_stmt
             }
 
@@ -1957,6 +1977,62 @@ fn scalar_write_to_stmt(
     })
 }
 
+/// Single-pass `encode_single_pass` body for one singular field (experiment).
+///
+/// Every arm except message-typed ones is identical to
+/// [`scalar_write_to_stmt`] (no `SizeCache` involved), so those delegate.
+/// A message arm reserves the length prefix, encodes the child straight into
+/// the buffer, then patches the prefix — no size pre-pass. Groups carry no
+/// prefix and just recurse.
+fn singular_single_pass_stmt(
+    ctx: &CodeGenContext,
+    field: &FieldDescriptorProto,
+    features: &ResolvedFeatures,
+) -> Result<TokenStream, CodeGenError> {
+    let ty = effective_type(ctx, field, features);
+    match ty {
+        Type::TYPE_MESSAGE => {
+            let field_name = field
+                .name
+                .as_deref()
+                .ok_or(CodeGenError::MissingField("field.name"))?;
+            let field_number = validated_field_number(field)?;
+            let ident = ctx.field_ident(field_name, field.number.unwrap_or(0));
+            Ok(quote! {
+                if let ::core::option::Option::Some(__v) = self.#ident.as_option() {
+                    ::buffa::encoding::Tag::new(
+                        #field_number,
+                        ::buffa::encoding::WireType::LengthDelimited,
+                    ).encode(buf);
+                    let __len_pos = ::buffa::types::reserve_len_prefix(buf);
+                    let __payload_start = buf.len();
+                    __v.encode_single_pass(buf);
+                    let __len = ::core::primitive::u32::try_from(
+                        buf.len() - __payload_start,
+                    ).unwrap_or(::core::primitive::u32::MAX);
+                    ::buffa::types::patch_len_prefix(buf, __len_pos, __len);
+                }
+            })
+        }
+        Type::TYPE_GROUP => {
+            let field_name = field
+                .name
+                .as_deref()
+                .ok_or(CodeGenError::MissingField("field.name"))?;
+            let field_number = validated_field_number(field)?;
+            let ident = ctx.field_ident(field_name, field.number.unwrap_or(0));
+            Ok(quote! {
+                if let ::core::option::Option::Some(__v) = self.#ident.as_option() {
+                    ::buffa::types::put_group_start(#field_number, buf);
+                    __v.encode_single_pass(buf);
+                    ::buffa::types::put_group_end(#field_number, buf);
+                }
+            })
+        }
+        _ => scalar_write_to_stmt(ctx, field, features),
+    }
+}
+
 /// Generate a merge match arm for a field with explicit presence (`Option<T>`).
 ///
 /// Emits `field_number => { wire_check; self.field = Some(decoded_value); }`.
@@ -2452,6 +2528,62 @@ fn repeated_write_to_stmt(
     })
 }
 
+/// Single-pass `encode_single_pass` body for one repeated field (experiment).
+///
+/// Non-message arms are [`repeated_write_to_stmt`] verbatim (no cache); the
+/// message/group arms reserve + patch per element and recurse without it.
+fn repeated_single_pass_stmt(
+    ctx: &CodeGenContext,
+    field: &FieldDescriptorProto,
+    features: &ResolvedFeatures,
+    repr: &crate::RepeatedRepr,
+) -> Result<TokenStream, CodeGenError> {
+    let ty = effective_type(ctx, field, features);
+    match ty {
+        Type::TYPE_MESSAGE => {
+            let field_name = field
+                .name
+                .as_deref()
+                .ok_or(CodeGenError::MissingField("field.name"))?;
+            let field_number = validated_field_number(field)?;
+            let ident = ctx.field_ident(field_name, field.number.unwrap_or(0));
+            let elems = repeated_for_iter(&ident, repr);
+            Ok(quote! {
+                for v in #elems {
+                    ::buffa::encoding::Tag::new(
+                        #field_number,
+                        ::buffa::encoding::WireType::LengthDelimited,
+                    ).encode(buf);
+                    let __len_pos = ::buffa::types::reserve_len_prefix(buf);
+                    let __payload_start = buf.len();
+                    v.encode_single_pass(buf);
+                    let __len = ::core::primitive::u32::try_from(
+                        buf.len() - __payload_start,
+                    ).unwrap_or(::core::primitive::u32::MAX);
+                    ::buffa::types::patch_len_prefix(buf, __len_pos, __len);
+                }
+            })
+        }
+        Type::TYPE_GROUP => {
+            let field_name = field
+                .name
+                .as_deref()
+                .ok_or(CodeGenError::MissingField("field.name"))?;
+            let field_number = validated_field_number(field)?;
+            let ident = ctx.field_ident(field_name, field.number.unwrap_or(0));
+            let elems = repeated_for_iter(&ident, repr);
+            Ok(quote! {
+                for v in #elems {
+                    ::buffa::types::put_group_start(#field_number, buf);
+                    v.encode_single_pass(buf);
+                    ::buffa::types::put_group_end(#field_number, buf);
+                }
+            })
+        }
+        _ => repeated_write_to_stmt(ctx, field, features, repr),
+    }
+}
+
 fn repeated_merge_arm(
     ctx: &CodeGenContext,
     field: &FieldDescriptorProto,
@@ -2832,6 +2964,43 @@ fn oneof_write_arm(
     }
 }
 
+/// Single-pass `encode_single_pass` arm for one oneof variant (experiment).
+///
+/// Non-message variants are [`oneof_write_arm`] verbatim; message/group
+/// variants reserve + patch and recurse without the `SizeCache`.
+fn oneof_single_pass_arm(
+    enum_ident: &TokenStream,
+    variant_ident: &Ident,
+    field_number: u32,
+    ty: Type,
+) -> TokenStream {
+    match ty {
+        Type::TYPE_MESSAGE => quote! {
+            #enum_ident::#variant_ident(x) => {
+                ::buffa::encoding::Tag::new(
+                    #field_number,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                ).encode(buf);
+                let __len_pos = ::buffa::types::reserve_len_prefix(buf);
+                let __payload_start = buf.len();
+                x.encode_single_pass(buf);
+                let __len = ::core::primitive::u32::try_from(
+                    buf.len() - __payload_start,
+                ).unwrap_or(::core::primitive::u32::MAX);
+                ::buffa::types::patch_len_prefix(buf, __len_pos, __len);
+            }
+        },
+        Type::TYPE_GROUP => quote! {
+            #enum_ident::#variant_ident(x) => {
+                ::buffa::types::put_group_start(#field_number, buf);
+                x.encode_single_pass(buf);
+                ::buffa::types::put_group_end(#field_number, buf);
+            }
+        },
+        _ => oneof_write_arm(enum_ident, variant_ident, field_number, ty),
+    }
+}
+
 /// Generate a `merge` match arm for one oneof variant.
 ///
 /// Emits `field_number => { wire_check; self.field = Some(EnumIdent::Variant(decoded)); }`.
@@ -3000,12 +3169,13 @@ fn generate_oneof_impls(
     nesting: usize,
     features: &ResolvedFeatures,
     preserve_unknown_fields: bool,
-) -> Result<(TokenStream, TokenStream, Vec<TokenStream>), CodeGenError> {
+) -> Result<(TokenStream, TokenStream, TokenStream, Vec<TokenStream>), CodeGenError> {
     let field_ident = ctx.oneof_ident(oneof_name);
     let qualified_enum: TokenStream = quote! { #oneof_prefix #enum_ident };
 
     let mut size_arms: Vec<TokenStream> = Vec::new();
     let mut write_arms: Vec<TokenStream> = Vec::new();
+    let mut single_pass_arms: Vec<TokenStream> = Vec::new();
     let mut merge_arm_list: Vec<TokenStream> = Vec::new();
 
     for field in fields {
@@ -3020,6 +3190,12 @@ fn generate_oneof_impls(
 
         size_arms.push(oneof_size_arm(&qualified_enum, &variant_ident, tag_len, ty));
         write_arms.push(oneof_write_arm(
+            &qualified_enum,
+            &variant_ident,
+            field_number,
+            ty,
+        ));
+        single_pass_arms.push(oneof_single_pass_arm(
             &qualified_enum,
             &variant_ident,
             field_number,
@@ -3077,8 +3253,15 @@ fn generate_oneof_impls(
             }
         }
     };
+    let single_pass_stmt = quote! {
+        if let ::core::option::Option::Some(ref v) = self.#field_ident {
+            match v {
+                #(#single_pass_arms)*
+            }
+        }
+    };
 
-    Ok((compute_stmt, write_stmt, merge_arm_list))
+    Ok((compute_stmt, write_stmt, single_pass_stmt, merge_arm_list))
 }
 
 // ---------------------------------------------------------------------------
@@ -3477,6 +3660,37 @@ fn map_write_to_stmt(
             buf,
         );
     })
+}
+
+/// Single-pass `encode_single_pass` body for one map field (experiment).
+///
+/// Scalar values are [`map_write_to_stmt`] verbatim; message values go
+/// through the backpatching [`::buffa::map_codec::write_message_field_single_pass`]
+/// instead of the `SizeCache`-slot runtime.
+fn map_single_pass_stmt(
+    ctx: &CodeGenContext,
+    msg: &DescriptorProto,
+    field: &FieldDescriptorProto,
+    proto_fqn: &str,
+    features: &ResolvedFeatures,
+) -> Result<TokenStream, CodeGenError> {
+    let m = map_entry_ctx(ctx, msg, field, proto_fqn, features)?;
+    let MapEntryCtx {
+        field_number,
+        ident,
+        key_codec,
+        ..
+    } = &m;
+    if m.val_ty == Type::TYPE_MESSAGE {
+        return Ok(quote! {
+            ::buffa::map_codec::write_message_field_single_pass::<#key_codec, _, _>(
+                &self.#ident,
+                #field_number,
+                buf,
+            );
+        });
+    }
+    map_write_to_stmt(ctx, msg, field, proto_fqn, features)
 }
 
 fn map_merge_arm(

@@ -218,6 +218,24 @@ impl ::buffa::Message for Struct {
         >(&self.fields, 1u32, __cache, buf);
         self.__buffa_unknown_fields.write_to(buf);
     }
+    /// Single-pass encode into a contiguous buffer (experiment).
+    ///
+    /// Same bytes as `compute_size` + `write_to`, but length prefixes
+    /// are reserved and backpatched: the field set is walked once.
+    /// Falls back to the two passes only for hand-written impls that
+    /// do not override it.
+    fn encode_single_pass(&self, buf: &mut ::buffa::alloc::vec::Vec<u8>) {
+        #[allow(unused_imports)]
+        use ::buffa::EncodeSink as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        ::buffa::map_codec::write_message_field_single_pass::<
+            ::buffa::map_codec::Str,
+            _,
+            _,
+        >(&self.fields, 1u32, buf);
+        self.__buffa_unknown_fields.write_to(buf);
+    }
     fn merge_field(
         &mut self,
         tag: ::buffa::encoding::Tag,
@@ -657,6 +675,65 @@ impl ::buffa::Message for Value {
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
+    /// Single-pass encode into a contiguous buffer (experiment).
+    ///
+    /// Same bytes as `compute_size` + `write_to`, but length prefixes
+    /// are reserved and backpatched: the field set is walked once.
+    /// Falls back to the two passes only for hand-written impls that
+    /// do not override it.
+    fn encode_single_pass(&self, buf: &mut ::buffa::alloc::vec::Vec<u8>) {
+        #[allow(unused_imports)]
+        use ::buffa::EncodeSink as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if let ::core::option::Option::Some(ref v) = self.kind {
+            match v {
+                __buffa::oneof::value::Kind::NullValue(x) => {
+                    ::buffa::types::put_int32_field(1u32, x.to_i32(), buf);
+                }
+                __buffa::oneof::value::Kind::NumberValue(x) => {
+                    ::buffa::types::put_double_field(2u32, *x, buf);
+                }
+                __buffa::oneof::value::Kind::StringValue(x) => {
+                    ::buffa::types::put_string_field(3u32, x, buf);
+                }
+                __buffa::oneof::value::Kind::BoolValue(x) => {
+                    ::buffa::types::put_bool_field(4u32, *x, buf);
+                }
+                __buffa::oneof::value::Kind::StructValue(x) => {
+                    ::buffa::encoding::Tag::new(
+                            5u32,
+                            ::buffa::encoding::WireType::LengthDelimited,
+                        )
+                        .encode(buf);
+                    let __len_pos = ::buffa::types::reserve_len_prefix(buf);
+                    let __payload_start = buf.len();
+                    x.encode_single_pass(buf);
+                    let __len = ::core::primitive::u32::try_from(
+                            buf.len() - __payload_start,
+                        )
+                        .unwrap_or(::core::primitive::u32::MAX);
+                    ::buffa::types::patch_len_prefix(buf, __len_pos, __len);
+                }
+                __buffa::oneof::value::Kind::ListValue(x) => {
+                    ::buffa::encoding::Tag::new(
+                            6u32,
+                            ::buffa::encoding::WireType::LengthDelimited,
+                        )
+                        .encode(buf);
+                    let __len_pos = ::buffa::types::reserve_len_prefix(buf);
+                    let __payload_start = buf.len();
+                    x.encode_single_pass(buf);
+                    let __len = ::core::primitive::u32::try_from(
+                            buf.len() - __payload_start,
+                        )
+                        .unwrap_or(::core::primitive::u32::MAX);
+                    ::buffa::types::patch_len_prefix(buf, __len_pos, __len);
+                }
+            }
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
     fn merge_field(
         &mut self,
         tag: ::buffa::encoding::Tag,
@@ -1071,6 +1148,32 @@ impl ::buffa::Message for ListValue {
         for v in &self.values {
             ::buffa::types::put_submessage_header(1u32, __cache, buf);
             v.write_to(__cache, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    /// Single-pass encode into a contiguous buffer (experiment).
+    ///
+    /// Same bytes as `compute_size` + `write_to`, but length prefixes
+    /// are reserved and backpatched: the field set is walked once.
+    /// Falls back to the two passes only for hand-written impls that
+    /// do not override it.
+    fn encode_single_pass(&self, buf: &mut ::buffa::alloc::vec::Vec<u8>) {
+        #[allow(unused_imports)]
+        use ::buffa::EncodeSink as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        for v in &self.values {
+            ::buffa::encoding::Tag::new(
+                    1u32,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )
+                .encode(buf);
+            let __len_pos = ::buffa::types::reserve_len_prefix(buf);
+            let __payload_start = buf.len();
+            v.encode_single_pass(buf);
+            let __len = ::core::primitive::u32::try_from(buf.len() - __payload_start)
+                .unwrap_or(::core::primitive::u32::MAX);
+            ::buffa::types::patch_len_prefix(buf, __len_pos, __len);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }

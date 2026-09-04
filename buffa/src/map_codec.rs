@@ -783,6 +783,36 @@ pub fn write_message_field<KC: MapCodec, M: Message, C>(
     }
 }
 
+/// Write a message-valued map field in a single pass (experiment).
+///
+/// Same bytes as [`write_message_field`], but each entry's two length
+/// prefixes are reserved and backpatched instead of precomputed, so no
+/// [`SizeCache`] traversal is needed. `Vec`-only, like the rest of the
+/// single-pass path.
+pub fn write_message_field_single_pass<KC: MapCodec, M: Message, C>(
+    map: &C,
+    field_number: u32,
+    buf: &mut Vec<u8>,
+) where
+    C: MapStorage<Key = KC::Value, Value = M>,
+{
+    for (k, v) in map.storage_iter() {
+        Tag::new(field_number, WireType::LengthDelimited).encode(buf);
+        let entry_pos = types::reserve_len_prefix(buf);
+        let entry_start = buf.len();
+        Tag::new(1, KC::WIRE_TYPE).encode(buf);
+        KC::encode(k, buf);
+        Tag::new(2, WireType::LengthDelimited).encode(buf);
+        let val_pos = types::reserve_len_prefix(buf);
+        let val_start = buf.len();
+        v.encode_single_pass(buf);
+        let val_len = u32::try_from(buf.len() - val_start).unwrap_or(u32::MAX);
+        types::patch_len_prefix(buf, val_pos, val_len);
+        let entry_len = u32::try_from(buf.len() - entry_start).unwrap_or(u32::MAX);
+        types::patch_len_prefix(buf, entry_pos, entry_len);
+    }
+}
+
 fn merge_entry_contents<KC, VC>(
     key: &mut KC::Value,
     val: &mut VC::Value,

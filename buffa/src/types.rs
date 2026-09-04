@@ -1336,6 +1336,70 @@ pub fn put_group_end(field_number: u32, buf: &mut impl EncodeSink) {
 }
 
 // ---------------------------------------------------------------------------
+// Single-pass length-prefix reservation (experiment)
+// ---------------------------------------------------------------------------
+//
+// `compute_size` + `write_to` walk the field set twice. On a contiguous
+// `Vec<u8>` the size pass can be skipped: reserve the worst-case prefix,
+// write the payload, then patch the actual length in. A sub-message length
+// is `u32`, so its varint is at most this many bytes.
+
+/// Maximum varint length in bytes of a `u32` length prefix.
+pub const MAX_LEN_PREFIX_LEN: usize = 5;
+
+/// Reserve a length-prefix slot in `buf`, returning its position.
+///
+/// Writes [`MAX_LEN_PREFIX_LEN`] zero bytes; the caller writes the payload
+/// immediately after, then finalises with [`patch_len_prefix`]. `Vec`-only:
+/// the reservation + patch protocol needs random access, which the
+/// append-only [`EncodeSink`](crate::EncodeSink) contract does not provide.
+#[inline]
+pub fn reserve_len_prefix(buf: &mut Vec<u8>) -> usize {
+    let pos = buf.len();
+    buf.extend_from_slice(&[0u8; MAX_LEN_PREFIX_LEN]);
+    pos
+}
+
+/// Write the actual length prefix into a slot from [`reserve_len_prefix`].
+///
+/// `len` is the payload length in bytes (already written after the slot).
+/// Encodes `len` as a varint at `len_pos`, shifts the payload down when the
+/// encoding is shorter than the reservation, and truncates the tail.
+/// Panics (never corrupts) if the slot/payload layout is inconsistent.
+#[inline]
+pub fn patch_len_prefix(buf: &mut Vec<u8>, len_pos: usize, len: u32) {
+    let mut tmp = [0u8; MAX_LEN_PREFIX_LEN];
+    let mut v = len as u64;
+    let mut vlen = 0;
+    loop {
+        let mut byte = (v & 0x7F) as u8;
+        v >>= 7;
+        if v != 0 {
+            byte |= 0x80;
+        }
+        tmp[vlen] = byte;
+        vlen += 1;
+        if v == 0 {
+            break;
+        }
+    }
+    let payload_start = len_pos + MAX_LEN_PREFIX_LEN;
+    let len_usize = len as usize;
+    assert!(
+        payload_start
+            .checked_add(len_usize)
+            .is_some_and(|end| end <= buf.len()),
+        "patch_len_prefix: payload out of bounds"
+    );
+    let shift = MAX_LEN_PREFIX_LEN - vlen;
+    if shift != 0 {
+        buf.copy_within(payload_start..payload_start + len_usize, len_pos + vlen);
+    }
+    buf[len_pos..len_pos + vlen].copy_from_slice(&tmp[..vlen]);
+    buf.truncate(len_pos + vlen + len_usize);
+}
+
+// ---------------------------------------------------------------------------
 // Length-delimited types (wire type 2): string and bytes
 // ---------------------------------------------------------------------------
 

@@ -1017,7 +1017,8 @@ fn test_view_inline_storage_selection() {
     fn assert_inline(_: &buffa::InlineMessageFieldView<AddressView<'_>>) {}
     fn assert_boxed(
         _: &buffa::MessageFieldView<crate::nested::__buffa::view::corecursive::NestedView<'_>>,
-    ) {}
+    ) {
+    }
 
     let view = PersonView::default();
     assert_inline(&view.address);

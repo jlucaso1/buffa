@@ -1363,7 +1363,8 @@ impl<V> InlineMessageFieldView<V> {
     where
         V: Default,
     {
-        self.inner.get_or_insert_default()
+        // `Option::get_or_insert_default` is newer than the MSRV (1.75).
+        self.inner.get_or_insert_with(V::default)
     }
 }
 
@@ -1404,9 +1405,7 @@ impl<V: DefaultViewInstance> core::ops::Deref for InlineMessageFieldView<V> {
 
     #[inline]
     fn deref(&self) -> &V {
-        self.inner
-            .as_ref()
-            .unwrap_or_else(V::default_view_instance)
+        self.inner.as_ref().unwrap_or_else(V::default_view_instance)
     }
 }
 

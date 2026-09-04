@@ -262,6 +262,16 @@ impl<'a> DecodeContext<'a> {
 ///   will read back.
 pub const MAX_MESSAGE_BYTES: u32 = 0x7FFF_FFFF;
 
+/// Initial capacity guess for single-pass encoding (experiment).
+///
+/// [`encode_to_vec_single_pass`](Message::encode_to_vec_single_pass) cannot
+/// pre-size the buffer without the size pass it skips. Starting from zero
+/// would reallocate several times even for tiny messages, dwarfing the saved
+/// traversal; this guess keeps sub-128-byte messages at exactly one
+/// allocation, matching the two-pass path. Larger messages grow
+/// geometrically from here as usual.
+pub const SINGLE_PASS_HINT: usize = 128;
+
 /// Saturate a `u64` size accumulator to `u32`.
 ///
 /// Generated `compute_size` implementations accumulate in `u64` (which
@@ -673,6 +683,49 @@ pub trait Message: DefaultInstance + Clone + PartialEq + Send + Sync {
         self.write_to(&mut cache, &mut buf);
         debug_assert_two_pass(buf.len(), size);
         buf
+    }
+
+    /// Encode this message into `buf` in a single pass, without a prior
+    /// `compute_size` traversal (experiment).
+    ///
+    /// Length prefixes are reserved and backpatched, so this only works on a
+    /// contiguous [`Vec<u8>`](alloc::vec::Vec) — generic sinks keep the
+    /// two-pass [`write_to`](Self::write_to). Generated code overrides this
+    /// with a per-field straight-line body; the provided fallback below runs
+    /// the regular two passes into `buf`, so hand-written impls stay correct
+    /// without overriding anything. Byte output is identical either way.
+    #[inline]
+    fn encode_single_pass(&self, buf: &mut alloc::vec::Vec<u8>) {
+        let mut cache = crate::SizeCache::new();
+        let size = match checked_encode_size(self.compute_size(&mut cache)) {
+            Ok(size) => size as usize,
+            Err(_) => encode_size_overflow(),
+        };
+        buf.reserve(size);
+        self.write_to(&mut cache, buf);
+    }
+
+    /// Encode to a new `Vec<u8>` in a single pass (experiment).
+    ///
+    /// Same bytes and same panics as [`encode_to_vec`](Self::encode_to_vec)
+    /// (including on messages past the 2 GiB protobuf limit), but the field
+    /// set is walked once instead of twice. Capacity cannot be pre-sized
+    /// without the size pass, so the buffer starts at a heuristic guess and
+    /// grows geometrically; small messages still allocate exactly once.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the encoded size exceeds the 2 GiB protobuf limit
+    /// ([`MAX_MESSAGE_BYTES`]).
+    #[inline]
+    #[must_use]
+    fn encode_to_vec_single_pass(&self) -> alloc::vec::Vec<u8> {
+        let mut buf = alloc::vec::Vec::with_capacity(SINGLE_PASS_HINT);
+        self.encode_single_pass(&mut buf);
+        match u32::try_from(buf.len()).ok() {
+            Some(size) if size <= MAX_MESSAGE_BYTES => buf,
+            _ => encode_size_overflow(),
+        }
     }
 
     /// Encode to a new `Vec<u8>`, returning an error instead of panicking
