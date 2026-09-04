@@ -1,0 +1,4 @@
+kind: Changed
+body: |-
+    **View decoders instantiate one sub-decoder per message field.** Generated `merge_view_field` arms for singular and oneof message/group fields route both the first occurrence and later merges through a single `get_or_insert_default()` + `merge_into_view` slot (new `MessageFieldView::get_or_insert_default`), instead of a separate `decode_view_ctx` call for the first occurrence and `merge_into_view` for the rest. Each arm previously carried two inlined copies of the same sub-decoder; decoding into the boxed slot also skips the stack-to-box move of the freshly decoded view.
+time: 2026-09-03T12:02:00.000000-03:00

@@ -649,3 +649,215 @@ fn test_view_oneof_with_message_variant() {
         "message-type oneof variant must check recursion depth: {content}"
     );
 }
+
+#[test]
+fn test_view_single_variant_message_oneof_has_no_wildcard_match() {
+    // A oneof whose only member is a message field: the decode arm must not
+    // emit a wildcard arm against the (exhaustively matched) oneof enum, or
+    // `unreachable_patterns` fires in the consumer crate, nor an
+    // `unreachable!()` panic site.
+    let mut file = proto3_file("oneof_single.proto");
+    file.message_type.push(DescriptorProto {
+        name: Some("Body".to_string()),
+        field: vec![make_field(
+            "data",
+            1,
+            Label::LABEL_OPTIONAL,
+            Type::TYPE_INT32,
+        )],
+        ..Default::default()
+    });
+    file.message_type.push(DescriptorProto {
+        name: Some("Request".to_string()),
+        field: vec![FieldDescriptorProto {
+            name: Some("body".to_string()),
+            number: Some(1),
+            label: Some(Label::LABEL_OPTIONAL),
+            r#type: Some(Type::TYPE_MESSAGE),
+            type_name: Some(".Body".to_string()),
+            oneof_index: Some(0),
+            ..Default::default()
+        }],
+        oneof_decl: vec![OneofDescriptorProto {
+            name: Some("payload".to_string()),
+            ..Default::default()
+        }],
+        ..Default::default()
+    });
+    let files = generate(
+        &[file],
+        &["oneof_single.proto".to_string()],
+        &CodeGenConfig::default(),
+    )
+    .expect("should generate");
+    let content = &joined(&files);
+    // Scope the checks to RequestView's decode impl so an unrelated codegen
+    // path cannot fail (or satisfy) them.
+    let start = content
+        .find("::buffa::MessageView<'a> for RequestView<'a>")
+        .expect("RequestView impl");
+    let arm = &content[start..];
+    let arm = &arm[..arm.find("fn to_owned_message").expect("end of decode impl")];
+    assert!(
+        !arm.contains("unreachable!"),
+        "oneof message arm must not emit an unreachable!() arm: {arm}"
+    );
+    // Both the first occurrence and a merge go through one `merge_into_view`
+    // call on the box installed in the oneof.
+    assert!(
+        arm.contains("::core::matches!(") && arm.contains("view.payload = Some("),
+        "oneof message arm must install the variant before merging: {arm}"
+    );
+    assert_eq!(
+        arm.matches("merge_into_view(").count(),
+        1,
+        "oneof message arm must have exactly one sub-decoder call: {arm}"
+    );
+    assert!(
+        !arm.contains("decode_view_ctx(sub"),
+        "oneof message arm must not keep a separate first-occurrence decoder: {arm}"
+    );
+}
+
+#[test]
+fn test_view_singular_message_field_merges_through_one_slot() {
+    let mut file = proto3_file("sub_slot.proto");
+    file.message_type.push(DescriptorProto {
+        name: Some("Inner".to_string()),
+        field: vec![make_field("x", 1, Label::LABEL_OPTIONAL, Type::TYPE_INT32)],
+        ..Default::default()
+    });
+    file.message_type.push(DescriptorProto {
+        name: Some("Outer".to_string()),
+        field: vec![FieldDescriptorProto {
+            name: Some("inner".to_string()),
+            number: Some(1),
+            label: Some(Label::LABEL_OPTIONAL),
+            r#type: Some(Type::TYPE_MESSAGE),
+            type_name: Some(".Inner".to_string()),
+            ..Default::default()
+        }],
+        ..Default::default()
+    });
+    let files = generate(
+        &[file],
+        &["sub_slot.proto".to_string()],
+        &CodeGenConfig::default(),
+    )
+    .expect("should generate");
+    let content = &joined(&files);
+    assert!(
+        content.contains("view.inner.get_or_insert_default()"),
+        "singular message view arm must merge through get_or_insert_default: {content}"
+    );
+    assert!(
+        !content.contains("decode_view_ctx(sub"),
+        "singular message view arm must not have a separate first-occurrence decoder: {content}"
+    );
+}
+
+#[test]
+fn test_view_repeated_message_merges_fresh_element() {
+    let mut file = proto3_file("rep_elem.proto");
+    file.message_type.push(DescriptorProto {
+        name: Some("Item".to_string()),
+        field: vec![make_field("x", 1, Label::LABEL_OPTIONAL, Type::TYPE_INT32)],
+        ..Default::default()
+    });
+    file.message_type.push(DescriptorProto {
+        name: Some("List".to_string()),
+        field: vec![FieldDescriptorProto {
+            name: Some("items".to_string()),
+            number: Some(1),
+            label: Some(Label::LABEL_REPEATED),
+            r#type: Some(Type::TYPE_MESSAGE),
+            type_name: Some(".Item".to_string()),
+            ..Default::default()
+        }],
+        ..Default::default()
+    });
+    let files = generate(
+        &[file],
+        &["rep_elem.proto".to_string()],
+        &CodeGenConfig::default(),
+    )
+    .expect("should generate");
+    let content = &joined(&files);
+    // A repeated element is a default view merged through the shared loop,
+    // not a per-element `decode_view_ctx` instantiation inlined into the arm.
+    assert!(
+        content.contains("::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?")
+            && content.contains("view.items.push(__elem)"),
+        "repeated message view arm must merge a fresh element: {content}"
+    );
+    assert!(
+        !content.contains("decode_view_ctx(sub"),
+        "repeated message view arm must not instantiate decode_view_ctx per element: {content}"
+    );
+}
+
+#[test]
+fn test_tiny_view_gets_inline_loop_override() {
+    let mut file = proto3_file("tiny_view.proto");
+    file.message_type.push(DescriptorProto {
+        name: Some("KeyValue".to_string()),
+        field: vec![
+            make_field("name", 1, Label::LABEL_OPTIONAL, Type::TYPE_STRING),
+            make_field("id", 2, Label::LABEL_OPTIONAL, Type::TYPE_BYTES),
+        ],
+        ..Default::default()
+    });
+    file.message_type.push(DescriptorProto {
+        name: Some("NamedVertex".to_string()),
+        field: vec![
+            make_field("x", 1, Label::LABEL_OPTIONAL, Type::TYPE_FLOAT),
+            make_field("label", 2, Label::LABEL_OPTIONAL, Type::TYPE_STRING),
+        ],
+        ..Default::default()
+    });
+    file.message_type.push(DescriptorProto {
+        name: Some("Vertex".to_string()),
+        field: vec![
+            make_field("x", 1, Label::LABEL_OPTIONAL, Type::TYPE_FLOAT),
+            make_field("y", 2, Label::LABEL_OPTIONAL, Type::TYPE_FLOAT),
+        ],
+        ..Default::default()
+    });
+    file.message_type.push(DescriptorProto {
+        name: Some("Mesh".to_string()),
+        field: vec![FieldDescriptorProto {
+            name: Some("vertices".to_string()),
+            number: Some(1),
+            label: Some(Label::LABEL_REPEATED),
+            r#type: Some(Type::TYPE_MESSAGE),
+            type_name: Some(".Vertex".to_string()),
+            ..Default::default()
+        }],
+        ..Default::default()
+    });
+    let files = generate(
+        &[file],
+        &["tiny_view.proto".to_string()],
+        &CodeGenConfig::default(),
+    )
+    .expect("should generate");
+    let content = &joined(&files);
+    let block = |name: &str| {
+        let head = format!("for {name}View<'a> {{");
+        let start = content
+            .find(&head)
+            .unwrap_or_else(|| panic!("no MessageView impl for {name}: {content}"));
+        let rest = &content[start + head.len()..];
+        &rest[..rest.find("\nimpl").unwrap_or(rest.len())]
+    };
+    assert!(
+        block("Vertex").contains("::buffa::__private::merge_into_view_inline(self"),
+        "the tiny VertexView should override merge_into_view: {content}"
+    );
+    for not_tiny in ["KeyValue", "NamedVertex"] {
+        assert!(
+            !block(not_tiny).contains("merge_into_view_inline(self"),
+            "{not_tiny}View must keep the shared view loop: {content}"
+        );
+    }
+}

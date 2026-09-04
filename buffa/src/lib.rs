@@ -309,6 +309,112 @@ pub mod __private {
     /// that downstream crates do not need a direct `once_cell` dependency.
     pub use once_cell::race::OnceBox;
 
+    /// Monomorphic decode loop; the trait's default is type-erased (see
+    /// `FieldMerge` in `message.rs`).
+    ///
+    /// Generated code overrides [`Message::merge_to_limit`](crate::Message::merge_to_limit)
+    /// with this for every message, which keeps the top-level entry points
+    /// (`merge`, `decode_length_delimited`, `DecodeOptions`) on a direct
+    /// call: the erased loop's single indirect call site mispredicts as
+    /// parent and child decoders alternate. Only types decoded at top level
+    /// instantiate it. "Tiny" messages (at most four singular fields, none
+    /// string or bytes — a `Vertex { x, y, z }`, a `Timestamp`) also route
+    /// [`merge_length_delimited`](crate::Message::merge_length_delimited)
+    /// and [`merge_group`](crate::Message::merge_group) through it, because
+    /// there the per-field indirect call is comparable to the field's own
+    /// decode work and inlining the whole sub-decoder into the parent arm
+    /// costs a few dozen bytes.
+    #[inline]
+    pub fn merge_to_limit_inline<M: crate::Message, B: bytes::Buf>(
+        msg: &mut M,
+        buf: &mut B,
+        ctx: crate::DecodeContext<'_>,
+        limit: usize,
+    ) -> Result<(), crate::DecodeError> {
+        while buf.remaining() > limit {
+            let tag = crate::encoding::Tag::decode(buf)?;
+            msg.merge_field(tag, buf, ctx)?;
+        }
+        Ok(())
+    }
+
+    /// Monomorphic counterpart of
+    /// [`MessageView::merge_into_view`](crate::MessageView::merge_into_view)
+    /// for tiny views; see [`merge_to_limit_inline`] for the rationale.
+    #[inline]
+    pub fn merge_into_view_inline<'a, V: crate::MessageView<'a>>(
+        view: &mut V,
+        buf: &'a [u8],
+        ctx: crate::DecodeContext<'_>,
+    ) -> Result<(), crate::DecodeError> {
+        let mut cur: &'a [u8] = buf;
+        while !cur.is_empty() {
+            let before_tag = cur;
+            let tag = crate::encoding::Tag::decode(&mut cur)?;
+            cur = view.merge_view_field(tag, cur, before_tag, ctx)?;
+        }
+        Ok(())
+    }
+
+    /// Monomorphic counterpart of [`Message::merge_group`](crate::Message::merge_group)
+    /// for tiny messages; see [`merge_to_limit_inline`].
+    #[inline]
+    pub fn merge_group_inline<M: crate::Message, B: bytes::Buf>(
+        msg: &mut M,
+        buf: &mut B,
+        ctx: crate::DecodeContext<'_>,
+        field_number: u32,
+    ) -> Result<(), crate::DecodeError> {
+        let ctx = ctx.descend()?;
+        loop {
+            if !buf.has_remaining() {
+                return Err(crate::DecodeError::UnexpectedEof);
+            }
+            let tag = crate::encoding::Tag::decode(buf)?;
+            if tag.wire_type() == crate::encoding::WireType::EndGroup {
+                return if tag.field_number() == field_number {
+                    Ok(())
+                } else {
+                    Err(crate::DecodeError::InvalidEndGroup(tag.field_number()))
+                };
+            }
+            msg.merge_field(tag, buf, ctx)?;
+        }
+    }
+
+    /// Monomorphic counterpart of
+    /// [`Message::merge_length_delimited`](crate::Message::merge_length_delimited)
+    /// for tiny messages; see [`merge_to_limit_inline`]. Like the erased
+    /// default it runs its loop directly rather than through a
+    /// `merge_to_limit` override.
+    #[inline]
+    pub fn merge_length_delimited_inline<M: crate::Message, B: bytes::Buf>(
+        msg: &mut M,
+        buf: &mut B,
+        ctx: crate::DecodeContext<'_>,
+    ) -> Result<(), crate::DecodeError> {
+        let ctx = ctx.descend()?;
+        let len_u64 = crate::encoding::decode_varint(buf)?;
+        if len_u64 > crate::MAX_MESSAGE_BYTES as u64 {
+            return Err(crate::DecodeError::MessageTooLarge);
+        }
+        let len = usize::try_from(len_u64).map_err(|_| crate::DecodeError::MessageTooLarge)?;
+        if buf.remaining() < len {
+            return Err(crate::DecodeError::UnexpectedEof);
+        }
+        let limit = buf.remaining() - len;
+        merge_to_limit_inline(msg, buf, ctx, limit)?;
+        if buf.remaining() != limit {
+            let remaining = buf.remaining();
+            if remaining > limit {
+                buf.advance(remaining - limit);
+            } else {
+                return Err(crate::DecodeError::UnexpectedEof);
+            }
+        }
+        Ok(())
+    }
+
     /// The concrete `map<K, V>` field type generated code uses by default.
     ///
     /// Generated code refers to this as `::buffa::__private::HashMap<K, V>`

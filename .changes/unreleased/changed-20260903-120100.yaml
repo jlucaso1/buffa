@@ -1,0 +1,4 @@
+kind: Changed
+body: |-
+    **Encoders no longer instantiate `DefaultInstance` for every message field.** Generated `compute_size`/`write_to` bind singular message fields with `MessageField::as_option()` instead of `is_set()` followed by a deref. The deref path falls back to `T::default_instance()`, which pulled a lazily-initialised static default (its `OnceBox` initialiser, allocation and drop glue) into the binary for every message type reachable from an encoder; those now only exist for types the application itself derefs while unset.
+time: 2026-09-03T12:01:00.000000-03:00

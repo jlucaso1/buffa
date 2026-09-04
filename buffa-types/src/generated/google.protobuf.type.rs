@@ -269,10 +269,7 @@ impl ::buffa::Message for Type {
         for v in &self.fields {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.oneofs {
             size += 1u64 + ::buffa::types::string_encoded_len(v) as u64;
@@ -280,18 +277,12 @@ impl ::buffa::Message for Type {
         for v in &self.options {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
-        if self.source_context.is_set() {
+        if let ::core::option::Option::Some(__v) = self.source_context.as_option() {
             let __slot = __cache.reserve();
-            let inner_size = self.source_context.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            let inner_size = __v.compute_size(__cache);
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         {
             let val = self.syntax.to_i32();
@@ -316,31 +307,19 @@ impl ::buffa::Message for Type {
             ::buffa::types::put_string_field(1u32, &self.name, buf);
         }
         for v in &self.fields {
-            ::buffa::types::put_len_delimited_header(
-                2u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(2u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         for v in &self.oneofs {
             ::buffa::types::put_string_field(3u32, v, buf);
         }
         for v in &self.options {
-            ::buffa::types::put_len_delimited_header(
-                4u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(4u32, __cache, buf);
             v.write_to(__cache, buf);
         }
-        if self.source_context.is_set() {
-            ::buffa::types::put_len_delimited_header(
-                5u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            self.source_context.write_to(__cache, buf);
+        if let ::core::option::Option::Some(__v) = self.source_context.as_option() {
+            ::buffa::types::put_submessage_header(5u32, __cache, buf);
+            __v.write_to(__cache, buf);
         }
         {
             let val = self.syntax.to_i32();
@@ -365,11 +344,7 @@ impl ::buffa::Message for Type {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(&mut self.name, buf)?;
+                ::buffa::types::merge_string_field(tag, &mut self.name, buf)?;
             }
             2u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -384,15 +359,7 @@ impl ::buffa::Message for Type {
                 self.fields.push(elem);
             }
             3u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                let __elem = ::buffa::types::decode_string(buf)?;
-                ctx.register_element_memory(
-                    ::buffa::__private::element_footprint(&__elem),
-                )?;
-                self.oneofs.push(__elem);
+                ::buffa::types::push_string_field(tag, &mut self.oneofs, buf, ctx)?;
             }
             4u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -427,11 +394,7 @@ impl ::buffa::Message for Type {
                 );
             }
             7u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(&mut self.edition, buf)?;
+                ::buffa::types::merge_string_field(tag, &mut self.edition, buf)?;
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -449,6 +412,15 @@ impl ::buffa::Message for Type {
         self.syntax = ::buffa::EnumValue::from(0);
         self.edition.clear();
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for Type {
@@ -807,10 +779,7 @@ impl ::buffa::Message for Field {
         for v in &self.options {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         if !self.json_name.is_empty() {
             size += 1u64 + ::buffa::types::string_encoded_len(&self.json_name) as u64;
@@ -857,11 +826,7 @@ impl ::buffa::Message for Field {
             ::buffa::types::put_bool_field(8u32, self.packed, buf);
         }
         for v in &self.options {
-            ::buffa::types::put_len_delimited_header(
-                9u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(9u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         if !self.json_name.is_empty() {
@@ -900,39 +865,19 @@ impl ::buffa::Message for Field {
                 );
             }
             3u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.number = ::buffa::types::decode_int32(buf)?;
+                ::buffa::types::merge_int32_field(tag, &mut self.number, buf)?;
             }
             4u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(&mut self.name, buf)?;
+                ::buffa::types::merge_string_field(tag, &mut self.name, buf)?;
             }
             6u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(&mut self.type_url, buf)?;
+                ::buffa::types::merge_string_field(tag, &mut self.type_url, buf)?;
             }
             7u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.oneof_index = ::buffa::types::decode_int32(buf)?;
+                ::buffa::types::merge_int32_field(tag, &mut self.oneof_index, buf)?;
             }
             8u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.packed = ::buffa::types::decode_bool(buf)?;
+                ::buffa::types::merge_bool_field(tag, &mut self.packed, buf)?;
             }
             9u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -947,18 +892,10 @@ impl ::buffa::Message for Field {
                 self.options.push(elem);
             }
             10u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(&mut self.json_name, buf)?;
+                ::buffa::types::merge_string_field(tag, &mut self.json_name, buf)?;
             }
             11u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(&mut self.default_value, buf)?;
+                ::buffa::types::merge_string_field(tag, &mut self.default_value, buf)?;
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -979,6 +916,15 @@ impl ::buffa::Message for Field {
         self.json_name.clear();
         self.default_value.clear();
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for Field {
@@ -1587,26 +1533,17 @@ impl ::buffa::Message for Enum {
         for v in &self.enumvalue {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         for v in &self.options {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
-        if self.source_context.is_set() {
+        if let ::core::option::Option::Some(__v) = self.source_context.as_option() {
             let __slot = __cache.reserve();
-            let inner_size = self.source_context.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            let inner_size = __v.compute_size(__cache);
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         {
             let val = self.syntax.to_i32();
@@ -1631,28 +1568,16 @@ impl ::buffa::Message for Enum {
             ::buffa::types::put_string_field(1u32, &self.name, buf);
         }
         for v in &self.enumvalue {
-            ::buffa::types::put_len_delimited_header(
-                2u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(2u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         for v in &self.options {
-            ::buffa::types::put_len_delimited_header(
-                3u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(3u32, __cache, buf);
             v.write_to(__cache, buf);
         }
-        if self.source_context.is_set() {
-            ::buffa::types::put_len_delimited_header(
-                4u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            self.source_context.write_to(__cache, buf);
+        if let ::core::option::Option::Some(__v) = self.source_context.as_option() {
+            ::buffa::types::put_submessage_header(4u32, __cache, buf);
+            __v.write_to(__cache, buf);
         }
         {
             let val = self.syntax.to_i32();
@@ -1677,11 +1602,7 @@ impl ::buffa::Message for Enum {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(&mut self.name, buf)?;
+                ::buffa::types::merge_string_field(tag, &mut self.name, buf)?;
             }
             2u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -1728,11 +1649,7 @@ impl ::buffa::Message for Enum {
                 );
             }
             6u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(&mut self.edition, buf)?;
+                ::buffa::types::merge_string_field(tag, &mut self.edition, buf)?;
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -1749,6 +1666,15 @@ impl ::buffa::Message for Enum {
         self.syntax = ::buffa::EnumValue::from(0);
         self.edition.clear();
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for Enum {
@@ -2017,10 +1943,7 @@ impl ::buffa::Message for EnumValue {
         for v in &self.options {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -2039,11 +1962,7 @@ impl ::buffa::Message for EnumValue {
             ::buffa::types::put_int32_field(2u32, self.number, buf);
         }
         for v in &self.options {
-            ::buffa::types::put_len_delimited_header(
-                3u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(3u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -2060,18 +1979,10 @@ impl ::buffa::Message for EnumValue {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(&mut self.name, buf)?;
+                ::buffa::types::merge_string_field(tag, &mut self.name, buf)?;
             }
             2u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.number = ::buffa::types::decode_int32(buf)?;
+                ::buffa::types::merge_int32_field(tag, &mut self.number, buf)?;
             }
             3u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -2097,6 +2008,15 @@ impl ::buffa::Message for EnumValue {
         self.number = 0i32;
         self.options.clear();
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for EnumValue {
@@ -2329,13 +2249,10 @@ impl ::buffa::Message for Option {
         if !self.name.is_empty() {
             size += 1u64 + ::buffa::types::string_encoded_len(&self.name) as u64;
         }
-        if self.value.is_set() {
+        if let ::core::option::Option::Some(__v) = self.value.as_option() {
             let __slot = __cache.reserve();
-            let inner_size = self.value.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            let inner_size = __v.compute_size(__cache);
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -2350,13 +2267,9 @@ impl ::buffa::Message for Option {
         if !self.name.is_empty() {
             ::buffa::types::put_string_field(1u32, &self.name, buf);
         }
-        if self.value.is_set() {
-            ::buffa::types::put_len_delimited_header(
-                2u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            self.value.write_to(__cache, buf);
+        if let ::core::option::Option::Some(__v) = self.value.as_option() {
+            ::buffa::types::put_submessage_header(2u32, __cache, buf);
+            __v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -2372,11 +2285,7 @@ impl ::buffa::Message for Option {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(&mut self.name, buf)?;
+                ::buffa::types::merge_string_field(tag, &mut self.name, buf)?;
             }
             2u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -2400,6 +2309,15 @@ impl ::buffa::Message for Option {
         self.name.clear();
         self.value = ::buffa::MessageField::none();
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for Option {

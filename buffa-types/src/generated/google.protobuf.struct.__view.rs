@@ -23,6 +23,15 @@ pub struct StructView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for StructView<'a> {
     type Owned = super::super::Struct;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -148,8 +157,7 @@ impl<'a> ::buffa::ViewEncode<'a> for StructView<'a> {
                 + {
                     let __slot = __cache.reserve();
                     let inner = v.compute_size(__cache);
-                    __cache.set(__slot, inner);
-                    ::buffa::encoding::varint_len(inner as u64) as u64 + inner as u64
+                    __cache.record_submessage(__slot, inner)
                 };
             size += 1u64 + ::buffa::encoding::varint_len(entry_size) as u64 + entry_size;
         }
@@ -423,6 +431,15 @@ pub struct ValueView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for ValueView<'a> {
     type Owned = super::super::Value;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -502,28 +519,27 @@ impl<'a> ::buffa::MessageView<'a> for ValueView<'a> {
                 )?;
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_bytes(&mut cur)?;
+                if !::core::matches!(
+                    view.kind,
+                    Some(super::super::__buffa::view::oneof::value::Kind::StructValue(_))
+                ) {
+                    view.kind = Some(
+                        super::super::__buffa::view::oneof::value::Kind::StructValue(
+                            ::core::default::Default::default(),
+                        ),
+                    );
+                }
                 if let Some(
                     super::super::__buffa::view::oneof::value::Kind::StructValue(
-                        ref mut existing,
+                        ref mut __boxed,
                     ),
                 ) = view.kind
                 {
                     ::buffa::MessageView::merge_into_view(
-                        &mut **existing,
+                        &mut **__boxed,
                         sub,
                         __sub_ctx,
                     )?;
-                } else {
-                    view.kind = Some(
-                        super::super::__buffa::view::oneof::value::Kind::StructValue(
-                            ::buffa::alloc::boxed::Box::new(
-                                <super::super::__buffa::view::StructView as ::buffa::MessageView>::decode_view_ctx(
-                                    sub,
-                                    __sub_ctx,
-                                )?,
-                            ),
-                        ),
-                    );
                 }
             }
             6u32 => {
@@ -533,28 +549,27 @@ impl<'a> ::buffa::MessageView<'a> for ValueView<'a> {
                 )?;
                 let __sub_ctx = ctx.descend()?;
                 let sub = ::buffa::types::borrow_bytes(&mut cur)?;
+                if !::core::matches!(
+                    view.kind,
+                    Some(super::super::__buffa::view::oneof::value::Kind::ListValue(_))
+                ) {
+                    view.kind = Some(
+                        super::super::__buffa::view::oneof::value::Kind::ListValue(
+                            ::core::default::Default::default(),
+                        ),
+                    );
+                }
                 if let Some(
                     super::super::__buffa::view::oneof::value::Kind::ListValue(
-                        ref mut existing,
+                        ref mut __boxed,
                     ),
                 ) = view.kind
                 {
                     ::buffa::MessageView::merge_into_view(
-                        &mut **existing,
+                        &mut **__boxed,
                         sub,
                         __sub_ctx,
                     )?;
-                } else {
-                    view.kind = Some(
-                        super::super::__buffa::view::oneof::value::Kind::ListValue(
-                            ::buffa::alloc::boxed::Box::new(
-                                <super::super::__buffa::view::ListValueView as ::buffa::MessageView>::decode_view_ctx(
-                                    sub,
-                                    __sub_ctx,
-                                )?,
-                            ),
-                        ),
-                    );
                 }
             }
             _ => {
@@ -652,18 +667,12 @@ impl<'a> ::buffa::ViewEncode<'a> for ValueView<'a> {
                 super::super::__buffa::view::oneof::value::Kind::StructValue(x) => {
                     let __slot = __cache.reserve();
                     let inner = x.compute_size(__cache);
-                    __cache.set(__slot, inner);
-                    size
-                        += 1u64 + ::buffa::encoding::varint_len(inner as u64) as u64
-                            + inner as u64;
+                    size += 1u64 + __cache.record_submessage(__slot, inner);
                 }
                 super::super::__buffa::view::oneof::value::Kind::ListValue(x) => {
                     let __slot = __cache.reserve();
                     let inner = x.compute_size(__cache);
-                    __cache.set(__slot, inner);
-                    size
-                        += 1u64 + ::buffa::encoding::varint_len(inner as u64) as u64
-                            + inner as u64;
+                    size += 1u64 + __cache.record_submessage(__slot, inner);
                 }
             }
         }
@@ -693,19 +702,11 @@ impl<'a> ::buffa::ViewEncode<'a> for ValueView<'a> {
                     ::buffa::types::put_bool_field(4u32, *x, buf);
                 }
                 super::super::__buffa::view::oneof::value::Kind::StructValue(x) => {
-                    ::buffa::types::put_len_delimited_header(
-                        5u32,
-                        u64::from(__cache.consume_next()),
-                        buf,
-                    );
+                    ::buffa::types::put_submessage_header(5u32, __cache, buf);
                     x.write_to(__cache, buf);
                 }
                 super::super::__buffa::view::oneof::value::Kind::ListValue(x) => {
-                    ::buffa::types::put_len_delimited_header(
-                        6u32,
-                        u64::from(__cache.consume_next()),
-                        buf,
-                    );
+                    ::buffa::types::put_submessage_header(6u32, __cache, buf);
                     x.write_to(__cache, buf);
                 }
             }
@@ -1052,6 +1053,15 @@ pub struct ListValueView<'a> {
 }
 impl<'a> ::buffa::MessageView<'a> for ListValueView<'a> {
     type Owned = super::super::ListValue;
+    #[inline]
+    fn decode_view_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let mut view = <Self as ::core::default::Default>::default();
+        ::buffa::__private::merge_into_view_inline(&mut view, buf, ctx)?;
+        ::core::result::Result::Ok(view)
+    }
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         let __elem = ::core::cell::Cell::new(::buffa::DEFAULT_ELEMENT_MEMORY_LIMIT);
@@ -1090,13 +1100,9 @@ impl<'a> ::buffa::MessageView<'a> for ListValueView<'a> {
                 ctx.register_element_memory(
                     ::core::mem::size_of::<super::super::__buffa::view::ValueView>(),
                 )?;
-                view.values
-                    .push(
-                        <super::super::__buffa::view::ValueView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
+                let mut __elem = <super::super::__buffa::view::ValueView as ::core::default::Default>::default();
+                ::buffa::MessageView::merge_into_view(&mut __elem, sub, __sub_ctx)?;
+                view.values.push(__elem);
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -1139,10 +1145,7 @@ impl<'a> ::buffa::ViewEncode<'a> for ListValueView<'a> {
         for v in &self.values {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -1156,11 +1159,7 @@ impl<'a> ::buffa::ViewEncode<'a> for ListValueView<'a> {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
         for v in &self.values {
-            ::buffa::types::put_len_delimited_header(
-                1u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(1u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);

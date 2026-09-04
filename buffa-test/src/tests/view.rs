@@ -930,3 +930,81 @@ fn test_reborrow_nested_and_repeated_fields() {
         other => panic!("expected Email variant, got {other:?}"),
     }
 }
+
+/// A singular message field split across two occurrences must merge in the
+/// view decoder (proto merge semantics), and match the owned decoder. The
+/// view arm routes the first occurrence through the same
+/// `get_or_insert_default` + `merge_into_view` slot as later ones.
+#[test]
+fn test_view_singular_message_field_split_across_occurrences_merges() {
+    const ADDRESS_FIELD: u8 = (7 << 3) | 2;
+    let zip_only = Address {
+        zip_code: 12345,
+        ..Default::default()
+    };
+    let city_only = Address {
+        city: "SF".into(),
+        ..Default::default()
+    };
+    let bytes = [
+        ld(ADDRESS_FIELD, &zip_only.encode_to_vec()),
+        ld(ADDRESS_FIELD, &city_only.encode_to_vec()),
+    ]
+    .concat();
+
+    let owned = Person::decode_from_slice(&bytes).expect("owned");
+    assert_eq!(
+        (owned.address.zip_code, owned.address.city.as_str()),
+        (12345, "SF")
+    );
+
+    let view = PersonView::decode_view(&bytes).expect("view");
+    let addr = view.address.as_option().expect("address set");
+    assert_eq!((addr.zip_code, addr.city), (12345, "SF"));
+    assert_eq!(view.to_owned_message().unwrap(), owned);
+}
+
+/// A message-typed oneof variant seen twice merges; a different variant
+/// afterwards replaces it.
+#[test]
+fn test_view_oneof_message_variant_merges_then_other_variant_replaces() {
+    const HOME_ADDRESS_FIELD: u8 = (15 << 3) | 2;
+    const PHONE_FIELD: u8 = (14 << 3) | 2;
+    let zip_only = Address {
+        zip_code: 12345,
+        ..Default::default()
+    };
+    let city_only = Address {
+        city: "SF".into(),
+        ..Default::default()
+    };
+    let twice = [
+        ld(HOME_ADDRESS_FIELD, &zip_only.encode_to_vec()),
+        ld(HOME_ADDRESS_FIELD, &city_only.encode_to_vec()),
+    ]
+    .concat();
+
+    let owned = Person::decode_from_slice(&twice).expect("owned");
+    let view = PersonView::decode_view(&twice).expect("view");
+    match &view.contact {
+        Some(view_oneof::person::Contact::HomeAddress(addr)) => {
+            assert_eq!(
+                (addr.zip_code, addr.city),
+                (12345, "SF"),
+                "same variant merges"
+            );
+        }
+        other => panic!("expected HomeAddress, got {other:?}"),
+    }
+    assert_eq!(view.to_owned_message().unwrap(), owned);
+
+    let replaced = [twice.clone(), ld(PHONE_FIELD, b"+1")].concat();
+    let owned = Person::decode_from_slice(&replaced).expect("owned");
+    let view = PersonView::decode_view(&replaced).expect("view");
+    assert!(
+        matches!(view.contact, Some(view_oneof::person::Contact::Phone("+1"))),
+        "later variant replaces: {:?}",
+        view.contact
+    );
+    assert_eq!(view.to_owned_message().unwrap(), owned);
+}

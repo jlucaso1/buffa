@@ -1,0 +1,4 @@
+kind: Changed
+body: |-
+    **View decoders share one tag loop.** `MessageView::merge_into_view` now runs a single type-erased loop instead of one instantiation per view type (and per parent arm it was inlined into); `decode_view_ctx` (the top-level entry, whose default now dispatches through `merge_into_view` and which generated views override with a monomorphic loop) and views with at most four singular fields, none string or bytes, keep a monomorphic `#[inline]` loop, mirroring the owned side. Repeated message and group view arms merge a fresh default element through `merge_into_view` instead of calling `decode_view_ctx` per element, so a wide element type no longer inlines its own loop into every parent arm that lists it.
+time: 2026-09-03T15:00:00.000000-03:00
