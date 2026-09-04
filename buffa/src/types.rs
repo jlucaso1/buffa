@@ -1014,19 +1014,19 @@ pub fn push_borrowed_bytes_field<'a>(
 // check (`if !x.is_empty()`, `if let Some(v)`, …) stays in generated code
 // where the per-field semantics are visible. Each `put_<type>_field` is an
 // `#[inline(always)]` shim that folds its literal field number into a
-// constant tag and hands it to one of four `#[inline]` primitives
-// (`put_tagged_varint` / `_fixed32` / `_fixed64` / `_len_delimited`). A
-// speed-optimised build inlines the primitive as well and the tag becomes
-// constant byte store(s), the codegen the pre-fusion two-statement
-// expansion produced; a size-optimised build, where the inliner takes
-// almost nothing, keeps the primitive out of line and emits one call per
-// field instead of one for the tag and one for the payload (−4.8% on a
-// 750-message schema). An earlier layout that made the whole shim plain
-// `#[inline]` lost the fold on the string/bytes variants (~6-9% on
-// encode-heavy paths); splitting the constant tag off from the shared body
-// keeps it. They are shared by owned and view `write_to` impls
-// (duck-typed: `&String` / `&str` and `&Vec<u8>` / `&[u8]` both coerce to
-// the borrowed parameter).
+// constant tag and hands it to one of four primitives (`put_tagged_varint`
+// / `_fixed32` / `_fixed64` / `_len_delimited`). The tag store inlines and
+// folds to constant byte(s) at any opt level; the loop-y payload halves
+// (`put_varint_payload`, `put_len_prefixed`) are `#[inline(never)]` so a
+// speed-optimised build shares one copy instead of duplicating the varint
+// loop and sink-grow stubs into every arm of wide messages, while a
+// size-optimised build emits one call per field instead of one for the tag
+// and one for the payload (−4.8% on a 750-message schema). An earlier layout
+// that made the whole primitive plain `#[inline]` lost the fold on the
+// string/bytes variants (~6-9% on encode-heavy paths); splitting the constant
+// tag off from the shared body keeps it. They are shared by owned and view
+// `write_to` impls (duck-typed: `&String` / `&str` and `&Vec<u8>` / `&[u8]`
+// both coerce to the borrowed parameter).
 
 /// The wire form of a field's tag, for the fused writers below.
 #[inline(always)]
@@ -1040,13 +1040,28 @@ fn tag_u32(field_number: u32, wire: WireType) -> u32 {
 ///
 /// Generated code calls those writers with a literal field number. They
 /// are `#[inline(always)]` shims that fold the tag to a constant and hand
-/// it here, so a speed-optimised build, which inlines this too, still
-/// emits constant byte store(s) for the tag, while a size-optimised build
-/// makes one call per field instead of one for the tag and one for the
-/// payload.
+/// it here. The tag store stays inline (a constant tag folds to one or two
+/// byte stores at any opt level) while the value varint loop is an
+/// out-of-line `#[inline(never)]` body shared by every field: a
+/// speed-optimised build used to inline the whole primitive into
+/// every arm, duplicating the generic varint loop and the sink-grow stubs
+/// once per field (`write_to` of a 90-field message grew ~30%), while a
+/// size-optimised build keeps one call per field either way.
 #[inline]
 pub fn put_tagged_varint(tag: u32, value: u64, buf: &mut impl EncodeSink) {
     encode_varint(u64::from(tag), buf);
+    put_varint_payload(value, buf);
+}
+
+/// The value half of [`put_tagged_varint`]: one varint loop per `EncodeSink`
+/// instead of one per field arm.
+///
+/// `#[inline(never)]` on purpose — this is the boundary that keeps wide
+/// `write_to` bodies small at `-O3` (see above) at the cost of one call per
+/// varint field on speed builds. The tag half stays inline so the constant
+/// tag still folds.
+#[inline(never)]
+fn put_varint_payload(value: u64, buf: &mut impl EncodeSink) {
     encode_varint(value, buf);
 }
 
@@ -1067,10 +1082,23 @@ pub fn put_tagged_fixed64(tag: u32, value: u64, buf: &mut impl EncodeSink) {
 }
 
 /// Write a tag, a varint length prefix and the payload bytes; see
-/// [`put_tagged_varint`].
+/// [`put_tagged_varint`]. As there, the tag folds inline while the
+/// length-prefix loop and the slice copy live in a shared out-of-line
+/// `#[inline(never)]` body.
 #[inline]
 pub fn put_tagged_len_delimited(tag: u32, payload: &[u8], buf: &mut impl EncodeSink) {
     encode_varint(u64::from(tag), buf);
+    put_len_prefixed(payload, buf);
+}
+
+/// The length-prefix + payload half of [`put_tagged_len_delimited`]: one copy
+/// per `EncodeSink` instead of one per string/bytes/submessage arm.
+///
+/// `#[inline(never)]` on purpose — the length varint loop and the sink-grow
+/// stubs are the bulk of what a speed-optimised build duplicated into every
+/// arm (see [`put_tagged_varint`]).
+#[inline(never)]
+fn put_len_prefixed(payload: &[u8], buf: &mut impl EncodeSink) {
     encode_varint(payload.len() as u64, buf);
     buf.put_slice(payload);
 }
