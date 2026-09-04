@@ -1582,8 +1582,8 @@ fn test_message_proto3_optional() {
         "missing if-let in impl: {content}"
     );
     assert!(
-        content.contains("Option::Some"),
-        "missing Some assignment in merge: {content}"
+        content.contains("::buffa::types::merge_opt_int32_field(tag, &mut self.count, buf)?"),
+        "optional scalar must decode through the fused explicit-presence reader: {content}"
     );
 }
 
@@ -1624,8 +1624,8 @@ fn test_message_proto3_optional_string() {
         "missing put_string_field in write_to: {content}"
     );
     assert!(
-        content.contains("merge_string"),
-        "missing merge_string in merge: {content}"
+        content.contains("::buffa::types::merge_opt_string_field(tag, &mut self.label, buf)?"),
+        "optional string must decode through the fused explicit-presence reader: {content}"
     );
 }
 
@@ -1978,8 +1978,8 @@ fn test_repeated_unpacked_string() {
         "missing put_string_field: {content}"
     );
     assert!(
-        content.contains("decode_string"),
-        "missing decode_string: {content}"
+        content.contains("::buffa::types::push_string_field(tag, &mut self."),
+        "repeated string must append through push_string_field: {content}"
     );
 }
 
@@ -2020,8 +2020,8 @@ fn test_repeated_message_field() {
         "missing merge_length_delimited for repeated msg: {content}"
     );
     assert!(
-        content.contains("__cache.consume_next()"),
-        "missing SizeCache consume in write_to: {content}"
+        content.contains("::buffa::types::put_submessage_header("),
+        "missing SizeCache-backed sub-message header in write_to: {content}"
     );
 }
 
@@ -2240,9 +2240,11 @@ fn editions_delimited_message_encoding() {
     // If the map-entry exemption fails, codegen panics in type_encoded_size_expr
     // (TYPE_GROUP is unreachable there), so reaching this line is the key
     // evidence. Spot-check group-decode call counts: only delim_child should
-    // use them (merge_group in owned impl, borrow_group in view).
+    // use them (a `Message::merge_group` call in the owned impl, borrow_group
+    // in the view). Tiny messages also emit a `merge_group` *override*, which
+    // is a definition rather than a group-decoding call site.
     assert_eq!(
-        content.matches("merge_group").count(),
+        content.matches("::buffa::Message::merge_group(").count(),
         1,
         "owned: {content}"
     );
@@ -2918,5 +2920,170 @@ fn test_exclude_packages_filter_runs_before_context_build() {
     assert!(
         !content.contains("super::google::protobuf::Timestamp"),
         "no local path to the excluded package may be emitted: {content}"
+    );
+}
+
+#[test]
+fn test_tiny_message_gets_inline_loop_overrides() {
+    // At most four singular numeric fields: monomorphic `#[inline]` overrides
+    // of the shared decode loops are emitted. A message with a repeated field
+    // keeps the trait defaults, and so does a small message with a string or
+    // bytes field, whose per-field work dwarfs the shared loop's call.
+    let mut file = proto3_file("tiny.proto");
+    file.message_type.push(DescriptorProto {
+        name: Some("KeyValue".to_string()),
+        field: vec![
+            make_field("name", 1, Label::LABEL_OPTIONAL, Type::TYPE_STRING),
+            make_field("id", 2, Label::LABEL_OPTIONAL, Type::TYPE_BYTES),
+        ],
+        ..Default::default()
+    });
+    // One string among numeric fields is enough to keep the shared loops.
+    file.message_type.push(DescriptorProto {
+        name: Some("NamedVertex".to_string()),
+        field: vec![
+            make_field("x", 1, Label::LABEL_OPTIONAL, Type::TYPE_FLOAT),
+            make_field("y", 2, Label::LABEL_OPTIONAL, Type::TYPE_FLOAT),
+            make_field("z", 3, Label::LABEL_OPTIONAL, Type::TYPE_FLOAT),
+            make_field("label", 4, Label::LABEL_OPTIONAL, Type::TYPE_STRING),
+        ],
+        ..Default::default()
+    });
+    file.message_type.push(DescriptorProto {
+        name: Some("Vertex".to_string()),
+        field: vec![
+            make_field("x", 1, Label::LABEL_OPTIONAL, Type::TYPE_FLOAT),
+            make_field("y", 2, Label::LABEL_OPTIONAL, Type::TYPE_FLOAT),
+            make_field("z", 3, Label::LABEL_OPTIONAL, Type::TYPE_FLOAT),
+        ],
+        ..Default::default()
+    });
+    file.message_type.push(DescriptorProto {
+        name: Some("Mesh".to_string()),
+        field: vec![FieldDescriptorProto {
+            name: Some("vertices".to_string()),
+            number: Some(1),
+            label: Some(Label::LABEL_REPEATED),
+            r#type: Some(Type::TYPE_MESSAGE),
+            type_name: Some(".Vertex".to_string()),
+            ..Default::default()
+        }],
+        ..Default::default()
+    });
+    let files = generate(
+        &[file],
+        &["tiny.proto".to_string()],
+        &CodeGenConfig::default(),
+    )
+    .expect("should generate");
+    let content = &joined(&files);
+    let vertex = message_impl_block(content, "Vertex");
+    assert!(
+        vertex.contains("::buffa::__private::merge_to_limit_inline(self")
+            && vertex.contains("::buffa::__private::merge_length_delimited_inline(self"),
+        "the tiny Vertex should override merge_to_limit and merge_length_delimited: {vertex}"
+    );
+    for not_tiny in ["KeyValue", "NamedVertex", "Mesh"] {
+        let block = message_impl_block(content, not_tiny);
+        assert!(
+            !block.contains("merge_length_delimited_inline(self")
+                && !block.contains("merge_group_inline(self"),
+            "{not_tiny} must keep the shared nested decode loops: {block}"
+        );
+        // The top-level entry is monomorphic for every message.
+        assert!(
+            block.contains("merge_to_limit_inline(self"),
+            "{not_tiny} must override merge_to_limit for top-level decoding: {block}"
+        );
+    }
+}
+
+/// The `impl ::buffa::Message for <name>` block of `content`, up to the next
+/// `impl`.
+fn message_impl_block<'a>(content: &'a str, name: &str) -> &'a str {
+    let head = format!("impl ::buffa::Message for {name} {{");
+    let start = content
+        .find(&head)
+        .unwrap_or_else(|| panic!("no Message impl for {name}: {content}"));
+    let rest = &content[start + head.len()..];
+    let end = rest.find("\nimpl").unwrap_or(rest.len());
+    &rest[..end]
+}
+
+#[test]
+fn test_repeated_message_charges_budget_before_push() {
+    let mut file = proto3_file("rep_budget.proto");
+    file.message_type.push(DescriptorProto {
+        name: Some("Item".to_string()),
+        field: vec![make_field("x", 1, Label::LABEL_OPTIONAL, Type::TYPE_INT32)],
+        ..Default::default()
+    });
+    file.message_type.push(DescriptorProto {
+        name: Some("List".to_string()),
+        field: vec![FieldDescriptorProto {
+            name: Some("items".to_string()),
+            number: Some(1),
+            label: Some(Label::LABEL_REPEATED),
+            r#type: Some(Type::TYPE_MESSAGE),
+            type_name: Some(".Item".to_string()),
+            ..Default::default()
+        }],
+        ..Default::default()
+    });
+    let files = generate(
+        &[file],
+        &["rep_budget.proto".to_string()],
+        &CodeGenConfig::default(),
+    )
+    .expect("should generate");
+    let content = &joined(&files);
+    // The element-memory budget must reject an element before the `Vec` can
+    // grow for it, so the charge has to precede the push in the arm.
+    let charge = content
+        .find("element_footprint(&elem)")
+        .expect("charge against the element budget");
+    let push = content.find("self.items.push(elem)").expect("push");
+    assert!(
+        charge < push,
+        "must charge the element budget before push: {content}"
+    );
+}
+
+#[test]
+fn test_encoder_binds_message_field_with_as_option() {
+    // `is_set()` + deref would instantiate `T::default_instance()` for every
+    // encodable message type; the encoder must bind the Option instead.
+    let mut file = proto3_file("enc_opt.proto");
+    file.message_type.push(DescriptorProto {
+        name: Some("Inner".to_string()),
+        field: vec![make_field("x", 1, Label::LABEL_OPTIONAL, Type::TYPE_INT32)],
+        ..Default::default()
+    });
+    file.message_type.push(DescriptorProto {
+        name: Some("Outer".to_string()),
+        field: vec![FieldDescriptorProto {
+            name: Some("inner".to_string()),
+            number: Some(1),
+            label: Some(Label::LABEL_OPTIONAL),
+            r#type: Some(Type::TYPE_MESSAGE),
+            type_name: Some(".Inner".to_string()),
+            ..Default::default()
+        }],
+        ..Default::default()
+    });
+    let files = generate(
+        &[file],
+        &["enc_opt.proto".to_string()],
+        &CodeGenConfig::default(),
+    )
+    .expect("should generate");
+    let content = &joined(&files);
+    assert!(
+        content.contains("= self.inner.as_option()"),
+        "owned encoder must bind the message field with as_option(): {content}"
+    );
+    assert!(
+        !content.contains("self.inner.is_set()"),
+        "owned encoder must not use is_set() + deref: {content}"
     );
 }

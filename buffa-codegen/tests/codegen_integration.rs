@@ -1163,7 +1163,7 @@ fn inline_string_default_is_unchanged() {
         "default string repr should remain String: {content}"
     );
     assert!(
-        content.contains("merge_string(&mut self"),
+        content.contains("merge_string_field(tag, &mut self"),
         "default string field should keep the in-place merge_string fast path: {content}"
     );
     assert!(

@@ -260,6 +260,21 @@ impl SizeCache {
     /// entry points reject over-limit messages before `write_to` runs, so
     /// (like the two-pass byte ledger) the check is debug-only rather than a
     /// release-mode branch on every nested-message write.
+    /// Store a sub-message's computed size in `slot` and return the bytes
+    /// its length-delimited payload occupies on the wire: the varint length
+    /// prefix plus the payload itself. The caller adds the field's tag length.
+    ///
+    /// One call for what generated code used to spell as `set` followed by
+    /// `varint_len`: every message-typed field arm in every `compute_size`
+    /// repeats this sequence, so at `opt-level = "z"` the two out-of-line
+    /// calls per arm are worth folding into one.
+    #[inline]
+    #[must_use]
+    pub fn record_submessage(&mut self, slot: usize, inner_size: u32) -> u64 {
+        self.set(slot, inner_size);
+        crate::encoding::varint_len(u64::from(inner_size)) as u64 + u64::from(inner_size)
+    }
+
     #[inline]
     #[cfg_attr(debug_assertions, track_caller)]
     pub fn consume_next(&mut self) -> u32 {

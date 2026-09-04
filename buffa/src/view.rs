@@ -104,6 +104,57 @@ use crate::error::DecodeError;
 use crate::message::Message as _;
 use bytes::Bytes;
 
+/// Object-safe view of [`MessageView::merge_view_field`].
+///
+/// The view counterpart of `FieldMerge` in `message.rs`: the tag loop in
+/// [`MessageView::merge_into_view`] is identical for every view type, and as
+/// an inlined provided method it was instantiated once per view and then
+/// inlined again into every parent arm and every `decode_view_ctx`. Erasing
+/// the view type leaves one loop plus a vtable per view type; the generated
+/// `merge_view_field` is the only monomorphised decode code. Tiny views
+/// override the loop with the monomorphic
+/// [`__private::merge_into_view_inline`](crate::__private::merge_into_view_inline)
+/// instead, for the same reason as on the owned side.
+trait ViewFieldMerge<'a> {
+    fn merge_view_field_dyn(
+        &mut self,
+        tag: crate::encoding::Tag,
+        cur: &'a [u8],
+        before_tag: &'a [u8],
+        ctx: crate::DecodeContext<'_>,
+    ) -> Result<&'a [u8], DecodeError>;
+}
+
+impl<'a, V: MessageView<'a>> ViewFieldMerge<'a> for V {
+    #[inline]
+    fn merge_view_field_dyn(
+        &mut self,
+        tag: crate::encoding::Tag,
+        cur: &'a [u8],
+        before_tag: &'a [u8],
+        ctx: crate::DecodeContext<'_>,
+    ) -> Result<&'a [u8], DecodeError> {
+        self.merge_view_field(tag, cur, before_tag, ctx)
+    }
+}
+
+/// Type-erased body of [`MessageView::merge_into_view`].
+fn merge_into_view_erased<'a>(
+    this: &mut (dyn ViewFieldMerge<'a> + '_),
+    buf: &'a [u8],
+    ctx: crate::DecodeContext<'_>,
+) -> Result<(), DecodeError> {
+    let mut cur: &'a [u8] = buf;
+    while !cur.is_empty() {
+        // Captured so unknown fields can preserve their raw byte span
+        // (`before_tag.len() - cur.len()` after the payload is consumed).
+        let before_tag = cur;
+        let tag = crate::encoding::Tag::decode(&mut cur)?;
+        cur = this.merge_view_field_dyn(tag, cur, before_tag, ctx)?;
+    }
+    Ok(())
+}
+
 /// Trait for zero-copy borrowed message views.
 ///
 /// View types borrow from the input buffer and provide read-only access
@@ -195,8 +246,11 @@ pub trait MessageView<'a>: Sized {
     /// [`with_element_memory`](crate::DecodeContext::with_element_memory)
     /// turns every repeated-element charge in every field arm into a no-op.
     ///
-    /// Also called by generated sub-message decode arms with a descended
-    /// context. Not to be confused with
+    /// Generated decode arms do not call this: singular, oneof and repeated
+    /// message fields all decode through
+    /// [`merge_into_view`](Self::merge_into_view) (into the existing slot or
+    /// a fresh default element), so an override of this method is not
+    /// consulted for nested messages. Not to be confused with
     /// [`decode_view_with_ctx`](Self::decode_view_with_ctx), the
     /// `DecodeOptions` override point whose *default* ignores the context.
     ///
@@ -210,6 +264,13 @@ pub trait MessageView<'a>: Sized {
         Self: Default,
     {
         let mut view = Self::default();
+        // Dispatches through `merge_into_view` so an override of the loop
+        // applies at top level too. Generated views override this method
+        // with a monomorphic loop instead (see
+        // `crate::__private::merge_into_view_inline`), for the same reason
+        // `Message::merge` has one; nested message fields (singular, oneof
+        // and repeated) go through the shared erased loop in
+        // `merge_into_view` either way.
         view.merge_into_view(buf, ctx)?;
         Ok(view)
     }
@@ -228,21 +289,16 @@ pub trait MessageView<'a>: Sized {
     ///
     /// Returns a [`DecodeError`] on malformed input, a wire-type mismatch, or
     /// when a configured decode limit (recursion depth, unknown-field
-    /// allowance) is exceeded.
+    /// allowance) is exceeded. On error `self` is left in an unspecified,
+    /// partially merged state: fields decoded before the failure keep their
+    /// new values, and a message field whose first occurrence failed
+    /// mid-way is set rather than unset.
     fn merge_into_view(
         &mut self,
         buf: &'a [u8],
         ctx: crate::DecodeContext<'_>,
     ) -> Result<(), DecodeError> {
-        let mut cur: &'a [u8] = buf;
-        while !cur.is_empty() {
-            // Captured so unknown fields can preserve their raw byte span
-            // (`before_tag.len() - cur.len()` after the payload is consumed).
-            let before_tag = cur;
-            let tag = crate::encoding::Tag::decode(&mut cur)?;
-            cur = self.merge_view_field(tag, cur, before_tag, ctx)?;
-        }
-        Ok(())
+        merge_into_view_erased(self, buf, ctx)
     }
 
     /// Decode one field's payload into this view (generated per message).
@@ -1130,12 +1186,34 @@ impl<V> MessageFieldView<V> {
     }
 
     /// Get a mutable reference to the inner view, or `None` if unset.
-    ///
-    /// Used by generated decode code to merge a second occurrence of a
-    /// message field into an existing value (proto merge semantics).
     #[inline]
     pub fn as_mut(&mut self) -> Option<&mut V> {
         self.inner.as_deref_mut()
+    }
+
+    /// Get a mutable reference to the inner view, setting it to `V::default()`
+    /// first if the field is unset.
+    ///
+    /// Setting an unset field allocates the `Box<V>` that backs it, exactly
+    /// as [`set`](Self::set) does; a field that is already set is returned
+    /// without allocating. Generated decode code merges every occurrence of
+    /// a message field through this one call.
+    ///
+    /// ```
+    /// use buffa::view::MessageFieldView;
+    ///
+    /// let mut field: MessageFieldView<Vec<u8>> = MessageFieldView::unset();
+    /// field.get_or_insert_default().push(1);
+    /// field.get_or_insert_default().push(2);
+    /// assert_eq!(field.as_option().map(Vec::as_slice), Some(&[1, 2][..]));
+    /// ```
+    #[inline]
+    pub fn get_or_insert_default(&mut self) -> &mut V
+    where
+        V: Default,
+    {
+        self.inner
+            .get_or_insert_with(|| alloc::boxed::Box::new(V::default()))
     }
 }
 
@@ -2879,6 +2957,20 @@ mod tests {
         assert!(v.is_unset());
         assert!(!v.is_set());
         assert_eq!(v.as_option(), None);
+    }
+
+    #[test]
+    fn message_field_view_get_or_insert_default_sets_once() {
+        let mut v: MessageFieldView<Vec<u8>> = MessageFieldView::unset();
+        assert!(v.is_unset());
+        v.get_or_insert_default().push(7);
+        assert!(v.is_set());
+        // A second call returns the same value rather than a fresh default.
+        v.get_or_insert_default().push(8);
+        assert_eq!(v.as_option().map(Vec::as_slice), Some(&[7u8, 8][..]));
+        // On an already-set field it is the same slot `as_mut` exposes.
+        let ptr = v.as_mut().map(|x| x as *mut Vec<u8>);
+        assert_eq!(ptr, Some(v.get_or_insert_default() as *mut Vec<u8>));
     }
 
     #[test]

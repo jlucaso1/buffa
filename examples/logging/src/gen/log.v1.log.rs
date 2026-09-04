@@ -165,13 +165,10 @@ impl ::buffa::Message for LogEntry {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
         let mut size = 0u64;
-        if self.timestamp.is_set() {
+        if let ::core::option::Option::Some(__v) = self.timestamp.as_option() {
             let __slot = __cache.reserve();
-            let inner_size = self.timestamp.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            let inner_size = __v.compute_size(__cache);
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         {
             let val = self.severity.to_i32();
@@ -185,13 +182,10 @@ impl ::buffa::Message for LogEntry {
         if !self.logger.is_empty() {
             size += 1u64 + ::buffa::types::string_encoded_len(&self.logger) as u64;
         }
-        if self.context.is_set() {
+        if let ::core::option::Option::Some(__v) = self.context.as_option() {
             let __slot = __cache.reserve();
-            let inner_size = self.context.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            let inner_size = __v.compute_size(__cache);
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         size
             += ::buffa::map_codec::field_len::<
@@ -209,13 +203,9 @@ impl ::buffa::Message for LogEntry {
     ) {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
-        if self.timestamp.is_set() {
-            ::buffa::types::put_len_delimited_header(
-                1u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            self.timestamp.write_to(__cache, buf);
+        if let ::core::option::Option::Some(__v) = self.timestamp.as_option() {
+            ::buffa::types::put_submessage_header(1u32, __cache, buf);
+            __v.write_to(__cache, buf);
         }
         {
             let val = self.severity.to_i32();
@@ -229,13 +219,9 @@ impl ::buffa::Message for LogEntry {
         if !self.logger.is_empty() {
             ::buffa::types::put_string_field(4u32, &self.logger, buf);
         }
-        if self.context.is_set() {
-            ::buffa::types::put_len_delimited_header(
-                5u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
-            self.context.write_to(__cache, buf);
+        if let ::core::option::Option::Some(__v) = self.context.as_option() {
+            ::buffa::types::put_submessage_header(5u32, __cache, buf);
+            __v.write_to(__cache, buf);
         }
         ::buffa::map_codec::write_field::<
             ::buffa::map_codec::Str,
@@ -276,18 +262,10 @@ impl ::buffa::Message for LogEntry {
                 );
             }
             3u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(&mut self.message, buf)?;
+                ::buffa::types::merge_string_field(tag, &mut self.message, buf)?;
             }
             4u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(&mut self.logger, buf)?;
+                ::buffa::types::merge_string_field(tag, &mut self.logger, buf)?;
             }
             5u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -326,6 +304,15 @@ impl ::buffa::Message for LogEntry {
         self.context = ::buffa::MessageField::none();
         self.fields.clear();
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for LogEntry {
@@ -380,10 +367,7 @@ impl ::buffa::Message for LogBatch {
         for v in &self.entries {
             let __slot = __cache.reserve();
             let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u64 + ::buffa::encoding::varint_len(inner_size as u64) as u64
-                    + inner_size as u64;
+            size += 1u64 + __cache.record_submessage(__slot, inner_size);
         }
         size += self.__buffa_unknown_fields.encoded_len() as u64;
         ::buffa::saturate_size(size)
@@ -396,11 +380,7 @@ impl ::buffa::Message for LogBatch {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
         for v in &self.entries {
-            ::buffa::types::put_len_delimited_header(
-                1u32,
-                u64::from(__cache.consume_next()),
-                buf,
-            );
+            ::buffa::types::put_submessage_header(1u32, __cache, buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -422,6 +402,9 @@ impl ::buffa::Message for LogBatch {
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
                 let mut elem = ::core::default::Default::default();
+                ctx.register_element_memory(
+                    ::buffa::__private::element_footprint(&elem),
+                )?;
                 ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
                 self.entries.push(elem);
             }
@@ -435,6 +418,15 @@ impl ::buffa::Message for LogBatch {
     fn clear(&mut self) {
         self.entries.clear();
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for LogBatch {

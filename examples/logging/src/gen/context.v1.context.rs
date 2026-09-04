@@ -127,32 +127,16 @@ impl ::buffa::Message for RequestContext {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(&mut self.request_id, buf)?;
+                ::buffa::types::merge_string_field(tag, &mut self.request_id, buf)?;
             }
             2u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(&mut self.user_id, buf)?;
+                ::buffa::types::merge_string_field(tag, &mut self.user_id, buf)?;
             }
             3u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(&mut self.method, buf)?;
+                ::buffa::types::merge_string_field(tag, &mut self.method, buf)?;
             }
             4u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(&mut self.path, buf)?;
+                ::buffa::types::merge_string_field(tag, &mut self.path, buf)?;
             }
             5u32 => {
                 ::buffa::encoding::check_wire_type(
@@ -179,6 +163,15 @@ impl ::buffa::Message for RequestContext {
         self.path.clear();
         self.metadata.clear();
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for RequestContext {

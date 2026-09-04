@@ -173,11 +173,7 @@ impl ::buffa::Message for DoubleValue {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Fixed64,
-                )?;
-                self.value = ::buffa::types::decode_double(buf)?;
+                ::buffa::types::merge_double_field(tag, &mut self.value, buf)?;
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -189,6 +185,32 @@ impl ::buffa::Message for DoubleValue {
     fn clear(&mut self) {
         self.value = 0f64;
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+    }
+    #[inline]
+    fn merge_length_delimited(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
+    }
+    #[inline]
+    fn merge_group(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        field_number: u32,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
     }
 }
 impl ::buffa::ExtensionSet for DoubleValue {
@@ -407,11 +429,7 @@ impl ::buffa::Message for FloatValue {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Fixed32,
-                )?;
-                self.value = ::buffa::types::decode_float(buf)?;
+                ::buffa::types::merge_float_field(tag, &mut self.value, buf)?;
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -423,6 +441,32 @@ impl ::buffa::Message for FloatValue {
     fn clear(&mut self) {
         self.value = 0f32;
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+    }
+    #[inline]
+    fn merge_length_delimited(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
+    }
+    #[inline]
+    fn merge_group(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        field_number: u32,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
     }
 }
 impl ::buffa::ExtensionSet for FloatValue {
@@ -641,11 +685,7 @@ impl ::buffa::Message for Int64Value {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.value = ::buffa::types::decode_int64(buf)?;
+                ::buffa::types::merge_int64_field(tag, &mut self.value, buf)?;
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -657,6 +697,32 @@ impl ::buffa::Message for Int64Value {
     fn clear(&mut self) {
         self.value = 0i64;
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+    }
+    #[inline]
+    fn merge_length_delimited(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
+    }
+    #[inline]
+    fn merge_group(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        field_number: u32,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
     }
 }
 impl ::buffa::ExtensionSet for Int64Value {
@@ -875,11 +941,7 @@ impl ::buffa::Message for UInt64Value {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.value = ::buffa::types::decode_uint64(buf)?;
+                ::buffa::types::merge_uint64_field(tag, &mut self.value, buf)?;
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -891,6 +953,32 @@ impl ::buffa::Message for UInt64Value {
     fn clear(&mut self) {
         self.value = 0u64;
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+    }
+    #[inline]
+    fn merge_length_delimited(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
+    }
+    #[inline]
+    fn merge_group(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        field_number: u32,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
     }
 }
 impl ::buffa::ExtensionSet for UInt64Value {
@@ -1109,11 +1197,7 @@ impl ::buffa::Message for Int32Value {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.value = ::buffa::types::decode_int32(buf)?;
+                ::buffa::types::merge_int32_field(tag, &mut self.value, buf)?;
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -1125,6 +1209,32 @@ impl ::buffa::Message for Int32Value {
     fn clear(&mut self) {
         self.value = 0i32;
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+    }
+    #[inline]
+    fn merge_length_delimited(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
+    }
+    #[inline]
+    fn merge_group(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        field_number: u32,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
     }
 }
 impl ::buffa::ExtensionSet for Int32Value {
@@ -1343,11 +1453,7 @@ impl ::buffa::Message for UInt32Value {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.value = ::buffa::types::decode_uint32(buf)?;
+                ::buffa::types::merge_uint32_field(tag, &mut self.value, buf)?;
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -1359,6 +1465,32 @@ impl ::buffa::Message for UInt32Value {
     fn clear(&mut self) {
         self.value = 0u32;
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+    }
+    #[inline]
+    fn merge_length_delimited(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
+    }
+    #[inline]
+    fn merge_group(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        field_number: u32,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
     }
 }
 impl ::buffa::ExtensionSet for UInt32Value {
@@ -1577,11 +1709,7 @@ impl ::buffa::Message for BoolValue {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::Varint,
-                )?;
-                self.value = ::buffa::types::decode_bool(buf)?;
+                ::buffa::types::merge_bool_field(tag, &mut self.value, buf)?;
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -1593,6 +1721,32 @@ impl ::buffa::Message for BoolValue {
     fn clear(&mut self) {
         self.value = false;
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
+    }
+    #[inline]
+    fn merge_length_delimited(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_length_delimited_inline(self, buf, ctx)
+    }
+    #[inline]
+    fn merge_group(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        field_number: u32,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_group_inline(self, buf, ctx, field_number)
     }
 }
 impl ::buffa::ExtensionSet for BoolValue {
@@ -1811,11 +1965,7 @@ impl ::buffa::Message for StringValue {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(&mut self.value, buf)?;
+                ::buffa::types::merge_string_field(tag, &mut self.value, buf)?;
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -1827,6 +1977,15 @@ impl ::buffa::Message for StringValue {
     fn clear(&mut self) {
         self.value.clear();
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for StringValue {
@@ -2045,11 +2204,7 @@ impl ::buffa::Message for BytesValue {
         use ::buffa::Enumeration as _;
         match tag.field_number() {
             1u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_bytes(&mut self.value, buf)?;
+                ::buffa::types::merge_bytes_field(tag, &mut self.value, buf)?;
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -2061,6 +2216,15 @@ impl ::buffa::Message for BytesValue {
     fn clear(&mut self) {
         self.value.clear();
         self.__buffa_unknown_fields.clear();
+    }
+    #[inline]
+    fn merge_to_limit(
+        &mut self,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+        limit: usize,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        ::buffa::__private::merge_to_limit_inline(self, buf, ctx, limit)
     }
 }
 impl ::buffa::ExtensionSet for BytesValue {
