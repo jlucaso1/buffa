@@ -792,7 +792,7 @@ pub fn write_message_field<KC: MapCodec, M: Message, C>(
 pub fn write_message_field_single_pass<KC: MapCodec, M: Message, C>(
     map: &C,
     field_number: u32,
-    buf: &mut Vec<u8>,
+    buf: &mut alloc::vec::Vec<u8>,
 ) where
     C: MapStorage<Key = KC::Value, Value = M>,
 {
