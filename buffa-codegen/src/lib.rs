@@ -717,8 +717,10 @@ impl MapRepr {
 /// newtype, mirroring the `ProtoString` newtype expectation.
 ///
 /// Select a representation through `buffa_build`'s `box_type_custom` builder
-/// method. The wire format is identical regardless of the pointer; view types
-/// are unaffected. Applies to singular message fields and **boxed** oneof
+/// method. The wire format is identical regardless of the pointer. View
+/// singular fields follow this by default (inline exactly when the owned
+/// field is inline) unless the `view_inline_fields` config override says
+/// otherwise. Applies to singular message fields and **boxed** oneof
 /// message/group variants (a variant opted into inline storage via
 /// `unboxed_oneof_fields` takes precedence and gets no pointer). Repeated
 /// message fields use a collection, not a pointer.
@@ -1181,6 +1183,15 @@ pub struct CodeGenConfig {
     /// Applies to singular (and proto2 optional/required) message fields only —
     /// not repeated message fields (a collection) or oneof message variants.
     pub pointer_fields: Vec<(String, PointerRepr)>,
+    /// Override for singular message/group view field storage (experiment).
+    ///
+    /// `None` (default): views follow [`pointer_repr`](CodeGenContext::pointer_repr) —
+    /// inline (`InlineMessageFieldView`) exactly when the owned side would
+    /// store the field inline. `Some(true)`: store inline whenever acyclic,
+    /// ignoring `Box` rules (cycle safety still applies — recursive fields
+    /// stay boxed). `Some(false)`: always box. Oneof variants, repeated
+    /// elements and map values are unaffected in all cases.
+    pub view_inline_fields: Option<bool>,
     /// Ordered (proto-path-prefix, [`RepeatedRepr`]) rules selecting the owned
     /// Rust collection for `repeated` fields. Later rules win, with the same
     /// proto-segment-aware prefix matching as [`bytes_fields`](Self::bytes_fields)
@@ -1733,6 +1744,7 @@ impl Default for CodeGenConfig {
             string_fields: Vec::new(),
             map_fields: Vec::new(),
             pointer_fields: Vec::new(),
+            view_inline_fields: None,
             repeated_fields: Vec::new(),
             feature_overrides: Vec::new(),
             unboxed_oneof_fields: Vec::new(),
@@ -3093,6 +3105,11 @@ pub struct SharedCorpusContext {
     pointer_fields: std::sync::Arc<Vec<(String, PointerRepr)>>,
     unboxed_oneof_variants: std::sync::Arc<std::collections::HashSet<String>>,
     inlined_message_fields: std::sync::Arc<std::collections::HashSet<String>>,
+    /// Singular message-field paths acyclic under default (`Inline`)
+    /// pointer rules, ignoring `config.pointer_fields`. Backs the
+    /// `view_inline_fields = Some(true)` override, which must stay
+    /// cycle-safe even when every owned rule says `Box`.
+    acyclic_message_fields: std::sync::Arc<std::collections::HashSet<String>>,
     comment_map: std::sync::Arc<std::collections::HashMap<String, String>>,
 }
 
@@ -3117,6 +3134,14 @@ impl SharedCorpusContext {
             &config.unboxed_oneof_fields,
             &config.pointer_fields,
         );
+        // Cycle-safe inline candidates under default rules, for the
+        // `view_inline_fields = Some(true)` override: a blanket `Box` rule
+        // would otherwise empty `inlined_message_fields`.
+        let acyclic_message_fields = oneof::resolve_inlined_fields(
+            &msg_index,
+            &config.unboxed_oneof_fields,
+            &[],
+        );
         let comment_map = files.iter().flat_map(comments::fqn_comments).collect();
         Self {
             files: std::sync::Arc::new(files.to_vec()),
@@ -3124,6 +3149,7 @@ impl SharedCorpusContext {
             pointer_fields: std::sync::Arc::new(config.pointer_fields.clone()),
             unboxed_oneof_variants: std::sync::Arc::new(unboxed_oneof_variants),
             inlined_message_fields: std::sync::Arc::new(inlined_message_fields),
+            acyclic_message_fields: std::sync::Arc::new(acyclic_message_fields),
             comment_map: std::sync::Arc::new(comment_map),
         }
     }
@@ -3166,6 +3192,12 @@ impl SharedCorpusContext {
         &self.inlined_message_fields
     }
 
+    pub(crate) fn acyclic_message_fields(
+        &self,
+    ) -> &std::sync::Arc<std::collections::HashSet<String>> {
+        &self.acyclic_message_fields
+    }
+
     pub(crate) fn comment_map(&self) -> &std::sync::Arc<std::collections::HashMap<String, String>> {
         &self.comment_map
     }
@@ -3179,6 +3211,7 @@ impl core::fmt::Debug for SharedCorpusContext {
             .field("files", &self.files.len())
             .field("unboxed_oneof_variants", &self.unboxed_oneof_variants.len())
             .field("inlined_message_fields", &self.inlined_message_fields.len())
+            .field("acyclic_message_fields", &self.acyclic_message_fields.len())
             .field("comments", &self.comment_map.len())
             .finish()
     }

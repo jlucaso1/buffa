@@ -1314,6 +1314,18 @@ impl Config {
         self
     }
 
+    /// Override singular message/group view field storage (experiment).
+    ///
+    /// `true`: store inline whenever acyclic, ignoring `Box` pointer rules
+    /// (lets a crate that boxes owned fields for struct-size reasons still
+    /// measure inline views); `false`: always box. Cycle safety always
+    /// applies. Unset (default): views follow the owned pointer rules.
+    #[must_use]
+    pub fn view_inline_fields(mut self, inline: bool) -> Self {
+        self.codegen_config.view_inline_fields = Some(inline);
+        self
+    }
+
     /// Map the matching singular message fields to a custom pointer implementing
     /// `buffa::ProtoBox<T>`, named by a Rust type-path **template** with a `*`
     /// placeholder for the message type (e.g. `"::my_crate::SmallBox<*>"`).

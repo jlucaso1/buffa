@@ -931,3 +931,53 @@ fn test_view_recursive_message_field_stays_boxed() {
         "no inline view storage on a recursive schema: {content}"
     );
 }
+
+#[test]
+fn test_view_inline_override_forces_inline_despite_box_rule() {
+    let mut file = proto3_file("override_view.proto");
+    file.message_type.push(DescriptorProto {
+        name: Some("Leaf".to_string()),
+        field: vec![make_field("v", 1, Label::LABEL_OPTIONAL, Type::TYPE_INT32)],
+        ..Default::default()
+    });
+    file.message_type.push(DescriptorProto {
+        name: Some("Root".to_string()),
+        field: vec![FieldDescriptorProto {
+            name: Some("leaf".to_string()),
+            number: Some(1),
+            label: Some(Label::LABEL_OPTIONAL),
+            r#type: Some(Type::TYPE_MESSAGE),
+            type_name: Some(".Leaf".to_string()),
+            ..Default::default()
+        }],
+        ..Default::default()
+    });
+    // Box everything owned: without the override the view stays boxed too.
+    let mut boxed_cfg = CodeGenConfig::default();
+    boxed_cfg
+        .pointer_fields
+        .push((".".to_string(), crate::PointerRepr::Box));
+    let files = generate(&[file.clone()], &["override_view.proto".to_string()], &boxed_cfg)
+        .expect("should generate");
+    assert!(
+        joined(&files).contains("pub leaf: ::buffa::MessageFieldView<"),
+        "Box rule must keep the view boxed by default"
+    );
+    // Force inline views: owned stays Box, the view goes inline.
+    let mut inline_cfg = CodeGenConfig::default();
+    inline_cfg
+        .pointer_fields
+        .push((".".to_string(), crate::PointerRepr::Box));
+    inline_cfg.view_inline_fields = Some(true);
+    let files = generate(&[file], &["override_view.proto".to_string()], &inline_cfg)
+        .expect("should generate");
+    let content = joined(&files);
+    assert!(
+        content.contains("pub leaf: ::buffa::InlineMessageFieldView<"),
+        "override must inline the view despite the Box rule: {content}"
+    );
+    assert!(
+        content.contains("pub leaf: ::buffa::MessageField<"),
+        "owned field must stay boxed under the override"
+    );
+}

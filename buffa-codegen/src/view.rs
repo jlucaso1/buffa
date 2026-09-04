@@ -817,7 +817,8 @@ pub(crate) fn view_singular_type(
         Type::TYPE_MESSAGE | Type::TYPE_GROUP => {
             let view_ty = resolve_view_ty_tokens(scope, field, lt)?;
             // Non-recursive fields (same `inlined_message_fields` predicate
-            // as owned `Inline` storage) hold the sub-view by value: no
+            // as owned `Inline` storage, unless the `view_inline_fields`
+            // override says otherwise) hold the sub-view by value: no
             // per-occurrence box allocation when decoding. Recursive fields
             // (including `Self`, which never clears the cycle check) keep
             // the boxed `MessageFieldView` so the type stays sized.
@@ -828,7 +829,7 @@ pub(crate) fn view_singular_type(
             // Leading-dot form, matching `inlined_message_fields` keys and
             // every owned `pointer_repr` call site.
             let field_fqn = format!(".{}.{}", proto_fqn, field_name);
-            if ctx.pointer_repr(&field_fqn) == crate::PointerRepr::Inline {
+            if ctx.view_field_inline(&field_fqn) {
                 Ok(quote! { ::buffa::InlineMessageFieldView<#view_ty> })
             } else {
                 Ok(quote! { ::buffa::MessageFieldView<#view_ty> })
